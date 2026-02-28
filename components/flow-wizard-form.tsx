@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
+function getCurrentTimeForTimezone(timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+
+  return formatter.format(new Date());
+}
 
 export function FlowWizardForm() {
   const router = useRouter();
@@ -19,10 +30,17 @@ export function FlowWizardForm() {
   const [tone, setTone] = useState("");
   const [postsPerDay, setPostsPerDay] = useState(3);
   const [timezone, setTimezone] = useState("Europe/Kiev");
-  const [startTime, setStartTime] = useState("09:00");
+  const [startTime, setStartTime] = useState(() => getCurrentTimeForTimezone("Europe/Kiev"));
   const [autopublishEnabled, setAutopublishEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const startTimeTouchedRef = useRef(false);
+
+  useEffect(() => {
+    if (!startTimeTouchedRef.current) {
+      setStartTime(getCurrentTimeForTimezone(timezone));
+    }
+  }, [timezone]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -135,7 +153,14 @@ export function FlowWizardForm() {
               </div>
               <div className="space-y-2">
                 <Label>Start time</Label>
-                <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(event) => {
+                    startTimeTouchedRef.current = true;
+                    setStartTime(event.target.value);
+                  }}
+                />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">

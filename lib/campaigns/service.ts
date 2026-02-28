@@ -21,6 +21,17 @@ type CampaignInput = {
 
 type FlowWithSteps = Awaited<ReturnType<typeof getFlowOrThrow>>;
 
+function getCurrentTimeForTimezone(timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+
+  return formatter.format(new Date());
+}
+
 async function createRun(flowId: string, queueItemId?: string | null) {
   return prisma.jobRun.create({
     data: {
@@ -96,6 +107,9 @@ function getStepConfig(flow: FlowWithSteps, type: string) {
 }
 
 export async function createCampaign(userId: string, input: CampaignInput) {
+  const timezone = input.timezone?.trim() || "Europe/Kiev";
+  const startTime = input.startTime?.trim() || getCurrentTimeForTimezone(timezone);
+
   return prisma.flow.create({
     data: {
       userId,
@@ -106,14 +120,14 @@ export async function createCampaign(userId: string, input: CampaignInput) {
       audience: input.audience?.trim() || null,
       tone: input.tone?.trim() || null,
       postsPerDay: Math.max(1, Math.min(50, input.postsPerDay ?? 3)),
-      timezone: input.timezone?.trim() || "Europe/Kiev",
-      startTime: input.startTime?.trim() || "09:00",
+      timezone,
+      startTime,
       autopublishEnabled: Boolean(input.autopublishEnabled),
       isEnabled: true,
       schedule: {
         create: {
           cron: "0 0 * * *",
-          timezone: input.timezone?.trim() || "Europe/Kiev",
+          timezone,
           maxRunsPerDay: Math.max(1, Math.min(50, input.postsPerDay ?? 3)),
           nextRunAt: new Date(),
           isPaused: true
