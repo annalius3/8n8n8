@@ -48,6 +48,8 @@ type Run = {
 type ActionResponse = {
   count?: number;
   processed?: number;
+  generated?: number;
+  published?: number;
   updated?: number;
   deleted?: number;
   error?: string;
@@ -68,7 +70,10 @@ async function postJson(url: string, body: Record<string, unknown>) {
 
 function getSuccessMessage(action: string, data: ActionResponse) {
   if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
-  if (action === "generate-all" || action === "generate-selected") {
+  if (action === "generate-all") {
+    return `Обработано ${data.generated ?? 0} элементов: сгенерировано 3/меньше и опубликовано ${data.published ?? 0}.`;
+  }
+  if (action === "generate-selected") {
     return `Контент и изображения обновлены для ${data.processed ?? 0} элементов.`;
   }
   if (action === "publish-selected" || action === "publish-due") {
@@ -145,10 +150,10 @@ export function CampaignQueueManager({
             </Button>
             <Button
               type="button"
-              onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { queueItemIds: allIds }))}
+              onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }))}
               disabled={loading !== null || allIds.length === 0}
             >
-              Сгенерировать всё
+              Сгенерировать 3 и опубликовать 1
             </Button>
             <Button
               type="button"

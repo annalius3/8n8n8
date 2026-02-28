@@ -482,6 +482,7 @@ export async function publishQueueItems(input: {
   userId: string;
   queueItemIds?: string[];
   dueOnly?: boolean;
+  limit?: number;
 }) {
   const flow = await getFlowOrThrow(input.flowId, input.userId);
   const publishConfig = getStepConfig(flow, "pinterest_publish");
@@ -499,7 +500,9 @@ export async function publishQueueItems(input: {
     orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }]
   });
 
-  for (const item of items) {
+  const limitedItems = typeof input.limit === "number" ? items.slice(0, Math.max(0, input.limit)) : items;
+
+  for (const item of limitedItems) {
     const run = await createRun(flow.id, item.id);
 
     try {
@@ -583,7 +586,37 @@ export async function publishQueueItems(input: {
     }
   }
 
-  return { processed: items.length };
+  return { processed: limitedItems.length };
+}
+
+export async function runGenerateAllPipeline(flowId: string, userId: string) {
+  const flow = await getFlowOrThrow(flowId, userId);
+
+  const candidates = await prisma.postQueueItem.findMany({
+    where: {
+      flowId: flow.id,
+      userId,
+      publishedAt: null,
+      status: { in: [QueueStatus.pending, QueueStatus.failed] }
+    },
+    orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }],
+    take: 3,
+    select: { id: true }
+  });
+
+  const queueItemIds = candidates.map((item) => item.id);
+  const generationResult = await generateContentForQueueItems(flow.id, userId, queueItemIds);
+  const publishResult = await publishQueueItems({
+    flowId: flow.id,
+    userId,
+    queueItemIds,
+    limit: 1
+  });
+
+  return {
+    generated: generationResult.processed,
+    published: publishResult.processed
+  };
 }
 
 export async function retryFailedQueueItems(flowId: string, userId: string, queueItemIds: string[]) {
