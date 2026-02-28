@@ -78,11 +78,11 @@ export function TopicSuggestionsManager({
     };
 
     if (!topicsResponse.ok) {
-      throw new Error(topicsData.error ?? "Не удалось обновить список тем");
+      throw new Error(topicsData.error ?? "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ");
     }
 
     if (!runsResponse.ok) {
-      throw new Error(runsData.error ?? "Не удалось обновить логи запуска");
+      throw new Error(runsData.error ?? "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
     }
 
     const nextSuggestions = topicsData.suggestions ?? [];
@@ -124,10 +124,10 @@ export function TopicSuggestionsManager({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось запустить генерацию тем");
+        throw new Error(data.error ?? "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ");
       }
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось запустить генерацию тем");
+      setError(requestError instanceof Error ? requestError.message : "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ");
     } finally {
       window.clearInterval(poll);
       generationStartedRef.current = false;
@@ -186,13 +186,13 @@ export function TopicSuggestionsManager({
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось добавить темы в очередь");
+        throw new Error(data.error ?? "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
       }
 
       router.push(`/flows/${flowId}/queue`);
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось добавить темы в очередь");
+      setError(requestError instanceof Error ? requestError.message : "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
     } finally {
       setLoading(false);
     }
@@ -204,22 +204,22 @@ export function TopicSuggestionsManager({
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Шаг 2. Просмотр 50 тем</CardTitle>
+          <CardTitle>пїЅпїЅпїЅ 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 50 пїЅпїЅпїЅ</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {generating ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Идёт генерация 50 тем. Список и логи обновляются автоматически.
+              пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 50 пїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
             </div>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Поиск по темам" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ" />
             <Button type="button" variant="outline" onClick={() => setSelectedIds(filtered.map((item) => item.id))} disabled={generating || filtered.length === 0}>
-              Выбрать все
+              пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
             </Button>
             <Button type="button" variant="outline" onClick={() => setSelectedIds([])} disabled={generating || selectedIds.length === 0}>
-              Снять выбор
+              пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
             </Button>
           </div>
 
@@ -234,19 +234,19 @@ export function TopicSuggestionsManager({
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                {generating ? "Темы ещё генерируются..." : "Тем пока нет. Нажмите «Запустить генерацию», чтобы получить 50 тем."}
+                {generating ? "пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..." : "пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 50 пїЅпїЅпїЅ."}
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="button" variant="outline" disabled={generating} onClick={() => void startGeneration()}>
-              {generating ? "Генерирую..." : "Запустить генерацию"}
+              {generating ? "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..." : "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"}
             </Button>
             <Button type="button" disabled={loading || selectedIds.length === 0 || generating} onClick={addSelectedToQueue}>
-              {loading ? "Добавляю..." : "Добавить выбранные в очередь"}
+              {loading ? "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..." : "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ"}
             </Button>
-            <span className="text-sm text-muted-foreground">Выбрано: {selectedIds.length}</span>
+            <span className="text-sm text-muted-foreground">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: {selectedIds.length}</span>
           </div>
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -255,15 +255,15 @@ export function TopicSuggestionsManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>Последний запуск генерации тем</CardTitle>
+          <CardTitle>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {lastRun ? (
             <>
               <div className="rounded-lg border p-3 text-sm">
                 <p>Run ID: {lastRun.id}</p>
-                <p className="text-muted-foreground">Статус: {lastRun.status}</p>
-                <p className="text-muted-foreground">Старт: {new Date(lastRun.startedAt).toLocaleString("ru-RU")}</p>
+                <p className="text-muted-foreground">пїЅпїЅпїЅпїЅпїЅпїЅ: {lastRun.status}</p>
+                <p className="text-muted-foreground">пїЅпїЅпїЅпїЅпїЅ: {new Date(lastRun.startedAt).toLocaleString("ru-RU")}</p>
                 {lastRun.error ? <p className="mt-2 text-red-600">{lastRun.error}</p> : null}
               </div>
               <ExecutionTimeline
@@ -277,7 +277,7 @@ export function TopicSuggestionsManager({
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">Логи появятся после первого запуска генерации тем.</p>
+            <p className="text-sm text-muted-foreground">пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ.</p>
           )}
         </CardContent>
       </Card>

@@ -58,7 +58,7 @@ export function FlowWizardForm() {
             ? data.error
             : data.error?.fieldErrors
               ? Object.values(data.error.fieldErrors).flat().filter(Boolean).join(", ")
-              : "Не удалось создать поток";
+              : "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ";
         setError(message);
         return;
       }
@@ -66,7 +66,7 @@ export function FlowWizardForm() {
       router.push(`/flows/${data.flowId}/topics`);
       router.refresh();
     } catch {
-      setError("Не удалось связаться с сервером");
+      setError("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
     } finally {
       setLoading(false);
     }
@@ -76,27 +76,27 @@ export function FlowWizardForm() {
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Шаг 1. Исходная тема</CardTitle>
+          <CardTitle>пїЅпїЅпїЅ 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label>Название потока</Label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Calm Energy Campaign" />
+              <Label>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</Label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: Calm Energy Campaign" />
             </div>
             <div className="space-y-2">
-              <Label>Исходная тема</Label>
+              <Label>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ</Label>
               <Textarea
                 rows={3}
                 value={seedTopic}
                 onChange={(event) => setSeedTopic(event.target.value)}
-                placeholder="Например: morning routine for calm energy"
+                placeholder="пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: morning routine for calm energy"
                 required
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Язык</Label>
+                <Label>пїЅпїЅпїЅпїЅ</Label>
                 <Select value={language} onChange={(event) => setLanguage(event.target.value as "EN" | "RU" | "UA")}>
                   <option value="EN">EN</option>
                   <option value="RU">RU</option>
@@ -104,7 +104,7 @@ export function FlowWizardForm() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Постов в день</Label>
+                <Label>пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ</Label>
                 <Input
                   type="number"
                   min={1}
@@ -140,11 +140,11 @@ export function FlowWizardForm() {
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-              Включить автопубликацию по расписанию
+              пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Создаю поток..." : "Перейти к генерации 50 тем"}
+              {loading ? "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ..." : "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 50 пїЅпїЅпїЅ"}
             </Button>
           </form>
         </CardContent>
@@ -152,20 +152,20 @@ export function FlowWizardForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Что произойдёт дальше</CardTitle>
+          <CardTitle>пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">1. Создание потока</p>
-            <p className="mt-1">Сначала создастся сам поток с настройками языка, расписания и публикации.</p>
+            <p className="font-medium text-foreground">1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</p>
+            <p className="mt-1">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">2. Генерация тем</p>
-            <p className="mt-1">На следующем экране автоматически запустится генерация 50 тем с polling и логами выполнения.</p>
+            <p className="font-medium text-foreground">2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ</p>
+            <p className="mt-1">пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 50 пїЅпїЅпїЅ пїЅ polling пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">3. Очередь контента</p>
-            <p className="mt-1">После выбора тем вы добавите их в очередь, сгенерируете текст и изображение, а затем опубликуете.</p>
+            <p className="font-medium text-foreground">3. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</p>
+            <p className="mt-1">пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</p>
           </div>
         </CardContent>
       </Card>

@@ -19,7 +19,7 @@ const createSchema = z.object({
 
 export async function GET() {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ" }, { status: 401 });
 
   const flows = await prisma.flow.findMany({
     where: { userId: user.id },
@@ -41,7 +41,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ" }, { status: 401 });
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
