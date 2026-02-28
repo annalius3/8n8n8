@@ -23,9 +23,9 @@ export function RunNowButton({ flowId }: { flowId: string }) {
   return (
     <div className="flex items-center gap-2">
       <Button onClick={runNow} disabled={loading}>
-        {loading ? "Running..." : "Run now"}
+        {loading ? "Запуск..." : "Запустить"}
       </Button>
-      {runId ? <span className="text-xs text-muted-foreground">Run: {runId}</span> : null}
+      {runId ? <span className="text-xs text-muted-foreground">Запуск: {runId}</span> : null}
     </div>
   );
 }

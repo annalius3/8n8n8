@@ -56,7 +56,7 @@ export function FlowEditor({
       updateStep(index, { configJson: parsed });
       setError(null);
     } catch {
-      setError("Step config must be valid JSON");
+      setError("config_json должен быть корректным JSON");
     }
   }
 
@@ -85,7 +85,7 @@ export function FlowEditor({
     });
 
     if (!metaResponse.ok || !stepsResponse.ok) {
-      setError("Failed to save flow");
+      setError("Не удалось сохранить поток");
       setSaving(false);
       return;
     }
@@ -98,11 +98,11 @@ export function FlowEditor({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Flow Settings</CardTitle>
+          <CardTitle>Настройки потока</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>Название</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -111,11 +111,11 @@ export function FlowEditor({
               <Input value={cron} onChange={(e) => setCron(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Timezone</Label>
+              <Label>Часовой пояс</Label>
               <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Max runs/day</Label>
+              <Label>Макс. запусков в день</Label>
               <Input
                 type="number"
                 min={1}
@@ -126,10 +126,10 @@ export function FlowEditor({
           </div>
           <div className="flex gap-6 text-sm">
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} /> Enabled
+              <input type="checkbox" checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} /> Включен
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={isPaused} onChange={(e) => setIsPaused(e.target.checked)} /> Schedule paused
+              <input type="checkbox" checked={isPaused} onChange={(e) => setIsPaused(e.target.checked)} /> Планировщик на паузе
             </label>
           </div>
         </CardContent>
@@ -137,19 +137,19 @@ export function FlowEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle>Flow Steps (ordered list)</CardTitle>
+          <CardTitle>Шаги потока (упорядоченный список)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {steps.map((step, index) => (
             <div key={`${index}-${step.type}`} className="rounded-lg border p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <strong>Step #{index + 1}</strong>
+                <strong>Шаг #{index + 1}</strong>
                 <Button size="sm" variant="outline" onClick={() => removeStep(index)}>
-                  Remove
+                  Удалить
                 </Button>
               </div>
               <div className="mb-2 space-y-2">
-                <Label>Type</Label>
+                <Label>Тип</Label>
                 <Select value={step.type} onChange={(e) => updateStep(index, { type: e.target.value })}>
                   <option value="schedule">schedule</option>
                   <option value="rss">rss</option>
@@ -158,14 +158,14 @@ export function FlowEditor({
                   <option value="template">template</option>
                   <option value="ai_image_leonardo">ai_image_leonardo</option>
                   <option value="pinterest_publish">pinterest_publish</option>
-                  <option value="schedule_trigger">schedule_trigger (legacy)</option>
-                  <option value="source_rss">source_rss (legacy)</option>
-                  <option value="source_queue">source_queue (legacy)</option>
-                  <option value="wait">wait (legacy)</option>
-                  <option value="sleep">sleep (legacy)</option>
-                  <option value="ai_text">ai_text (legacy)</option>
-                  <option value="ai_image">ai_image (legacy)</option>
-                  <option value="publish_pinterest">publish_pinterest (legacy)</option>
+                  <option value="schedule_trigger">schedule_trigger (устар.)</option>
+                  <option value="source_rss">source_rss (устар.)</option>
+                  <option value="source_queue">source_queue (устар.)</option>
+                  <option value="wait">wait (устар.)</option>
+                  <option value="sleep">sleep (устар.)</option>
+                  <option value="ai_text">ai_text (устар.)</option>
+                  <option value="ai_image">ai_image (устар.)</option>
+                  <option value="publish_pinterest">publish_pinterest (устар.)</option>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -181,10 +181,10 @@ export function FlowEditor({
 
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={addStep}>
-              Add step
+              Добавить шаг
             </Button>
             <Button type="button" onClick={saveAll} disabled={saving}>
-              {saving ? "Saving..." : "Save flow"}
+              {saving ? "Сохранение..." : "Сохранить поток"}
             </Button>
           </div>
 

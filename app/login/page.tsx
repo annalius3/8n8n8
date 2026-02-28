@@ -22,7 +22,7 @@ export default function LoginPage() {
     });
 
     if (!response.ok) {
-      setError("Failed to generate magic link");
+      setError("Не удалось создать magic link");
       return;
     }
 
@@ -33,7 +33,7 @@ export default function LoginPage() {
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>Magic Link Login</CardTitle>
+        <CardTitle>Вход по magic link</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -41,12 +41,12 @@ export default function LoginPage() {
             <Label>Email</Label>
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <Button type="submit">Generate magic link</Button>
+          <Button type="submit">Создать magic link</Button>
         </form>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {magicLink ? (
           <p className="text-sm">
-            Open link: <a className="underline" href={magicLink}>{magicLink}</a>
+            Открыть ссылку: <a className="underline" href={magicLink}>{magicLink}</a>
           </p>
         ) : null}
       </CardContent>

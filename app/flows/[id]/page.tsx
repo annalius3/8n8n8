@@ -30,7 +30,7 @@ export default async function FlowEditorPage({ params }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <Link href="/flows">
-          <Button variant="outline">Back to flows</Button>
+          <Button variant="outline">Назад к потокам</Button>
         </Link>
         <RunNowButton flowId={flow.id} />
       </div>

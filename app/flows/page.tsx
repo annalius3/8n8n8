@@ -22,11 +22,11 @@ export default async function FlowsPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Flows</CardTitle>
+          <CardTitle>Потоки</CardTitle>
           <div className="flex items-center gap-2">
             <SchedulerTickButton />
             <Link href="/flows/new">
-              <Button>Create flow</Button>
+              <Button>Создать поток</Button>
             </Link>
           </div>
         </CardHeader>
@@ -34,12 +34,12 @@ export default async function FlowsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Название</TableHead>
+                <TableHead>Статус</TableHead>
                 <TableHead>Cron</TableHead>
-                <TableHead>Next run</TableHead>
-                <TableHead>Steps</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Следующий запуск</TableHead>
+                <TableHead>Шаги</TableHead>
+                <TableHead>Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -51,7 +51,7 @@ export default async function FlowsPage() {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    {flow.isEnabled ? <Badge>enabled</Badge> : <Badge variant="secondary">disabled</Badge>}
+                    {flow.isEnabled ? <Badge>включен</Badge> : <Badge variant="secondary">выключен</Badge>}
                   </TableCell>
                   <TableCell>{flow.schedule?.cron ?? "-"}</TableCell>
                   <TableCell>{flow.schedule?.nextRunAt?.toLocaleString() ?? "-"}</TableCell>
@@ -66,7 +66,7 @@ export default async function FlowsPage() {
               ))}
               {flows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6}>No flows yet.</TableCell>
+                  <TableCell colSpan={6}>Потоков пока нет.</TableCell>
                 </TableRow>
               ) : null}
             </TableBody>

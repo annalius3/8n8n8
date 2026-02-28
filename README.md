@@ -1,33 +1,35 @@
-# Autoposting Flow
+# Автопостинг Flow
 
-MVP flow-based autoposting service (simplified n8n-like behavior).
+MVP-сервис потокового автопостинга в стиле упрощённого n8n.
 
-## Stack
+## Стек
 - Next.js App Router + TypeScript
 - Prisma + PostgreSQL
-- shadcn/ui style components + Tailwind
-- Auth: magic link (local, fast setup)
+- shadcn/ui + Tailwind
+- Авторизация: magic link
 
-## Implemented entities (Prisma)
+## Сущности Prisma
 - User
 - Connection (`provider`, `name`, `encrypted_json`)
 - Flow
 - FlowStep
-- FlowSchedule (`max_runs_per_day` included)
+- FlowSchedule (`max_runs_per_day`)
 - PostQueueItem
 - PublishedItem
 - JobRun
 - JobRunStep
 
-## Features
-- `/flows` - list flows, run now, enable/disable
-- `/flows/new` - flow creation wizard
-- `/flows/[id]` - step editor (ordered list, no drag&drop) + run now
-- `/runs` - run logs and step logs
-- Scheduler tick API: checks `flow_schedules.next_run_at <= now` and starts due flows
-- Worker runner executes step-by-step with one JSON `context`
+## Возможности
+- `/flows` — список потоков, запуск вручную, включение/выключение
+- `/flows/new` — мастер создания потока
+- `/flows/[id]` — редактор шагов списком, без drag&drop
+- `/runs` — история запусков и шагов
+- Планировщик проверяет `flow_schedules.next_run_at <= now` и запускает подходящие потоки
+- Runner выполняет шаги последовательно и хранит единый JSON `context`
+- Дедупликация RSS по `published_items`
+- Блокировка элементов очереди через `locked_at`
 
-## Step types supported
+## Поддерживаемые типы шагов
 - `schedule`
 - `rss`
 - `queue`
@@ -36,40 +38,40 @@ MVP flow-based autoposting service (simplified n8n-like behavior).
 - `pinterest_publish`
 - `delay`
 
-Legacy aliases are supported (`schedule_trigger`, `source_rss`, `source_queue`, `ai_text`, `ai_image`, `publish_pinterest`, `wait`, `sleep`).
+Поддерживаются и старые алиасы: `schedule_trigger`, `source_rss`, `source_queue`, `ai_text`, `ai_image`, `publish_pinterest`, `wait`, `sleep`.
 
-## Security
-- Connection secrets encrypted with AES-256-GCM via `ENCRYPTION_KEY`
-- Tokens are never returned to client
-- Scheduler endpoint protected by `SCHEDULER_TOKEN` (header `x-scheduler-token`)
+## Безопасность
+- Секреты подключений шифруются через AES-256-GCM с `ENCRYPTION_KEY`
+- Токены не отдаются на клиент
+- `POST /api/scheduler/tick` защищён через `SCHEDULER_TOKEN` или авторизованного пользователя
 
-## ENV
-Required:
+## Переменные окружения
+Обязательные:
 - `DATABASE_URL`
 - `AUTH_SECRET`
 - `ENCRYPTION_KEY`
 - `LEONARDO_API_KEY`
-- `SCHEDULER_TOKEN` (for remote scheduler calls)
+- `SCHEDULER_TOKEN`
 
-Optional:
-- `OPENAI_API_KEY` (for template step provider=openai)
-- `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` (for Leonardo store to R2)
+Дополнительно:
+- `OPENAI_API_KEY` — если используете `provider=openai` в шаге `template`
+- `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` — если хотите складывать изображения Leonardo в Cloudflare R2
 - `NEXT_PUBLIC_BASE_URL`
 
-## Local run
-1. Copy env:
+## Локальный запуск
+1. Скопировать env:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Install dependencies:
+2. Установить зависимости:
 
 ```bash
 npm install
 ```
 
-3. Run migration + prisma generate + seed:
+3. Применить миграции, сгенерировать Prisma Client и сиды:
 
 ```bash
 npx prisma migrate dev
@@ -77,43 +79,35 @@ npx prisma generate
 npx prisma db seed
 ```
 
-4. Start app:
+4. Запустить приложение:
 
 ```bash
 npm run dev
 ```
 
-5. Open `http://localhost:3000/login`, enter `demo@autoposting.local`, open generated magic link.
+5. Открыть `http://localhost:3000/login`, ввести `demo@autoposting.local` и перейти по сгенерированной magic link.
 
-## Free hosting setup (Vercel + GitHub Actions)
-Use this if you want automation to work with your PC turned off.
+## Бесплатный продакшен: Vercel + GitHub Actions
+Если компьютер выключен, автоматизация может работать так:
 
-1. Deploy app to Vercel.
-2. Set Vercel env vars (`DATABASE_URL`, `AUTH_SECRET`, `ENCRYPTION_KEY`, `LEONARDO_API_KEY`, `SCHEDULER_TOKEN`, and others you use).
-3. In GitHub repo, add Actions secrets:
-- `APP_BASE_URL` = `https://your-app.vercel.app`
-- `SCHEDULER_TOKEN` = same value as in Vercel env
-4. Enable workflow `.github/workflows/scheduler-tick.yml` (runs every 15 minutes).
+1. Деплой приложения в Vercel
+2. Добавление env-переменных в Vercel
+3. Добавление secrets в GitHub:
+- `APP_BASE_URL` = `https://ваш-проект.vercel.app`
+- `SCHEDULER_TOKEN` = тот же токен, что в Vercel
+4. Включение workflow `.github/workflows/scheduler-tick.yml`
 
-Workflow calls:
+Workflow вызывает:
 - `POST {APP_BASE_URL}/api/scheduler/tick`
-- Header: `x-scheduler-token: {SCHEDULER_TOKEN}`
+- заголовок `x-scheduler-token: {SCHEDULER_TOKEN}`
 
-## Scheduler/Worker options
-- Self-hosted always-on worker:
-
+## Ручной запуск планировщика
 ```bash
-npm run worker
+curl -X POST https://ваш-домен.vercel.app/api/scheduler/tick \
+  -H "x-scheduler-token: ВАШ_ТОКЕН"
 ```
 
-- Remote trigger (for Vercel/free mode):
-
-```bash
-curl -X POST https://your-app.vercel.app/api/scheduler/tick \
-  -H "x-scheduler-token: YOUR_TOKEN"
-```
-
-## Testing Run now and logs
-1. Go to `/flows` and click `Run now` on demo flow.
-2. Open `/runs` to inspect `job_runs` and `job_run_steps`.
-3. Run scheduler manually via API call above and verify new runs appear.
+## Проверка работы
+1. Откройте `/flows` и нажмите «Запустить» на демо-потоке
+2. Откройте `/runs` и проверьте `job_runs` и `job_run_steps`
+3. Вызовите `scheduler/tick` вручную и убедитесь, что появились новые запуски

@@ -27,7 +27,7 @@ export function FlowToggleButton({ flowId, initialEnabled }: { flowId: string; i
 
   return (
     <Button variant="outline" onClick={toggle} disabled={loading}>
-      {loading ? "Saving..." : enabled ? "Disable" : "Enable"}
+      {loading ? "Сохранение..." : enabled ? "Выключить" : "Включить"}
     </Button>
   );
 }

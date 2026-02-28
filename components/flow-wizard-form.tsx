@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function FlowWizardForm() {
-  const [name, setName] = useState("RSS -> AI text -> Leonardo -> Pinterest");
+  const [name, setName] = useState("RSS -> Текст -> Leonardo -> Pinterest");
   const [sourceType, setSourceType] = useState<"rss" | "queue">("rss");
   const [rssUrl, setRssUrl] = useState("https://hnrss.org/frontpage");
   const [cron, setCron] = useState("0 */6 * * *");
@@ -44,7 +44,7 @@ export function FlowWizardForm() {
     });
 
     if (!response.ok) {
-      setError("Could not create flow");
+      setError("Не удалось создать поток");
       setLoading(false);
       return;
     }
@@ -58,23 +58,23 @@ export function FlowWizardForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Flow</CardTitle>
+        <CardTitle>Создание потока</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label>Flow name</Label>
+            <Label>Название потока</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label>Source type</Label>
+            <Label>Тип источника</Label>
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={sourceType}
               onChange={(e) => setSourceType(e.target.value as "rss" | "queue")}
             >
               <option value="rss">RSS</option>
-              <option value="queue">Queue (DB)</option>
+              <option value="queue">Очередь (БД)</option>
             </select>
           </div>
           {sourceType === "rss" ? (
@@ -89,11 +89,11 @@ export function FlowWizardForm() {
               <Input value={cron} onChange={(e) => setCron(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label>Timezone</Label>
+              <Label>Часовой пояс</Label>
               <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label>Max runs/day</Label>
+              <Label>Макс. запусков в день</Label>
               <Input
                 type="number"
                 value={maxRunsPerDay}
@@ -104,16 +104,16 @@ export function FlowWizardForm() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Pin description template</Label>
+            <Label>Шаблон описания пина</Label>
             <Textarea rows={4} value={textTemplate} onChange={(e) => setTextTemplate(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Leonardo prompt template</Label>
+            <Label>Шаблон промпта Leonardo</Label>
             <Textarea rows={3} value={imagePromptTemplate} onChange={(e) => setImagePromptTemplate(e.target.value)} />
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create flow"}
+            {loading ? "Создание..." : "Создать поток"}
           </Button>
         </form>
       </CardContent>

@@ -15,17 +15,10 @@ function isTokenValid(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const hasSchedulerToken = Boolean(process.env.SCHEDULER_TOKEN);
+  const user = await getCurrentUser();
 
-  if (hasSchedulerToken) {
-    if (!isTokenValid(request)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  } else {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!user && !isTokenValid(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const result = await runSchedulerTick();

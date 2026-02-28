@@ -10,7 +10,7 @@ export default async function NewFlowPage() {
     <div className="space-y-4">
       <div>
         <Link href="/flows">
-          <Button variant="outline">Back to flows</Button>
+          <Button variant="outline">Назад к потокам</Button>
         </Link>
       </div>
       <FlowWizardForm />
