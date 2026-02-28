@@ -7,10 +7,34 @@ import { ExecutionTimeline } from "@/components/execution-timeline";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { DemoRunBanner } from "@/components/demo-run-banner";
+import { SetupRequiredCard } from "@/components/setup-required-card";
 
 type Props = {
   searchParams?: Promise<{ status?: string }>;
 };
+
+async function loadRuns(userId: string, status: "all" | "success" | "failed" | "running") {
+  return prisma.jobRun.findMany({
+    where: {
+      flow: {
+        userId
+      },
+      ...(status !== "all" ? { status } : {})
+    },
+    include: {
+      flow: true,
+      steps: {
+        orderBy: {
+          stepIndex: "asc"
+        }
+      }
+    },
+    orderBy: {
+      startedAt: "desc"
+    },
+    take: 50
+  });
+}
 
 function translateRunStatus(status: string) {
   if (status === "failed") return { label: "Ошибка", variant: "destructive" as const };
@@ -31,31 +55,22 @@ function formatDate(date: Date | null | undefined) {
 }
 
 export default async function RunsPage({ searchParams }: Props) {
-  const user = await requireUser();
   const params = searchParams ? await searchParams : {};
   const activeStatus =
     params?.status === "success" || params?.status === "failed" || params?.status === "running" ? params.status : "all";
 
-  const runs = await prisma.jobRun.findMany({
-    where: {
-      flow: {
-        userId: user.id
-      },
-      ...(activeStatus !== "all" ? { status: activeStatus } : {})
-    },
-    include: {
-      flow: true,
-      steps: {
-        orderBy: {
-          stepIndex: "asc"
-        }
-      }
-    },
-    orderBy: {
-      startedAt: "desc"
-    },
-    take: 50
-  });
+  let runs: Awaited<ReturnType<typeof loadRuns>> = [];
+
+  try {
+    const user = await requireUser();
+    runs = await loadRuns(user.id, activeStatus);
+  } catch {
+    return (
+      <div className="space-y-6">
+        <SetupRequiredCard details="Страница запусков требует рабочее подключение к базе данных. Сейчас Vercel не может прочитать `job_runs`." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -104,10 +119,7 @@ export default async function RunsPage({ searchParams }: Props) {
         {runs.map((run) => {
           const runStatus = translateRunStatus(run.status);
           const runtime = (run.contextJson as Record<string, any> | null)?.runtime as Record<string, string> | undefined;
-          const isDemoRun = Boolean(
-            runtime &&
-              Object.values(runtime).some((value) => value === "demo")
-          );
+          const isDemoRun = Boolean(runtime && Object.values(runtime).some((value) => value === "demo"));
 
           return (
             <Card key={run.id}>

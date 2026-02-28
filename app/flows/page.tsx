@@ -8,6 +8,7 @@ import { RunNowButton } from "@/components/run-now-button";
 import { SchedulerTickButton } from "@/components/scheduler-tick-button";
 import { FlowToggleButton } from "@/components/flow-toggle-button";
 import { IntegrationModePanel } from "@/components/integration-mode-panel";
+import { SetupRequiredCard } from "@/components/setup-required-card";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 type FlowWithMeta = Awaited<ReturnType<typeof loadFlows>>[number];
@@ -70,9 +71,20 @@ function getCompactPreview(flow: FlowWithMeta) {
 }
 
 export default async function FlowsPage() {
-  const user = await requireUser();
-  const flows = await loadFlows(user.id);
   const modes = getIntegrationModes();
+  let flows: FlowWithMeta[] = [];
+
+  try {
+    const user = await requireUser();
+    flows = await loadFlows(user.id);
+  } catch {
+    return (
+      <div className="space-y-6">
+        <IntegrationModePanel modes={modes} />
+        <SetupRequiredCard details="Страница потоков зависит от Prisma и не может загрузиться, пока Vercel не подключён к Postgres." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
