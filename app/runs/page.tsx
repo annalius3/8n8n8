@@ -4,6 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { JsonView } from "@/components/json-view";
 import { ExecutionTimeline } from "@/components/execution-timeline";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { DemoRunBanner } from "@/components/demo-run-banner";
+
+type Props = {
+  searchParams?: Promise<{ status?: string }>;
+};
 
 function translateRunStatus(status: string) {
   if (status === "failed") return { label: "Ошибка", variant: "destructive" as const };
@@ -23,14 +30,18 @@ function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
 }
 
-export default async function RunsPage() {
+export default async function RunsPage({ searchParams }: Props) {
   const user = await requireUser();
+  const params = searchParams ? await searchParams : {};
+  const activeStatus =
+    params?.status === "success" || params?.status === "failed" || params?.status === "running" ? params.status : "all";
 
   const runs = await prisma.jobRun.findMany({
     where: {
       flow: {
         userId: user.id
-      }
+      },
+      ...(activeStatus !== "all" ? { status: activeStatus } : {})
     },
     include: {
       flow: true,
@@ -52,8 +63,32 @@ export default async function RunsPage() {
         <CardHeader>
           <CardTitle>Логи запусков</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Здесь видно весь путь выполнения: какие шаги сработали, что они получили на вход и что записали в output/context.
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Здесь видно весь путь выполнения: какие шаги сработали, что они получили на вход и что записали в output/context.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/runs">
+              <Button variant={activeStatus === "all" ? "default" : "outline"} size="sm">
+                Все
+              </Button>
+            </Link>
+            <Link href="/runs?status=success">
+              <Button variant={activeStatus === "success" ? "default" : "outline"} size="sm">
+                Успешные
+              </Button>
+            </Link>
+            <Link href="/runs?status=failed">
+              <Button variant={activeStatus === "failed" ? "default" : "outline"} size="sm">
+                Ошибки
+              </Button>
+            </Link>
+            <Link href="/runs?status=running">
+              <Button variant={activeStatus === "running" ? "default" : "outline"} size="sm">
+                Выполняются
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
 
@@ -68,6 +103,11 @@ export default async function RunsPage() {
       <div className="space-y-4">
         {runs.map((run) => {
           const runStatus = translateRunStatus(run.status);
+          const runtime = (run.contextJson as Record<string, any> | null)?.runtime as Record<string, string> | undefined;
+          const isDemoRun = Boolean(
+            runtime &&
+              Object.values(runtime).some((value) => value === "demo")
+          );
 
           return (
             <Card key={run.id}>
@@ -95,6 +135,11 @@ export default async function RunsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <DemoRunBanner
+                  isDemo={isDemoRun}
+                  text="Этот запуск использовал хотя бы одну demo-интеграцию. Логи и context валидны, но внешние API могли не вызываться по-настоящему."
+                />
+
                 <ExecutionTimeline
                   steps={run.steps.map((step) => ({
                     id: step.id,

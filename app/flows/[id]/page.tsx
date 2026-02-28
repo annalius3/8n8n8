@@ -14,6 +14,7 @@ import { IntegrationModePanel } from "@/components/integration-mode-panel";
 import { PostPreviewCard } from "@/components/post-preview-card";
 import { SourcePreviewCard } from "@/components/source-preview-card";
 import { FlowReadinessCard } from "@/components/flow-readiness-card";
+import { DemoRunBanner } from "@/components/demo-run-banner";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 type Props = {
@@ -98,6 +99,7 @@ export default async function FlowEditorPage({ params }: Props) {
   const modes = getIntegrationModes();
   const context = (lastRun?.contextJson as Record<string, any> | null) ?? null;
   const runtime = (context?.runtime as Record<string, any> | null) ?? null;
+  const isDemoRun = Boolean(runtime && Object.values(runtime).some((value) => value === "demo"));
   const preview = {
     title: context?.text?.pin_title ?? "Здесь появится заголовок после запуска",
     description: context?.text?.pin_description ?? "Здесь появится описание будущего поста",
@@ -179,6 +181,10 @@ export default async function FlowEditorPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <IntegrationModePanel modes={modes} />
+      <DemoRunBanner
+        isDemo={isDemoRun}
+        text="Последний запуск проходил частично или полностью в demo-режиме. Preview и context полезны для проверки сценария, но не все внешние API вызывались по-настоящему."
+      />
       <div className="flex flex-wrap items-center gap-2">
         <Link href="/flows">
           <Button variant="outline">Назад к потокам</Button>
