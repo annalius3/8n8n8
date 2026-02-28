@@ -15,6 +15,7 @@ type BoardItem = {
 };
 
 type IntervalUnit = "minutes" | "hours" | "days";
+type ScheduleMode = "posts_per_day" | "interval";
 
 function parseIntervalCron(cron?: string) {
   if (!cron) return null;
@@ -101,7 +102,7 @@ export function CampaignSettingsForm({
     value: 6,
     unit: "hours" as IntervalUnit
   };
-  const [useIntervalScheduling, setUseIntervalScheduling] = useState(initialInterval.enabled);
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>(initialInterval.enabled ? "interval" : "posts_per_day");
   const [scheduleEveryValue, setScheduleEveryValue] = useState(initialInterval.value);
   const [scheduleEveryUnit, setScheduleEveryUnit] = useState<IntervalUnit>(initialInterval.unit);
   const [niche, setNiche] = useState(initialNiche ?? "");
@@ -159,7 +160,7 @@ export function CampaignSettingsForm({
           startTime,
           autopublishEnabled,
           cron: buildIntervalCron({
-            enabled: useIntervalScheduling,
+            enabled: scheduleMode === "interval",
             value: scheduleEveryValue,
             unit: scheduleEveryUnit,
             startTime
@@ -227,35 +228,45 @@ export function CampaignSettingsForm({
             </div>
           </div>
           <div className="space-y-4 rounded-xl border p-4">
-            <div className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={useIntervalScheduling} onChange={(event) => setUseIntervalScheduling(event.target.checked)} />
-              <span>Публиковать по интервалу</span>
+            <div className="space-y-2">
+              <Label>Режим расписания</Label>
+              <Select value={scheduleMode} onChange={(event) => setScheduleMode(event.target.value as ScheduleMode)}>
+                <option value="posts_per_day">Определённое количество публикаций в день</option>
+                <option value="interval">Публиковать по интервалу</option>
+              </Select>
             </div>
-            <div className="grid gap-4 md:grid-cols-[160px_1fr]">
-              <div className="space-y-2">
-                <Label>Каждые</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={scheduleEveryUnit === "minutes" ? 59 : 30}
-                  value={scheduleEveryValue}
-                  onChange={(event) => setScheduleEveryValue(Math.max(1, Number(event.target.value) || 1))}
-                  disabled={!useIntervalScheduling}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Единица</Label>
-                <Select value={scheduleEveryUnit} onChange={(event) => setScheduleEveryUnit(event.target.value as IntervalUnit)} disabled={!useIntervalScheduling}>
-                  <option value="minutes">минут</option>
-                  <option value="hours">часов</option>
-                  <option value="days">дней</option>
-                </Select>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Если интервал включён, очередь будет планироваться по схеме «каждые N минут/часов/дней». Если выключен, остаётся режим
-              распределения по количеству постов в день.
-            </p>
+            {scheduleMode === "posts_per_day" ? (
+              <p className="text-xs text-muted-foreground">
+                Очередь будет распределяться равномерно в течение дня. Количество публикаций берётся из поля «Постов в день».
+              </p>
+            ) : (
+              <>
+                <div className="grid gap-4 md:grid-cols-[160px_1fr]">
+                  <div className="space-y-2">
+                    <Label>Каждые</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={scheduleEveryUnit === "minutes" ? 59 : 30}
+                      value={scheduleEveryValue}
+                      onChange={(event) => setScheduleEveryValue(Math.max(1, Number(event.target.value) || 1))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Единица</Label>
+                    <Select value={scheduleEveryUnit} onChange={(event) => setScheduleEveryUnit(event.target.value as IntervalUnit)}>
+                      <option value="minutes">минут</option>
+                      <option value="hours">часов</option>
+                      <option value="days">дней</option>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Используйте этот режим только если нужен жёсткий интервал между публикациями. Для обычного автопостинга лучше режим
+                  «Определённое количество публикаций в день».
+                </p>
+              </>
+            )}
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">

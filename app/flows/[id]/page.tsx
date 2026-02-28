@@ -20,6 +20,14 @@ function translateRunStatus(status: string | undefined) {
   return "—";
 }
 
+function describeScheduleMode(cron?: string | null) {
+  if (!cron) return "Публикаций в день";
+  if (/^\*\/\d+\s+\*\s+\*\s+\*\s+\*$/.test(cron)) return "Интервал: каждые N минут";
+  if (/^\d+\s+\*\/\d+\s+\*\s+\*\s+\*$/.test(cron)) return "Интервал: каждые N часов";
+  if (/^\d+\s+\d+\s+\*\/\d+\s+\*\s+\*$/.test(cron)) return "Интервал: каждые N дней";
+  return "Публикаций в день";
+}
+
 type Props = {
   params: Promise<{ id: string }>;
 };
@@ -116,6 +124,10 @@ export default async function FlowOverviewPage({ params }: Props) {
           <div className="rounded-lg border p-3">
             <p className="text-xs uppercase text-muted-foreground">Автопубликация</p>
             <p className="mt-1 text-sm font-medium">{flow.autopublishEnabled ? "Да" : "Нет"}</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs uppercase text-muted-foreground">Режим расписания</p>
+            <p className="mt-1 text-sm font-medium">{describeScheduleMode(flow.schedule?.cron)}</p>
           </div>
         </CardContent>
       </Card>
