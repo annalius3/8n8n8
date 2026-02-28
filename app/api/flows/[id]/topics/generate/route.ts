@@ -9,7 +9,7 @@ type Params = {
 export async function POST(_: Request, { params }: Params) {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "��������� �����������" }, { status: 401 });
+    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
   }
 
   const { id } = await params;
