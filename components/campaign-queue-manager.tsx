@@ -95,7 +95,7 @@ export function CampaignQueueManager({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Queue / Content Pipeline</CardTitle>
+          <CardTitle>Очередь / Конвейер контента</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -105,14 +105,14 @@ export function CampaignQueueManager({
               onClick={() => perform("plan", () => postJson(`/api/flows/${flowId}/queue/plan-schedule`, {}))}
               disabled={loading !== null}
             >
-              Plan schedule
+              Спланировать расписание
             </Button>
             <Button
               type="button"
               onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { queueItemIds: allIds }))}
               disabled={loading !== null || allIds.length === 0}
             >
-              Generate All
+              Сгенерировать всё
             </Button>
             <Button
               type="button"
@@ -127,7 +127,7 @@ export function CampaignQueueManager({
               onClick={() => perform("publish-selected", () => postJson(`/api/flows/${flowId}/queue/publish`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Publish selected
+              Опубликовать выбранные
             </Button>
             <Button
               type="button"
@@ -135,7 +135,7 @@ export function CampaignQueueManager({
               onClick={() => perform("publish-due", () => postJson(`/api/flows/${flowId}/queue/publish`, { dueOnly: true }))}
               disabled={loading !== null}
             >
-              Publish due now
+              Опубликовать запланированные
             </Button>
             <Button
               type="button"
@@ -143,7 +143,7 @@ export function CampaignQueueManager({
               onClick={() => perform("retry", () => postJson(`/api/flows/${flowId}/queue/retry`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Retry failed
+              Повторить failed
             </Button>
             <Button
               type="button"
@@ -151,7 +151,7 @@ export function CampaignQueueManager({
               onClick={() => perform("delete", () => postJson(`/api/flows/${flowId}/queue/delete`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Delete selected
+              Удалить выбранные
             </Button>
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -163,15 +163,15 @@ export function CampaignQueueManager({
           <thead className="bg-muted/40 text-left">
             <tr>
               <th className="p-3"></th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Topic</th>
-              <th className="p-3">Generated title</th>
-              <th className="p-3">Description</th>
-              <th className="p-3">Image</th>
+              <th className="p-3">Статус</th>
+              <th className="p-3">Тема</th>
+              <th className="p-3">Заголовок</th>
+              <th className="p-3">Описание</th>
+              <th className="p-3">Изображение</th>
               <th className="p-3">scheduled_at</th>
               <th className="p-3">published_at</th>
-              <th className="p-3">error</th>
-              <th className="p-3">Logs</th>
+              <th className="p-3">Ошибка</th>
+              <th className="p-3">Логи</th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +199,7 @@ export function CampaignQueueManager({
                   <td className="p-3 text-red-600">{item.error ?? "—"}</td>
                   <td className="p-3">
                     <Button type="button" variant="outline" size="sm" onClick={() => setExpandedItemId(expandedItemId === item.id ? null : item.id)}>
-                      View logs
+                      Показать логи
                     </Button>
                   </td>
                 </tr>

@@ -19,23 +19,36 @@ export default async function FlowOverviewPage({ params }: Props) {
   const user = await requireUser("/flows");
   const { id } = await params;
 
-  const flow = await prisma.flow.findFirst({
-    where: { id, userId: user.id },
-    include: {
-      topicSuggestions: true,
-      queueItems: {
-        orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }],
-        take: 10
-      },
-      runs: {
-        orderBy: { startedAt: "desc" },
-        take: 10,
-        include: {
-          steps: { orderBy: { stepIndex: "asc" } }
+  const [flow, pinterestConnections] = await Promise.all([
+    prisma.flow.findFirst({
+      where: { id, userId: user.id },
+      include: {
+        steps: { orderBy: { orderIndex: "asc" } },
+        topicSuggestions: true,
+        queueItems: {
+          orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }],
+          take: 10
+        },
+        runs: {
+          orderBy: { startedAt: "desc" },
+          take: 10,
+          include: {
+            steps: { orderBy: { stepIndex: "asc" } }
+          }
         }
       }
-    }
-  });
+    }),
+    prisma.connection.findMany({
+      where: {
+        userId: user.id,
+        provider: "pinterest"
+      },
+      select: {
+        name: true
+      },
+      orderBy: { updatedAt: "desc" }
+    })
+  ]);
 
   if (!flow) {
     notFound();
@@ -44,14 +57,15 @@ export default async function FlowOverviewPage({ params }: Props) {
   const lastRun = flow.runs[0];
   const readyCount = flow.queueItems.filter((item) => item.status === "ready").length;
   const publishedCount = flow.queueItems.filter((item) => item.status === "published").length;
+  const publishConfig = (flow.steps.find((step) => step.type === "pinterest_publish")?.configJson ?? {}) as Record<string, unknown>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
         <LinkButton href="/flows" variant="outline">К списку кампаний</LinkButton>
-        <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Topics</LinkButton>
-        <LinkButton href={`/flows/${flow.id}/queue`} variant="outline">Queue</LinkButton>
-        <LinkButton href="/settings" variant="outline">Settings</LinkButton>
+        <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Темы</LinkButton>
+        <LinkButton href={`/flows/${flow.id}/queue`} variant="outline">Очередь</LinkButton>
+        <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
       </div>
 
       <Card>
@@ -60,35 +74,35 @@ export default async function FlowOverviewPage({ params }: Props) {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Seed Topic</p>
+            <p className="text-xs uppercase text-muted-foreground">Исходная тема</p>
             <p className="mt-1 text-sm font-medium">{flow.seedTopic ?? "—"}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Language</p>
+            <p className="text-xs uppercase text-muted-foreground">Язык</p>
             <p className="mt-1 text-sm font-medium">{flow.language}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Posts per day</p>
+            <p className="text-xs uppercase text-muted-foreground">Постов в день</p>
             <p className="mt-1 text-sm font-medium">{flow.postsPerDay}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Status</p>
+            <p className="text-xs uppercase text-muted-foreground">Статус</p>
             <p className="mt-1 text-sm font-medium">{flow.isEnabled ? "Включён" : "Выключен"}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Topics</p>
+            <p className="text-xs uppercase text-muted-foreground">Темы</p>
             <p className="mt-1 text-sm font-medium">{flow.topicSuggestions.length}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Ready</p>
+            <p className="text-xs uppercase text-muted-foreground">Готово</p>
             <p className="mt-1 text-sm font-medium">{readyCount}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Published</p>
+            <p className="text-xs uppercase text-muted-foreground">Опубликовано</p>
             <p className="mt-1 text-sm font-medium">{publishedCount}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Autopublish</p>
+            <p className="text-xs uppercase text-muted-foreground">Автопубликация</p>
             <p className="mt-1 text-sm font-medium">{flow.autopublishEnabled ? "Да" : "Нет"}</p>
           </div>
         </CardContent>
@@ -106,6 +120,9 @@ export default async function FlowOverviewPage({ params }: Props) {
           initialNiche={flow.niche}
           initialAudience={flow.audience}
           initialTone={flow.tone}
+          initialPinterestConnectionName={typeof publishConfig.connection_name === "string" ? publishConfig.connection_name : ""}
+          initialPinterestBoardId={typeof publishConfig.board_id === "string" ? publishConfig.board_id : ""}
+          availablePinterestConnections={pinterestConnections.map((connection) => connection.name)}
         />
 
         <Card>
@@ -160,7 +177,7 @@ export default async function FlowOverviewPage({ params }: Props) {
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">Очередь пока пуста. Перейдите в Topics и добавьте темы в queue.</p>
+            <p className="text-sm text-muted-foreground">Очередь пока пуста. Перейдите в раздел тем и добавьте подходящие темы в очередь.</p>
           )}
         </CardContent>
       </Card>

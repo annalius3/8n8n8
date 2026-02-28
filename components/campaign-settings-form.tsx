@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 
+type BoardItem = {
+  id: string;
+  name: string;
+  privacy?: string;
+};
+
 export function CampaignSettingsForm({
   flowId,
   initialName,
@@ -18,7 +24,10 @@ export function CampaignSettingsForm({
   initialAutopublishEnabled,
   initialNiche,
   initialAudience,
-  initialTone
+  initialTone,
+  initialPinterestConnectionName,
+  initialPinterestBoardId,
+  availablePinterestConnections
 }: {
   flowId: string;
   initialName: string;
@@ -30,6 +39,9 @@ export function CampaignSettingsForm({
   initialNiche?: string | null;
   initialAudience?: string | null;
   initialTone?: string | null;
+  initialPinterestConnectionName?: string;
+  initialPinterestBoardId?: string;
+  availablePinterestConnections: string[];
 }) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
@@ -41,8 +53,37 @@ export function CampaignSettingsForm({
   const [niche, setNiche] = useState(initialNiche ?? "");
   const [audience, setAudience] = useState(initialAudience ?? "");
   const [tone, setTone] = useState(initialTone ?? "");
+  const [pinterestConnectionName, setPinterestConnectionName] = useState(initialPinterestConnectionName ?? "");
+  const [pinterestBoardId, setPinterestBoardId] = useState(initialPinterestBoardId ?? "");
+  const [boards, setBoards] = useState<BoardItem[]>([]);
+  const [boardsLoading, setBoardsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function loadBoards() {
+    if (!pinterestConnectionName.trim()) {
+      setError("Сначала выберите Pinterest-подключение");
+      return;
+    }
+
+    setBoardsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/connections/pinterest/boards?connectionName=${encodeURIComponent(pinterestConnectionName)}`);
+      const data = (await response.json().catch(() => ({}))) as { boards?: BoardItem[]; error?: string };
+      if (!response.ok || !data.boards) {
+        throw new Error(data.error ?? "Не удалось загрузить список досок");
+      }
+
+      setBoards(data.boards);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить список досок");
+      setBoards([]);
+    } finally {
+      setBoardsLoading(false);
+    }
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -62,7 +103,9 @@ export function CampaignSettingsForm({
           autopublishEnabled,
           niche,
           audience,
-          tone
+          tone,
+          pinterestConnectionName,
+          pinterestBoardId
         })
       });
 
@@ -82,7 +125,7 @@ export function CampaignSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Настройки кампании</CardTitle>
+        <CardTitle>Параметры кампании</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -134,6 +177,53 @@ export function CampaignSettingsForm({
               <Input value={tone} onChange={(event) => setTone(event.target.value)} />
             </div>
           </div>
+
+          <div className="space-y-4 rounded-xl border p-4">
+            <div className="space-y-2">
+              <Label>Pinterest-подключение</Label>
+              <Select value={pinterestConnectionName} onChange={(event) => setPinterestConnectionName(event.target.value)}>
+                <option value="">Выберите подключение</option>
+                {availablePinterestConnections.map((connectionName) => (
+                  <option key={connectionName} value={connectionName}>
+                    {connectionName}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-muted-foreground">Если списка нет, сначала сохраните токен на странице Подключения.</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button type="button" variant="outline" onClick={loadBoards} disabled={boardsLoading || !pinterestConnectionName.trim()}>
+                {boardsLoading ? "Загружаю доски..." : "Загрузить доски"}
+              </Button>
+            </div>
+
+            {boards.length > 0 ? (
+              <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                <p className="text-sm font-medium">Доступные доски</p>
+                {boards.map((board) => (
+                  <button
+                    key={board.id}
+                    type="button"
+                    className="block w-full rounded-lg border bg-background px-3 py-2 text-left text-sm"
+                    onClick={() => setPinterestBoardId(board.id)}
+                  >
+                    <div className="font-medium">{board.name}</div>
+                    <div className="text-muted-foreground">
+                      board_id: {board.id}
+                      {board.privacy ? ` · ${board.privacy}` : ""}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <Label>Board ID</Label>
+              <Input value={pinterestBoardId} onChange={(event) => setPinterestBoardId(event.target.value)} placeholder="Например: 1234567890" />
+            </div>
+          </div>
+
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
             Автопубликация включена

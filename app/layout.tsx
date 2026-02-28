@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <nav className="flex items-center gap-2">
                   <LinkButton href="/flows" variant="outline">Потоки</LinkButton>
                   <LinkButton href="/connections" variant="outline">Подключения</LinkButton>
-                  <LinkButton href="/settings" variant="outline">Settings</LinkButton>
+                  <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
                   <LinkButton href="/runs" variant="outline">Запуски</LinkButton>
                   {user ? (
                     <form action="/api/auth/logout" method="post">

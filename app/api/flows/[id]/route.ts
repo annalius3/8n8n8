@@ -21,7 +21,9 @@ const patchSchema = z.object({
   cron: z.string().min(5).optional(),
   timezone: z.string().optional(),
   maxRunsPerDay: z.number().int().positive().optional(),
-  isPaused: z.boolean().optional()
+  isPaused: z.boolean().optional(),
+  pinterestConnectionName: z.string().trim().min(1).optional(),
+  pinterestBoardId: z.string().trim().optional()
 });
 
 export async function GET(_: NextRequest, { params }: Params) {
@@ -54,7 +56,10 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const flow = await prisma.flow.findFirst({
     where: { id, userId: user.id },
-    include: { schedule: true }
+    include: {
+      schedule: true,
+      steps: true
+    }
   });
   if (!flow) return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
 
@@ -91,6 +96,43 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         nextRunAt: computeNextRunAt(cron, timezone)
       }
     });
+  }
+
+  if (data.pinterestConnectionName !== undefined || data.pinterestBoardId !== undefined) {
+    const existingPublishStep = flow.steps.find((step) => step.type === "pinterest_publish");
+    const existingConfig = (existingPublishStep?.configJson ?? {}) as Record<string, unknown>;
+    const nextConfig = {
+      ...existingConfig,
+      connection_name: data.pinterestConnectionName ?? String(existingConfig.connection_name ?? "Основной Pinterest"),
+      board_id: data.pinterestBoardId ?? String(existingConfig.board_id ?? "")
+    };
+
+    if (existingPublishStep) {
+      await prisma.flowStep.update({
+        where: { id: existingPublishStep.id },
+        data: {
+          configJson: nextConfig
+        }
+      });
+    } else {
+      const maxOrderIndex = flow.steps.reduce((max, step) => Math.max(max, step.orderIndex), 0);
+      await prisma.flowStep.create({
+        data: {
+          flowId: flow.id,
+          orderIndex: maxOrderIndex + 1,
+          type: "pinterest_publish",
+          configJson: {
+            connection_name: data.pinterestConnectionName ?? "Основной Pinterest",
+            board_id: data.pinterestBoardId ?? "",
+            title_from: "context.text.title",
+            description_from: "context.text.description",
+            image_url_from: "context.image.image_url",
+            link_url_from: "context.queue.link_url",
+            alt_text_template: "{topic}"
+          }
+        }
+      });
+    }
   }
 
   const updated = await prisma.flow.findUnique({

@@ -36,15 +36,15 @@ export default async function FlowsPage() {
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>Campaigns / Flows</CardTitle>
+            <CardTitle>Кампании</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Здесь создаются кампании от Seed Topic до очереди публикаций, генерации контента и автопостинга.
+              Здесь создаются кампании: от исходной темы до списка тем, очереди контента и автопостинга.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <SchedulerTickButton />
-            <LinkButton href="/settings" variant="outline">Settings</LinkButton>
-            <LinkButton href="/flows/new">Создать campaign</LinkButton>
+            <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
+            <LinkButton href="/flows/new">Создать кампанию</LinkButton>
           </div>
         </CardHeader>
       </Card>
@@ -52,7 +52,7 @@ export default async function FlowsPage() {
       {flows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Пока нет campaign. Создайте первую кампанию через Seed Topic wizard.
+            Пока нет кампаний. Создайте первую кампанию через мастер исходной темы.
           </CardContent>
         </Card>
       ) : null}
@@ -72,34 +72,34 @@ export default async function FlowsPage() {
                     <Link href={`/flows/${flow.id}` as any} className="text-lg font-semibold underline-offset-4 hover:underline">
                       {flow.name}
                     </Link>
-                    <p className="mt-1 text-sm text-muted-foreground">Seed Topic: {flow.seedTopic ?? "—"}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Исходная тема: {flow.seedTopic ?? "—"}</p>
                   </div>
                   {flow.isEnabled ? <Badge>Включён</Badge> : <Badge variant="secondary">Выключен</Badge>}
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <Badge variant="outline">{flow.language}</Badge>
-                  <Badge variant="outline">{flow.postsPerDay} posts/day</Badge>
+                  <Badge variant="outline">{flow.postsPerDay} постов/день</Badge>
                   <Badge variant="outline">{flow.timezone}</Badge>
-                  <Badge variant="outline">start {flow.startTime}</Badge>
-                  {flow.autopublishEnabled ? <Badge>autopublish</Badge> : <Badge variant="secondary">manual publish</Badge>}
+                  <Badge variant="outline">старт {flow.startTime}</Badge>
+                  {flow.autopublishEnabled ? <Badge>автопубликация</Badge> : <Badge variant="secondary">ручная публикация</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Topics</p>
+                    <p className="text-xs uppercase text-muted-foreground">Темы</p>
                     <p className="mt-1 text-sm font-medium">{flow.topicSuggestions.length}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Queue</p>
+                    <p className="text-xs uppercase text-muted-foreground">Очередь</p>
                     <p className="mt-1 text-sm font-medium">{flow.queueItems.length}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Pending / Ready</p>
+                    <p className="text-xs uppercase text-muted-foreground">Ожидают / Готовы</p>
                     <p className="mt-1 text-sm font-medium">{pending} / {ready}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Published</p>
+                    <p className="text-xs uppercase text-muted-foreground">Опубликовано</p>
                     <p className="mt-1 text-sm font-medium">{published}</p>
                   </div>
                 </div>
@@ -111,9 +111,9 @@ export default async function FlowsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <LinkButton href={`/flows/${flow.id}` as any} variant="outline">Overview</LinkButton>
-                  <LinkButton href={`/flows/${flow.id}/topics` as any} variant="outline">Topics</LinkButton>
-                  <LinkButton href={`/flows/${flow.id}/queue` as any} variant="outline">Queue</LinkButton>
+                  <LinkButton href={`/flows/${flow.id}` as any} variant="outline">Обзор</LinkButton>
+                  <LinkButton href={`/flows/${flow.id}/topics` as any} variant="outline">Темы</LinkButton>
+                  <LinkButton href={`/flows/${flow.id}/queue` as any} variant="outline">Очередь</LinkButton>
                 </div>
               </CardContent>
             </Card>

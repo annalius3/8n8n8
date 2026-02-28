@@ -76,7 +76,7 @@ export function FlowWizardForm() {
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Шаг 1. Seed Topic</CardTitle>
+          <CardTitle>Шаг 1. Исходная тема</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
@@ -85,7 +85,7 @@ export function FlowWizardForm() {
               <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Calm Energy Campaign" />
             </div>
             <div className="space-y-2">
-              <Label>Seed Topic</Label>
+              <Label>Исходная тема</Label>
               <Textarea
                 rows={3}
                 value={seedTopic}
@@ -144,7 +144,7 @@ export function FlowWizardForm() {
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Генерирую..." : "Generate Top 50 Topics"}
+              {loading ? "Генерирую..." : "Сгенерировать 50 тем"}
             </Button>
           </form>
         </CardContent>
@@ -156,15 +156,15 @@ export function FlowWizardForm() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">1. Topic generation</p>
+            <p className="font-medium text-foreground">1. Генерация тем</p>
             <p className="mt-1">Создастся кампания, JobRun и шаг `topic_generation` с логами входа и результата.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">2. Review Top 50</p>
+            <p className="font-medium text-foreground">2. Просмотр 50 тем</p>
             <p className="mt-1">Вы перейдёте к списку из 50 тем, сможете искать, отмечать и добавлять выбранные темы в очередь.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">3. Queue pipeline</p>
+            <p className="font-medium text-foreground">3. Очередь контента</p>
             <p className="mt-1">Для элементов очереди будут доступны bulk-генерация текста и изображения, публикация и повтор failed-элементов.</p>
           </div>
         </CardContent>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUserOrNull } from "@/lib/require-authenticated-user";
 import { listPinterestBoards } from "@/lib/integrations/pinterest";
 

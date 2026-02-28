@@ -85,16 +85,16 @@ export function TopicSuggestionsManager({
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Шаг 2. Review Top 50</CardTitle>
+          <CardTitle>Шаг 2. Просмотр 50 тем</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Поиск по темам" />
             <Button type="button" variant="outline" onClick={() => setSelectedIds(filtered.map((item) => item.id))}>
-              Select All
+              Выбрать все
             </Button>
             <Button type="button" variant="outline" onClick={() => setSelectedIds([])}>
-              Deselect All
+              Снять выбор
             </Button>
           </div>
 
@@ -110,7 +110,7 @@ export function TopicSuggestionsManager({
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="button" disabled={loading || selectedIds.length === 0} onClick={addSelectedToQueue}>
-              {loading ? "Добавляю..." : "Add Selected to Queue"}
+              {loading ? "Добавляю..." : "Добавить выбранные в очередь"}
             </Button>
             <span className="text-sm text-muted-foreground">Выбрано: {selectedIds.length}</span>
           </div>
