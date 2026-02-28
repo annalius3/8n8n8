@@ -1,5 +1,7 @@
 import { getServerEnv } from "@/lib/env";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
+import { decryptToken } from "@/lib/crypto";
+import { prisma } from "@/lib/prisma";
 
 export type LeonardoImageOptions = {
   negativePrompt?: string;
@@ -9,6 +11,7 @@ export type LeonardoImageOptions = {
   guidanceScale?: number;
   numImages?: number;
   timeoutSeconds?: number;
+  userId?: string;
 };
 
 export type LeonardoImageResult = {
@@ -31,11 +34,34 @@ type GetGenerationResponse = {
   };
 };
 
-export async function generateLeonardoImage(prompt: string, options: LeonardoImageOptions = {}): Promise<LeonardoImageResult> {
+async function resolveLeonardoApiKey(userId?: string) {
+  if (userId) {
+    const secret = await prisma.connection.findFirst({
+      where: {
+        userId,
+        provider: "leonardo_key"
+      },
+      orderBy: {
+        updatedAt: "desc"
+      }
+    });
+
+    if (secret) {
+      const parsed = JSON.parse(decryptToken(secret.encryptedJson)) as { apiKey?: string };
+      if (parsed.apiKey) {
+        return parsed.apiKey;
+      }
+    }
+  }
+
   const mode = getIntegrationModes().leonardo;
-  const apiKey = mode === "real" ? getServerEnv().LEONARDO_API_KEY : undefined;
+  return mode === "real" ? getServerEnv().LEONARDO_API_KEY : undefined;
+}
+
+export async function generateLeonardoImage(prompt: string, options: LeonardoImageOptions = {}): Promise<LeonardoImageResult> {
+  const apiKey = await resolveLeonardoApiKey(options.userId);
   if (!apiKey) {
-    throw new Error("LEONARDO_API_KEY is not configured");
+    throw new Error("Leonardo API key is not configured");
   }
 
   const createResponse = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", {

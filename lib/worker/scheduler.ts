@@ -1,4 +1,6 @@
+import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { publishQueueItems } from "@/lib/campaigns/service";
 import { computeNextRunAt } from "@/lib/worker/cron";
 import { runFlowNow } from "@/lib/worker/runner";
 
@@ -68,9 +70,38 @@ export async function runSchedulerTick() {
     started += 1;
   }
 
+  const dueCampaigns = await prisma.flow.findMany({
+    where: {
+      isEnabled: true,
+      autopublishEnabled: true,
+      queueItems: {
+        some: {
+          status: QueueStatus.ready,
+          publishedAt: null,
+          scheduledAt: { lte: now }
+        }
+      }
+    },
+    select: {
+      id: true,
+      userId: true
+    }
+  });
+
+  let publishedRuns = 0;
+  for (const campaign of dueCampaigns) {
+    const result = await publishQueueItems({
+      flowId: campaign.id,
+      userId: campaign.userId,
+      dueOnly: true
+    });
+    publishedRuns += result.processed;
+  }
+
   return {
     checkedAt: now.toISOString(),
     started,
-    due: due.length
+    due: due.length,
+    publishedRuns
   };
 }

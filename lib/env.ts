@@ -17,6 +17,7 @@ const requiredEnvSchema = z.object({
 const optionalEnvSchema = z.object({
   LEONARDO_API_KEY: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
+  DIRECT_URL: z.string().min(1).optional(),
   R2_ENDPOINT: z.string().url().optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),
   R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),

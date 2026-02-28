@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,42 +10,19 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export function FlowWizardForm() {
-  const [name, setName] = useState("RSS -> Текст -> Leonardo -> Pinterest");
-  const [sourceType, setSourceType] = useState<"rss" | "queue">("rss");
-  const [rssUrl, setRssUrl] = useState("https://hnrss.org/frontpage");
-  const [cron, setCron] = useState("0 */6 * * *");
-  const [timezone, setTimezone] = useState("Europe/Kiev");
-  const [maxRunsPerDay, setMaxRunsPerDay] = useState(10);
-  const [textTemplate, setTextTemplate] = useState("Read more: {link_url}\n\n{summary}\n\n{hashtags}");
-  const [imagePromptTemplate, setImagePromptTemplate] = useState(
-    "Minimal cozy aesthetic photo representing: {title}. Soft light, high quality, no text, no watermark."
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  const preview = useMemo(() => {
-    const sample = {
-      title: "Morning routine ideas for calm energy",
-      summary: "A short article about building a quiet morning routine that supports focus and wellbeing.",
-      link_url: sourceType === "rss" ? rssUrl : "https://example.com/queue-item",
-      hashtags: "#energy #healing #mindfulness"
-    };
-
-    return {
-      pinTitle: `${sample.title} - quick guide`,
-      pinDescription: textTemplate
-        .replaceAll("{title}", sample.title)
-        .replaceAll("{summary}", sample.summary)
-        .replaceAll("{link_url}", sample.link_url)
-        .replaceAll("{hashtags}", sample.hashtags),
-      imagePrompt: imagePromptTemplate
-        .replaceAll("{title}", sample.title)
-        .replaceAll("{summary}", sample.summary)
-        .replaceAll("{link_url}", sample.link_url)
-        .replaceAll("{image_prompt}", "soft healing lifestyle scene")
-    };
-  }, [imagePromptTemplate, rssUrl, sourceType, textTemplate]);
+  const [seedTopic, setSeedTopic] = useState("");
+  const [name, setName] = useState("");
+  const [language, setLanguage] = useState<"EN" | "RU" | "UA">("EN");
+  const [niche, setNiche] = useState("");
+  const [audience, setAudience] = useState("");
+  const [tone, setTone] = useState("");
+  const [postsPerDay, setPostsPerDay] = useState(3);
+  const [timezone, setTimezone] = useState("Europe/Kiev");
+  const [startTime, setStartTime] = useState("09:00");
+  const [autopublishEnabled, setAutopublishEnabled] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -53,41 +30,40 @@ export function FlowWizardForm() {
     setError(null);
 
     try {
-      const response = await fetch("/api/flows", {
+      const response = await fetch("/api/flows/generate-topics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          sourceType,
-          rssUrl,
-          cron,
+          seedTopic,
+          language,
+          niche,
+          audience,
+          tone,
+          postsPerDay,
           timezone,
-          maxRunsPerDay,
-          textTemplate,
-          imagePromptTemplate
+          startTime,
+          autopublishEnabled
         })
       });
 
-      const created = (await response.json().catch(() => ({}))) as {
-        id?: string;
+      const data = (await response.json().catch(() => ({}))) as {
+        flowId?: string;
         error?: string | { fieldErrors?: Record<string, string[]> };
       };
 
-      if (!response.ok || !created.id) {
+      if (!response.ok || !data.flowId) {
         const message =
-          typeof created.error === "string"
-            ? created.error
-            : created.error?.fieldErrors
-              ? Object.values(created.error.fieldErrors)
-                  .flat()
-                  .filter(Boolean)
-                  .join(", ")
-              : "Не удалось создать поток";
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.fieldErrors
+              ? Object.values(data.error.fieldErrors).flat().filter(Boolean).join(", ")
+              : "Не удалось сгенерировать 50 тем";
         setError(message);
         return;
       }
 
-      router.push(`/flows/${created.id}`);
+      router.push(`/flows/${data.flowId}/topics`);
       router.refresh();
     } catch {
       setError("Не удалось связаться с сервером");
@@ -97,61 +73,82 @@ export function FlowWizardForm() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Создание потока</CardTitle>
+          <CardTitle>Шаг 1. Seed Topic</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label>Название потока</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              <Label>Название кампании</Label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Calm Energy Campaign" />
             </div>
             <div className="space-y-2">
-              <Label>Тип источника</Label>
-              <Select value={sourceType} onChange={(e) => setSourceType(e.target.value as "rss" | "queue")}>
-                <option value="rss">RSS</option>
-                <option value="queue">Очередь (БД)</option>
-              </Select>
+              <Label>Seed Topic</Label>
+              <Textarea
+                rows={3}
+                value={seedTopic}
+                onChange={(event) => setSeedTopic(event.target.value)}
+                placeholder="Например: morning routine for calm energy"
+                required
+              />
             </div>
-            {sourceType === "rss" ? (
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>RSS URL</Label>
-                <Input value={rssUrl} onChange={(e) => setRssUrl(e.target.value)} required />
-              </div>
-            ) : null}
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Cron</Label>
-                <Input value={cron} onChange={(e) => setCron(e.target.value)} required />
+                <Label>Язык</Label>
+                <Select value={language} onChange={(event) => setLanguage(event.target.value as "EN" | "RU" | "UA")}>
+                  <option value="EN">EN</option>
+                  <option value="RU">RU</option>
+                  <option value="UA">UA</option>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Часовой пояс</Label>
-                <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Макс. запусков в день</Label>
+                <Label>Постов в день</Label>
                 <Input
                   type="number"
-                  value={maxRunsPerDay}
                   min={1}
-                  onChange={(e) => setMaxRunsPerDay(Number(e.target.value) || 1)}
-                  required
+                  max={50}
+                  value={postsPerDay}
+                  onChange={(event) => setPostsPerDay(Math.max(1, Math.min(50, Number(event.target.value) || 1)))}
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Шаблон описания поста</Label>
-              <Textarea rows={4} value={textTemplate} onChange={(e) => setTextTemplate(e.target.value)} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Niche / angle</Label>
+                <Input value={niche} onChange={(event) => setNiche(event.target.value)} placeholder="healing, wellness, finance" />
+              </div>
+              <div className="space-y-2">
+                <Label>Audience</Label>
+                <Input value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="new moms, founders, students" />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Шаблон prompt для Leonardo</Label>
-              <Textarea rows={3} value={imagePromptTemplate} onChange={(e) => setImagePromptTemplate(e.target.value)} />
+              <Label>Tone</Label>
+              <Input value={tone} onChange={(event) => setTone(event.target.value)} placeholder="clear, calm, expert, warm" />
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Timezone</Label>
+                <Input value={timezone} onChange={(event) => setTimezone(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Start time</Label>
+                <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={autopublishEnabled}
+                onChange={(event) => setAutopublishEnabled(event.target.checked)}
+              />
+              Включить автопубликацию по расписанию
+            </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            <Button type="submit" disabled={loading}>
-              {loading ? "Создание..." : "Создать поток"}
+            <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
+              {loading ? "Генерирую..." : "Generate Top 50 Topics"}
             </Button>
           </form>
         </CardContent>
@@ -159,29 +156,20 @@ export function FlowWizardForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Live Preview</CardTitle>
+          <CardTitle>Что произойдёт дальше</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Источник</p>
-            <p className="mt-1 text-sm font-medium">{sourceType === "rss" ? `RSS: ${rssUrl}` : "Очередь из базы данных"}</p>
+            <p className="font-medium text-foreground">1. Topic generation</p>
+            <p className="mt-1">Создастся campaign, JobRun и шаг `topic_generation` с логами входа и результата.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Будущий заголовок</p>
-            <p className="mt-1 text-sm font-medium">{preview.pinTitle}</p>
+            <p className="font-medium text-foreground">2. Review Top 50</p>
+            <p className="mt-1">Вы перейдёте к списку из 50 тем, сможете искать, отмечать и добавлять выбранные темы в очередь.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Будущее описание</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{preview.pinDescription}</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Prompt для картинки</p>
-            <p className="mt-1 text-sm text-muted-foreground">{preview.imagePrompt}</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Расписание</p>
-            <p className="mt-1 text-sm font-medium">{cron}</p>
-            <p className="text-xs text-muted-foreground">{timezone} · до {maxRunsPerDay} запусков в день</p>
+            <p className="font-medium text-foreground">3. Queue pipeline</p>
+            <p className="mt-1">Для элементов очереди будут доступны bulk-генерация текста и изображения, публикация и retry failed.</p>
           </div>
         </CardContent>
       </Card>

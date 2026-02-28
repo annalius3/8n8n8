@@ -9,6 +9,9 @@ datasource db {
 
 enum QueueStatus {
   pending
+  generating
+  ready
+  publishing
   processing
   published
   failed
@@ -54,16 +57,27 @@ model Connection {
 }
 
 model Flow {
-  id        String       @id @default(cuid())
-  userId    String       @map("user_id")
-  name      String
-  isEnabled Boolean      @default(true) @map("is_enabled")
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  steps     FlowStep[]
-  schedule  FlowSchedule?
-  runs      JobRun[]
+  id                 String            @id @default(cuid())
+  userId             String            @map("user_id")
+  name               String
+  isEnabled          Boolean           @default(true) @map("is_enabled")
+  seedTopic          String?           @map("seed_topic")
+  language           String            @default("EN")
+  niche              String?
+  audience           String?
+  tone               String?
+  postsPerDay        Int               @default(3) @map("posts_per_day")
+  timezone           String            @default("Europe/Kiev")
+  startTime          String            @default("09:00") @map("start_time")
+  autopublishEnabled Boolean           @default(false) @map("autopublish_enabled")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps              FlowStep[]
+  schedule           FlowSchedule?
+  runs               JobRun[]
+  topicSuggestions   TopicSuggestion[]
+  queueItems         PostQueueItem[]
 
   @@map("flows")
 }
@@ -98,22 +112,42 @@ model FlowSchedule {
   @@map("flow_schedules")
 }
 
+model TopicSuggestion {
+  id         String   @id @default(cuid())
+  flowId      String   @map("flow_id")
+  topicText   String   @map("topic_text")
+  selected    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  flow        Flow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+
+  @@index([flowId, createdAt])
+  @@map("topic_suggestions")
+}
+
 model PostQueueItem {
   id          String      @id @default(cuid())
   userId      String      @map("user_id")
+  flowId       String?     @map("flow_id")
   status      QueueStatus @default(pending)
+  topicText    String?     @map("topic_text")
   lockedAt    DateTime?   @map("locked_at")
+  scheduledAt  DateTime?   @map("scheduled_at")
   publishedAt DateTime?   @map("published_at")
   error       String?
   title       String
   body        String
   linkUrl     String?     @map("link_url")
   imagePrompt String?     @map("image_prompt")
+  imageUrl     String?     @map("image_url")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flow        Flow?       @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  runs        JobRun[]
 
   @@index([status, lockedAt])
+  @@index([flowId, status, scheduledAt])
   @@map("post_queue_items")
 }
 
@@ -132,15 +166,18 @@ model PublishedItem {
 model JobRun {
   id          String      @id @default(cuid())
   flowId       String      @map("flow_id")
+  queueItemId  String?     @map("queue_item_id")
   status       RunStatus   @default(running)
   startedAt    DateTime    @default(now()) @map("started_at")
   finishedAt   DateTime?   @map("finished_at")
   error        String?
   contextJson  Json?       @map("context_json")
   flow         Flow        @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  queueItem    PostQueueItem? @relation(fields: [queueItemId], references: [id], onDelete: SetNull)
   steps        JobRunStep[]
 
   @@index([flowId, startedAt])
+  @@index([queueItemId, startedAt])
   @@map("job_runs")
 }
 

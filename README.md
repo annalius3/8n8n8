@@ -1,6 +1,6 @@
-﻿# Автопостинг Flow
+﻿# Autoposting Flow
 
-MVP-сервис потокового автопостинга в стиле упрощённого n8n.
+Сервис для кампаний автопостинга: от Seed Topic до очереди публикаций, генерации текста/изображений и автопостинга.
 
 ## Стек
 - Next.js App Router + TypeScript
@@ -8,44 +8,36 @@ MVP-сервис потокового автопостинга в стиле у�
 - shadcn/ui + Tailwind
 - Авторизация: magic link
 
-## Сущности Prisma
+## Prisma-модели
 - User
 - Connection (`provider`, `name`, `encrypted_json`)
-- Flow
+- Flow (используется как Campaign)
+- TopicSuggestion
 - FlowStep
-- FlowSchedule (`max_runs_per_day`)
+- FlowSchedule
 - PostQueueItem
 - PublishedItem
 - JobRun
 - JobRunStep
 
-## Возможности
-- `/flows` — список потоков, запуск вручную, включение и выключение
-- `/flows/new` — мастер создания потока
-- `/flows/[id]` — редактор шагов списком, без drag&drop
-- `/runs` — история запусков и шагов
-- Планировщик проверяет `flow_schedules.next_run_at <= now` и запускает подходящие потоки
-- Runner выполняет шаги последовательно и хранит единый JSON `context`
-- Дедупликация RSS по `published_items`
-- Блокировка элементов очереди через `locked_at`
-- Healthcheck `GET /api/health` для проверки env и базы данных
+## Основные страницы
+- `/flows` — список campaign/flow
+- `/flows/new` — wizard: Seed Topic -> Generate Top 50 Topics
+- `/flows/[id]` — overview кампании + campaign settings
+- `/flows/[id]/topics` — review 50 тем, поиск, Select All / Deselect All, Add Selected to Queue
+- `/flows/[id]/queue` — queue pipeline, bulk generation, bulk publish, retry failed, delete selected, per-item logs
+- `/settings` — Leonardo key per user
+- `/runs` — глобальные логи запусков
 
-## Поддерживаемые типы шагов
-- `schedule`
-- `rss`
-- `queue`
-- `template`
-- `ai_image_leonardo`
-- `pinterest_publish`
-- `delay`
-
-Поддерживаются и старые алиасы: `schedule_trigger`, `source_rss`, `source_queue`, `ai_text`, `ai_image`, `publish_pinterest`, `wait`, `sleep`.
-
-## Безопасность
-- Секреты подключений шифруются через AES-256-GCM с `ENCRYPTION_KEY`
-- Токены не отдаются на клиент
-- `POST /api/scheduler/tick` защищён через `SCHEDULER_TOKEN` или авторизованного пользователя
-- Серверные env проходят централизованную валидацию
+## Новый сценарий работы
+1. На `/flows/new` задайте `Seed Topic`, язык, niche, audience, tone и schedule settings.
+2. Нажмите `Generate Top 50 Topics`.
+3. На `/flows/[id]/topics` выберите темы и нажмите `Add Selected to Queue`.
+4. На `/flows/[id]/queue`:
+- `Generate text + image` или `Generate All`
+- `Publish selected` или `Publish due now`
+- `Plan schedule`, `Retry failed`, `Delete selected`
+5. Для каждого шага создаются `JobRun` и `JobRunStep`.
 
 ## Переменные окружения
 Обязательные:
@@ -53,11 +45,16 @@ MVP-сервис потокового автопостинга в стиле у�
 - `AUTH_SECRET`
 - `ENCRYPTION_KEY`
 - `SCHEDULER_TOKEN`
+- `OPENAI_API_KEY`
 
-Опциональные интеграции:
-- `LEONARDO_API_KEY` — для шага `ai_image_leonardo`
-- `OPENAI_API_KEY` — если используете `provider=openai` в шаге `template`
-- `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` — если хотите складывать изображения Leonardo в Cloudflare R2
+Для изображений:
+- `LEONARDO_API_KEY`
+
+Рекомендуется для production migrations:
+- `DIRECT_URL`
+
+Опционально:
+- `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`
 - `NEXT_PUBLIC_BASE_URL`
 
 ## Локальный запуск
@@ -87,45 +84,18 @@ npx prisma db seed
 npm run dev
 ```
 
-5. Открыть `http://localhost:3000/login`, ввести `owner@autoposting.local` или любой свой email и перейти по сгенерированной magic link.
+5. Открыть `http://localhost:3000/login`, ввести email и перейти по сгенерированной magic link.
 
-## Продакшен-чеклист
-1. В Vercel выставить `Framework Preset = Next.js`
-2. Оставить `Output Directory` пустым
-3. Добавить обязательные env в Vercel
-4. Добавить `DATABASE_URL` в GitHub Secrets для workflow `Prisma Migrate Deploy`
-5. Добавить `APP_BASE_URL` и `SCHEDULER_TOKEN` в GitHub Secrets для scheduler workflow
-6. После деплоя проверить `GET /api/health`
-
-## GitHub Actions
-- `.github/workflows/build.yml` — сборка на каждый push и pull request
-- `.github/workflows/prisma-migrate.yml` — автоматический `prisma migrate deploy` на `main`
-- `.github/workflows/scheduler-tick.yml` — внешний cron для Vercel
-
-## Бесплатный продакшен: Vercel + GitHub Actions
-Если компьютер выключен, автоматизация может работать так:
-
-1. Деплой приложения в Vercel
-2. Добавление env-переменных в Vercel
-3. Добавление secrets в GitHub:
-- `APP_BASE_URL` = `https://ваш-проект.vercel.app`
-- `SCHEDULER_TOKEN` = тот же токен, что в Vercel
-- `DATABASE_URL` = production строка подключения к Postgres
-4. Включение workflow `.github/workflows/scheduler-tick.yml`
-
-Workflow вызывает:
-- `POST {APP_BASE_URL}/api/scheduler/tick`
-- заголовок `x-scheduler-token: {SCHEDULER_TOKEN}`
-
-## Ручной запуск планировщика
-```bash
-curl -X POST https://ваш-домен.vercel.app/api/scheduler/tick \
-  -H "x-scheduler-token: ВАШ_ТОКЕН"
-```
+## Production
+- В Vercel: `Framework Preset = Next.js`
+- `Root Directory` пустой
+- `Output Directory` пустой
+- `Build Command` можно оставить стандартным или `npm run build`
+- После деплоя проверить `GET /api/health`
 
 ## Проверка работы
-1. Откройте `/flows` и нажмите «Запустить» на демо-потоке
-2. Откройте `/runs` и проверьте `job_runs` и `job_run_steps`
-3. Вызовите `scheduler/tick` вручную и убедитесь, что появились новые запуски
-4. Откройте `/api/health` и убедитесь, что `ok: true`
-
+1. Откройте `/flows/new` и создайте кампанию через `Generate Top 50 Topics`
+2. Перейдите в `/flows/[id]/topics` и добавьте выбранные темы в queue
+3. Откройте `/flows/[id]/queue` и запустите `Generate All`
+4. Проверьте `/runs` и пер-item logs в queue
+5. Вызовите `scheduler/tick` вручную, если включён autopublish
