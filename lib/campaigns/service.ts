@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { generateTopicSuggestions, generateQueueItemContent } from "@/lib/campaigns/openai";
 import { computeScheduledDates, computeScheduledDatesFromIntervalCron } from "@/lib/campaigns/schedule";
-import { generateLeonardoImage } from "@/lib/integrations/leonardo";
+import { deleteLeonardoGeneration, generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
 import { applyTemplate } from "@/lib/worker/template";
 
@@ -430,6 +430,7 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
         },
         outputJson: {
           prompt,
+          generation_id: image.generationId,
           image_url: image.imageUrl
         }
       });
@@ -440,6 +441,7 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
           title: text.title,
           body: text.description,
           imageUrl: image.imageUrl,
+          imageGenerationId: image.generationId,
           imagePrompt: prompt,
           status: QueueStatus.ready,
           lockedAt: null,
@@ -552,15 +554,47 @@ export async function publishQueueItems(input: {
         }
       });
 
+      let cleanupError: string | null = null;
+      if (item.imageGenerationId) {
+        try {
+          await deleteLeonardoGeneration(item.imageGenerationId, input.userId);
+          await createRunStep({
+            runId: run.id,
+            stepIndex: 1,
+            stepType: "image_cleanup",
+            status: StepExecStatus.success,
+            inputJson: {
+              generation_id: item.imageGenerationId
+            },
+            outputJson: {
+              deleted: true
+            }
+          });
+        } catch (error) {
+          cleanupError = error instanceof Error ? error.message : "Leonardo cleanup failed";
+          await createRunStep({
+            runId: run.id,
+            stepIndex: 1,
+            stepType: "image_cleanup",
+            status: StepExecStatus.failed,
+            error: cleanupError,
+            inputJson: {
+              generation_id: item.imageGenerationId
+            }
+          });
+        }
+      }
+
       await prisma.postQueueItem.update({
         where: { id: item.id },
         data: {
           status: QueueStatus.published,
           publishedAt: new Date(),
-          imageUrl: null,
-          imagePrompt: null,
+          imageUrl: cleanupError ? item.imageUrl : null,
+          imagePrompt: cleanupError ? item.imagePrompt : null,
+          imageGenerationId: cleanupError ? item.imageGenerationId : null,
           lockedAt: null,
-          error: null
+          error: cleanupError
         }
       });
 
@@ -571,6 +605,11 @@ export async function publishQueueItems(input: {
           publish: {
             post_id: publishResult.postId,
             mode: publishResult.mode
+          },
+          cleanup: {
+            generation_id: item.imageGenerationId,
+            deleted: cleanupError ? false : Boolean(item.imageGenerationId),
+            error: cleanupError
           }
         }
       });

@@ -139,6 +139,7 @@ model PostQueueItem {
   body        String
   linkUrl     String?     @map("link_url")
   imagePrompt String?     @map("image_prompt")
+  imageGenerationId String? @map("image_generation_id")
   imageUrl     String?     @map("image_url")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")

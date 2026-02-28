@@ -16,6 +16,7 @@ export type LeonardoImageOptions = {
 
 export type LeonardoImageResult = {
   imageUrl: string;
+  generationId: string;
   mode: "real";
 };
 
@@ -113,7 +114,7 @@ export async function generateLeonardoImage(prompt: string, options: LeonardoIma
     const status = pollData.generations_by_pk?.status?.toUpperCase();
 
     if (imageUrl) {
-      return { imageUrl, mode: "real" };
+      return { imageUrl, generationId, mode: "real" };
     }
 
     if (status === "FAILED") {
@@ -122,4 +123,23 @@ export async function generateLeonardoImage(prompt: string, options: LeonardoIma
   }
 
   throw new Error("Leonardo generation timed out");
+}
+
+export async function deleteLeonardoGeneration(generationId: string, userId?: string) {
+  const apiKey = await resolveLeonardoApiKey(userId);
+  if (!apiKey) {
+    throw new Error("Leonardo API key is not configured");
+  }
+
+  const response = await fetch(`https://cloud.leonardo.ai/api/rest/v1/generations/${generationId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${apiKey}`
+    }
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`Leonardo delete failed: ${response.status} ${body.slice(0, 300)}`);
+  }
 }
