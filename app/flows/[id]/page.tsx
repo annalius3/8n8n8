@@ -11,6 +11,13 @@ function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
 }
 
+function translateRunStatus(status: string | undefined) {
+  if (status === "success") return "Успешно";
+  if (status === "failed") return "Ошибка";
+  if (status === "running") return "Выполняется";
+  return "—";
+}
+
 type Props = {
   params: Promise<{ id: string }>;
 };
@@ -137,7 +144,7 @@ export default async function FlowOverviewPage({ params }: Props) {
                 Статус:{" "}
                 {lastRun ? (
                   <Badge variant={lastRun.status === "failed" ? "destructive" : lastRun.status === "running" ? "secondary" : "default"}>
-                    {lastRun.status}
+                    {translateRunStatus(lastRun.status)}
                   </Badge>
                 ) : (
                   "—"

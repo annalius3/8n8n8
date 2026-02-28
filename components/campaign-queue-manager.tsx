@@ -7,6 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 
+function translateQueueStatus(status: string) {
+  if (status === "pending") return "Ожидает";
+  if (status === "generating") return "Генерируется";
+  if (status === "ready") return "Готово";
+  if (status === "publishing") return "Публикуется";
+  if (status === "published") return "Опубликовано";
+  if (status === "failed") return "Ошибка";
+  if (status === "processing") return "Обрабатывается";
+  return status;
+}
+
 type QueueItem = {
   id: string;
   status: string;
@@ -168,8 +179,8 @@ export function CampaignQueueManager({
               <th className="p-3">Заголовок</th>
               <th className="p-3">Описание</th>
               <th className="p-3">Изображение</th>
-              <th className="p-3">scheduled_at</th>
-              <th className="p-3">published_at</th>
+              <th className="p-3">Запланировано</th>
+              <th className="p-3">Опубликовано</th>
               <th className="p-3">Ошибка</th>
               <th className="p-3">Логи</th>
             </tr>
@@ -183,7 +194,7 @@ export function CampaignQueueManager({
                   </td>
                   <td className="p-3">
                     <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : "outline"}>
-                      {item.status}
+                      {translateQueueStatus(item.status)}
                     </Badge>
                   </td>
                   <td className="p-3">{item.topicText ?? "—"}</td>

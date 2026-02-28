@@ -12,6 +12,13 @@ function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
 }
 
+function translateRunStatus(status: string | undefined) {
+  if (status === "success") return "Успешно";
+  if (status === "failed") return "Ошибка";
+  if (status === "running") return "Выполняется";
+  return "ещё не было запусков";
+}
+
 export default async function FlowsPage() {
   const user = await requireUser("/flows");
   const [baseModes, hasPinterestConnection] = await Promise.all([
@@ -122,7 +129,7 @@ export default async function FlowsPage() {
 
                 <div className="rounded-lg border p-3 text-sm text-muted-foreground">
                   <p>Последний запуск: {formatDate(lastRun?.startedAt)}</p>
-                  <p>Статус: {lastRun?.status ?? "ещё не было запусков"}</p>
+                  <p>Статус: {translateRunStatus(lastRun?.status)}</p>
                   {lastRun?.error ? <p className="mt-2 text-red-600">{lastRun.error}</p> : null}
                 </div>
 

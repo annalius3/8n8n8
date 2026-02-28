@@ -165,15 +165,15 @@ export function CampaignSettingsForm({
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Niche</Label>
+              <Label>Ниша</Label>
               <Input value={niche} onChange={(event) => setNiche(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Audience</Label>
+              <Label>Аудитория</Label>
               <Input value={audience} onChange={(event) => setAudience(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Tone</Label>
+              <Label>Тон</Label>
               <Input value={tone} onChange={(event) => setTone(event.target.value)} />
             </div>
           </div>
