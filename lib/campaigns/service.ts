@@ -557,6 +557,8 @@ export async function publishQueueItems(input: {
         data: {
           status: QueueStatus.published,
           publishedAt: new Date(),
+          imageUrl: null,
+          imagePrompt: null,
           lockedAt: null,
           error: null
         }
