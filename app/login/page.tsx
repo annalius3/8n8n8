@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [magicLink, setMagicLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const nextPath = searchParams.get("next") || "/flows";
+  const callbackError = searchParams.get("error");
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -43,6 +44,11 @@ export default function LoginPage() {
         <p className="text-sm text-muted-foreground">
           Для демо-режима вход не обязателен. Эта страница нужна только если вы хотите проверить упрощённую авторизацию.
         </p>
+        {callbackError === "auth_setup" ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Не удалось завершить вход. Скорее всего, production-база ещё не готова к записи через Prisma.
+          </div>
+        ) : null}
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label>Email</Label>

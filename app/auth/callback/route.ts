@@ -14,17 +14,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const user = await prisma.user.upsert({
-    where: { email: payload.email },
-    update: {},
-    create: {
-      email: payload.email,
-      name: payload.email.split("@")[0]
-    }
-  });
+  try {
+    const user = await prisma.user.upsert({
+      where: { email: payload.email },
+      update: {},
+      create: {
+        email: payload.email,
+        name: payload.email.split("@")[0]
+      }
+    });
 
-  const redirectTarget = nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/flows";
-  const response = NextResponse.redirect(new URL(redirectTarget, request.url));
-  setAuthCookie(response, user.id);
-  return response;
+    const redirectTarget = nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/flows";
+    const response = NextResponse.redirect(new URL(redirectTarget, request.url));
+    setAuthCookie(response, user.id);
+    return response;
+  } catch {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("error", "auth_setup");
+    if (nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")) {
+      loginUrl.searchParams.set("next", nextPath);
+    }
+
+    return NextResponse.redirect(loginUrl);
+  }
 }

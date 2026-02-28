@@ -10,7 +10,7 @@ export async function GET() {
   let databaseError: string | null = null;
 
   try {
-    await prisma.$queryRawUnsafe("SELECT 1");
+    await prisma.user.count();
     databaseOk = true;
   } catch (error) {
     databaseError = error instanceof Error ? error.message : "Database check failed";
