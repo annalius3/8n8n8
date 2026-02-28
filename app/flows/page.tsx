@@ -30,7 +30,10 @@ export default async function FlowsPage() {
   };
 
   const flows = await prisma.flow.findMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      id: { not: "seed-flow-rss-pinterest" }
+    },
     include: {
       topicSuggestions: true,
       queueItems: true,
