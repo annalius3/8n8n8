@@ -62,7 +62,7 @@ export default async function FlowOverviewPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        <LinkButton href="/flows" variant="outline">К списку кампаний</LinkButton>
+        <LinkButton href="/flows" variant="outline">К списку потоков</LinkButton>
         <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Темы</LinkButton>
         <LinkButton href={`/flows/${flow.id}/queue`} variant="outline">Очередь</LinkButton>
         <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
@@ -184,3 +184,4 @@ export default async function FlowOverviewPage({ params }: Props) {
     </div>
   );
 }
+

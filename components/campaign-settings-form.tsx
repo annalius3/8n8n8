@@ -111,12 +111,12 @@ export function CampaignSettingsForm({
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось обновить настройки кампании");
+        throw new Error(data.error ?? "Не удалось обновить настройки потока");
       }
 
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось обновить настройки кампании");
+      setError(requestError instanceof Error ? requestError.message : "Не удалось обновить настройки потока");
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ export function CampaignSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Параметры кампании</CardTitle>
+        <CardTitle>Параметры потока</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>

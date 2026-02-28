@@ -49,15 +49,15 @@ export default async function FlowsPage() {
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>Кампании</CardTitle>
+            <CardTitle>Потоки автопостинга</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Здесь создаются кампании: от исходной темы до списка тем, очереди контента и автопостинга.
+              Здесь создаются потоки: от исходной темы до списка тем, очереди контента и автопостинга.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <SchedulerTickButton />
             <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
-            <LinkButton href="/flows/new">Создать кампанию</LinkButton>
+            <LinkButton href="/flows/new">Создать поток</LinkButton>
           </div>
         </CardHeader>
       </Card>
@@ -65,7 +65,7 @@ export default async function FlowsPage() {
       {flows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Пока нет кампаний. Создайте первую кампанию через мастер исходной темы.
+            Пока нет потоков. Создайте первый поток через мастер исходной темы.
           </CardContent>
         </Card>
       ) : null}

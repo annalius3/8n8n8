@@ -81,7 +81,7 @@ export function FlowWizardForm() {
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label>Название кампании</Label>
+              <Label>Название потока</Label>
               <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Calm Energy Campaign" />
             </div>
             <div className="space-y-2">
@@ -157,7 +157,7 @@ export function FlowWizardForm() {
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
             <p className="font-medium text-foreground">1. Генерация тем</p>
-            <p className="mt-1">Создастся кампания, JobRun и шаг `topic_generation` с логами входа и результата.</p>
+            <p className="mt-1">Создастся поток, JobRun и шаг `topic_generation` с логами входа и результата.</p>
           </div>
           <div className="rounded-lg border p-3">
             <p className="font-medium text-foreground">2. Просмотр 50 тем</p>
