@@ -131,6 +131,9 @@ export function CampaignSettingsForm({
       }
 
       setBoards(data.boards);
+      if (data.boards.length === 1) {
+        setPinterestBoardId(data.boards[0].id);
+      }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить список досок");
       setBoards([]);

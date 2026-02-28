@@ -99,9 +99,19 @@ export async function publishToPinterest(payload: PinterestPublishPayload): Prom
   }
 
   const secret = parsePinterestSecret(connection.encryptedJson);
+  let boardId = payload.boardId;
 
-  if (!payload.boardId) {
-    throw new Error("Pinterest connection exists, but board_id is not configured");
+  if (!boardId) {
+    const boards = await listPinterestBoards({
+      userId: payload.userId,
+      connectionName: payload.connectionName
+    });
+
+    if (boards.length === 1) {
+      boardId = boards[0].id;
+    } else {
+      throw new Error("Pinterest connection exists, but board_id is not configured");
+    }
   }
 
   if (!payload.imageUrl) {
@@ -111,7 +121,7 @@ export async function publishToPinterest(payload: PinterestPublishPayload): Prom
   const data = await pinterestFetch<{ id?: string }>("/pins", secret.accessToken, {
     method: "POST",
     body: JSON.stringify({
-      board_id: payload.boardId,
+      board_id: boardId,
       title: payload.title,
       description: payload.description,
       link: payload.linkUrl,

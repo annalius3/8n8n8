@@ -200,19 +200,19 @@ export function CampaignQueueManager({
         </CardContent>
       </Card>
 
-      <div className="overflow-hidden rounded-xl border">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-xl border">
+        <table className="w-full table-fixed text-sm">
           <thead className="bg-muted/40 text-left">
             <tr>
               <th className="p-3"></th>
-              <th className="p-3">Статус</th>
-              <th className="p-3">Тема</th>
-              <th className="p-3">Заголовок</th>
-              <th className="p-3">Описание</th>
-              <th className="p-3">Изображение</th>
-              <th className="p-3">Запланировано</th>
-              <th className="p-3">Опубликовано</th>
-              <th className="p-3">Ошибка</th>
+              <th className="w-28 p-3">Статус</th>
+              <th className="w-48 p-3">Тема</th>
+              <th className="w-48 p-3">Заголовок</th>
+              <th className="w-[340px] p-3">Описание</th>
+              <th className="w-28 p-3">Изображение</th>
+              <th className="w-40 p-3">Запланировано</th>
+              <th className="w-40 p-3">Опубликовано</th>
+              <th className="w-52 p-3">Ошибка</th>
               <th className="p-3">Логи</th>
             </tr>
           </thead>
@@ -231,14 +231,18 @@ export function CampaignQueueManager({
                   <td className="p-3">{item.topicText ?? "—"}</td>
                   <td className="p-3">{item.title || "—"}</td>
                   <td className="p-3">
-                    <div className="max-w-sm whitespace-pre-wrap text-muted-foreground">{item.body || "—"}</div>
+                    <div className="max-w-[320px] overflow-hidden whitespace-pre-wrap break-words text-muted-foreground">
+                      {item.body || "—"}
+                    </div>
                   </td>
                   <td className="p-3">
                     {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="h-20 w-20 rounded-md object-cover" /> : "—"}
                   </td>
                   <td className="p-3">{item.scheduledAt ? new Date(item.scheduledAt).toLocaleString("ru-RU") : "—"}</td>
                   <td className="p-3">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("ru-RU") : "—"}</td>
-                  <td className="p-3 text-red-600">{item.error ?? "—"}</td>
+                  <td className="p-3 text-red-600">
+                    <div className="max-w-[200px] break-words">{item.error ?? "—"}</div>
+                  </td>
                   <td className="p-3">
                     <Button type="button" variant="outline" size="sm" onClick={() => setExpandedItemId(expandedItemId === item.id ? null : item.id)}>
                       Показать логи
