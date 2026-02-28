@@ -357,6 +357,8 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
     orderBy: { createdAt: "asc" }
   });
 
+  let processed = 0;
+
   for (const item of items) {
     const run = await createRun(flow.id, item.id);
 
@@ -450,6 +452,7 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
           }
         }
       });
+      processed += 1;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Content generation failed";
       await createRunStep({
@@ -470,6 +473,8 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
       await finishRun(run.id, { status: RunStatus.failed, error: message });
     }
   }
+
+  return { processed };
 }
 
 export async function publishQueueItems(input: {

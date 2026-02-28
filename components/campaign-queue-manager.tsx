@@ -45,16 +45,38 @@ type Run = {
   }>;
 };
 
+type ActionResponse = {
+  count?: number;
+  processed?: number;
+  updated?: number;
+  deleted?: number;
+  error?: string;
+};
+
 async function postJson(url: string, body: Record<string, unknown>) {
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  const data = (await response.json().catch(() => ({}))) as { error?: string };
+  const data = (await response.json().catch(() => ({}))) as ActionResponse;
   if (!response.ok) {
     throw new Error(data.error ?? "Не удалось выполнить запрос");
   }
+  return data;
+}
+
+function getSuccessMessage(action: string, data: ActionResponse) {
+  if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
+  if (action === "generate-all" || action === "generate-selected") {
+    return `Контент и изображения обновлены для ${data.processed ?? 0} элементов.`;
+  }
+  if (action === "publish-selected" || action === "publish-due") {
+    return `Опубликовано ${data.processed ?? 0} элементов.`;
+  }
+  if (action === "retry") return `Повторно подготовлено ${data.updated ?? 0} элементов.`;
+  if (action === "delete") return `Удалено ${data.deleted ?? 0} элементов.`;
+  return "Действие выполнено.";
 }
 
 export function CampaignQueueManager({
@@ -70,6 +92,7 @@ export function CampaignQueueManager({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   const runsByItem = useMemo(() => {
@@ -87,11 +110,13 @@ export function CampaignQueueManager({
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
-  async function perform(action: string, handler: () => Promise<void>) {
+  async function perform(action: string, handler: () => Promise<ActionResponse>) {
     setLoading(action);
     setError(null);
+    setSuccess(null);
     try {
-      await handler();
+      const result = await handler();
+      setSuccess(getSuccessMessage(action, result));
       router.refresh();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Не удалось выполнить запрос");
@@ -165,6 +190,7 @@ export function CampaignQueueManager({
               Удалить выбранные
             </Button>
           </div>
+          {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getActiveUser } from "@/lib/active-user";
 import { toPublicOpenAIErrorMessage } from "@/lib/campaigns/openai";
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   try {
     const { id } = await params;
-    await generateContentForQueueItems(id, user.id, parsed.data.queueItemIds);
-    return NextResponse.json({ ok: true });
+    const result = await generateContentForQueueItems(id, user.id, parsed.data.queueItemIds);
+    return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json({ error: toPublicOpenAIErrorMessage(error) }, { status: 400 });
   }
