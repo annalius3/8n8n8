@@ -4,6 +4,7 @@ import { setAuthCookie, verifyMagicToken } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
+  const nextPath = request.nextUrl.searchParams.get("next");
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -22,7 +23,8 @@ export async function GET(request: NextRequest) {
     }
   });
 
-  const response = NextResponse.redirect(new URL("/flows", request.url));
+  const redirectTarget = nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/flows";
+  const response = NextResponse.redirect(new URL(redirectTarget, request.url));
   setAuthCookie(response, user.id);
   return response;
 }

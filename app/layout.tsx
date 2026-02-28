@@ -38,6 +38,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Link href="/flows">
                     <Button variant="outline">Потоки</Button>
                   </Link>
+                  <Link href="/connections">
+                    <Button variant="outline">Подключения</Button>
+                  </Link>
                   <Link href="/runs">
                     <Button variant="outline">Запуски</Button>
                   </Link>

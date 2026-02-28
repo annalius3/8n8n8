@@ -17,17 +17,118 @@ export type PinterestPublishResult = {
   mode: "real" | "demo";
 };
 
-export async function publishToPinterest(payload: PinterestPublishPayload): Promise<PinterestPublishResult> {
-  const connection = await prisma.connection.findFirst({
+type PinterestConnectionSecret = {
+  accessToken: string;
+  updatedAt?: string;
+};
+
+type PinterestBoard = {
+  id: string;
+  name: string;
+  privacy?: string;
+};
+
+type ListPinterestBoardsInput = {
+  userId: string;
+  connectionName?: string;
+};
+
+async function findPinterestConnection(userId: string, connectionName?: string) {
+  return prisma.connection.findFirst({
     where: {
-      userId: payload.userId,
+      userId,
       provider: "pinterest",
-      ...(payload.connectionName ? { name: payload.connectionName } : {})
+      ...(connectionName ? { name: connectionName } : {})
     }
   });
+}
+
+function parsePinterestSecret(encryptedJson: string): PinterestConnectionSecret {
+  const parsed = JSON.parse(decryptToken(encryptedJson)) as PinterestConnectionSecret;
+  if (!parsed.accessToken) {
+    throw new Error("Pinterest connection is missing access token");
+  }
+
+  return parsed;
+}
+
+async function pinterestFetch<T>(path: string, accessToken: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`https://api.pinterest.com/v5${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      ...(init?.headers ?? {})
+    },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Pinterest API error ${response.status}: ${errorText.slice(0, 300)}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+export async function listPinterestBoards(input: ListPinterestBoardsInput): Promise<PinterestBoard[]> {
+  const connection = await findPinterestConnection(input.userId, input.connectionName);
+  if (!connection) {
+    throw new Error("Сначала сохраните Pinterest token на странице Подключения");
+  }
+
+  const secret = parsePinterestSecret(connection.encryptedJson);
+  const data = await pinterestFetch<{ items?: Array<{ id?: string; name?: string; privacy?: string }> }>(
+    "/boards?page_size=100",
+    secret.accessToken
+  );
+
+  return (data.items ?? [])
+    .filter((board) => board.id && board.name)
+    .map((board) => ({
+      id: String(board.id),
+      name: String(board.name),
+      privacy: board.privacy ? String(board.privacy) : undefined
+    }));
+}
+
+export async function publishToPinterest(payload: PinterestPublishPayload): Promise<PinterestPublishResult> {
+  const connection = await findPinterestConnection(payload.userId, payload.connectionName);
 
   if (connection) {
-    decryptToken(connection.encryptedJson);
+    const secret = parsePinterestSecret(connection.encryptedJson);
+
+    if (!payload.boardId) {
+      throw new Error("Pinterest connection exists, but board_id is not configured");
+    }
+
+    if (!payload.imageUrl) {
+      throw new Error("Pinterest publish requires image_url for real API mode");
+    }
+
+    const data = await pinterestFetch<{ id?: string }>("/pins", secret.accessToken, {
+      method: "POST",
+      body: JSON.stringify({
+        board_id: payload.boardId,
+        title: payload.title,
+        description: payload.description,
+        link: payload.linkUrl,
+        alt_text: payload.altText,
+        media_source: {
+          source_type: "image_url",
+          url: payload.imageUrl
+        }
+      })
+    });
+
+    if (!data.id) {
+      throw new Error("Pinterest API did not return pin id");
+    }
+
+    return {
+      postId: String(data.id),
+      mode: "real"
+    };
   }
 
   return {

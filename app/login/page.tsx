@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("demo@autoposting.local");
   const [magicLink, setMagicLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const nextPath = searchParams.get("next") || "/flows";
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -19,7 +22,7 @@ export default function LoginPage() {
     const response = await fetch("/api/auth/magic-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, next: nextPath })
     });
 
     if (!response.ok) {
