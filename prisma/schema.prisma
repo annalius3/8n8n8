@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QueueStatus {
+  pending
+  processing
+  published
+  failed
+}
+
+enum RunStatus {
+  success
+  failed
+  running
+}
+
+enum StepExecStatus {
+  success
+  failed
+  skipped
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  connections    Connection[]
+  flows          Flow[]
+  postQueueItems PostQueueItem[]
+
+  @@map("users")
+}
+
+model Connection {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  provider      String
+  name          String
+  encryptedJson String   @map("encrypted_json")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, provider])
+  @@map("connections")
+}
+
+model Flow {
+  id        String       @id @default(cuid())
+  userId    String       @map("user_id")
+  name      String
+  isEnabled Boolean      @default(true) @map("is_enabled")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps     FlowStep[]
+  schedule  FlowSchedule?
+  runs      JobRun[]
+
+  @@map("flows")
+}
+
+model FlowStep {
+  id         String   @id @default(cuid())
+  flowId     String   @map("flow_id")
+  orderIndex Int      @map("order_index")
+  type       String
+  configJson Json     @map("config_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  flow       Flow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+
+  @@unique([flowId, orderIndex])
+  @@index([flowId, type])
+  @@map("flow_steps")
+}
+
+model FlowSchedule {
+  id            String    @id @default(cuid())
+  flowId         String    @unique @map("flow_id")
+  cron           String
+  timezone       String    @default("Europe/Kiev")
+  maxRunsPerDay  Int       @default(10) @map("max_runs_per_day")
+  nextRunAt      DateTime  @map("next_run_at")
+  lastRunAt      DateTime? @map("last_run_at")
+  isPaused       Boolean   @default(false) @map("is_paused")
+  flow           Flow      @relation(fields: [flowId], references: [id], onDelete: Cascade)
+
+  @@index([nextRunAt, isPaused])
+  @@map("flow_schedules")
+}
+
+model PostQueueItem {
+  id          String      @id @default(cuid())
+  userId      String      @map("user_id")
+  status      QueueStatus @default(pending)
+  lockedAt    DateTime?   @map("locked_at")
+  publishedAt DateTime?   @map("published_at")
+  error       String?
+  title       String
+  body        String
+  linkUrl     String?     @map("link_url")
+  imagePrompt String?     @map("image_prompt")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, lockedAt])
+  @@map("post_queue_items")
+}
+
+model PublishedItem {
+  id             String   @id @default(cuid())
+  sourceType     String   @map("source_type")
+  sourceUid      String   @map("source_uid")
+  platform       String
+  platformPostId String?  @map("platform_post_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([sourceType, sourceUid, platform])
+  @@map("published_items")
+}
+
+model JobRun {
+  id          String      @id @default(cuid())
+  flowId       String      @map("flow_id")
+  status       RunStatus   @default(running)
+  startedAt    DateTime    @default(now()) @map("started_at")
+  finishedAt   DateTime?   @map("finished_at")
+  error        String?
+  contextJson  Json?       @map("context_json")
+  flow         Flow        @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  steps        JobRunStep[]
+
+  @@index([flowId, startedAt])
+  @@map("job_runs")
+}
+
+model JobRunStep {
+  id         String         @id @default(cuid())
+  jobRunId   String         @map("job_run_id")
+  stepIndex  Int            @map("step_index")
+  stepType   String         @map("step_type")
+  inputJson  Json?          @map("input_json")
+  outputJson Json?          @map("output_json")
+  status     StepExecStatus
+  error      String?
+  startedAt  DateTime       @default(now()) @map("started_at")
+  finishedAt DateTime?      @map("finished_at")
+  jobRun     JobRun         @relation(fields: [jobRunId], references: [id], onDelete: Cascade)
+
+  @@index([jobRunId, stepIndex])
+  @@map("job_run_steps")
+}

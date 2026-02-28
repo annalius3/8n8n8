@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-background text-foreground;
+  background-image: radial-gradient(circle at top left, #dbeafe 0%, transparent 50%), radial-gradient(circle at bottom right, #dcfce7 0%, transparent 45%);
+  min-height: 100vh;
+}
+
+.container-page {
+  @apply mx-auto max-w-6xl p-6;
+}

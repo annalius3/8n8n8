@@ -1,0 +1,19 @@
+name: Scheduler Tick
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call scheduler endpoint
+        run: |
+          curl -sS -X POST "${{ secrets.APP_BASE_URL }}/api/scheduler/tick" \
+            -H "x-scheduler-token: ${{ secrets.SCHEDULER_TOKEN }}" \
+            --max-time 60 \
+            --retry 2 \
+            --retry-delay 5 \
+            --fail
