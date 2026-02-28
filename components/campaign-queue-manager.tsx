@@ -71,6 +71,9 @@ async function postJson(url: string, body: Record<string, unknown>) {
 function getSuccessMessage(action: string, data: ActionResponse) {
   if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
   if (action === "generate-all") {
+    if ((data.generated ?? 0) === 0 && (data.published ?? 0) === 0) {
+      return "Для автогенерации сейчас нет подходящих элементов: очередь уже обработана или пуста.";
+    }
     return `Обработано ${data.generated ?? 0} элементов: сгенерировано 3/меньше и опубликовано ${data.published ?? 0}.`;
   }
   if (action === "generate-selected") {
@@ -79,7 +82,12 @@ function getSuccessMessage(action: string, data: ActionResponse) {
   if (action === "publish-selected" || action === "publish-due") {
     return `Опубликовано ${data.processed ?? 0} элементов.`;
   }
-  if (action === "retry") return `Повторно подготовлено ${data.updated ?? 0} элементов.`;
+  if (action === "retry") {
+    if ((data.updated ?? 0) === 0) {
+      return "Элементов со статусом «Ошибка» для повторного запуска не найдено.";
+    }
+    return `Повторно подготовлено ${data.updated ?? 0} элементов.`;
+  }
   if (action === "delete") return `Удалено ${data.deleted ?? 0} элементов.`;
   return "Действие выполнено.";
 }
@@ -99,6 +107,7 @@ export function CampaignQueueManager({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
 
   const runsByItem = useMemo(() => {
     const map = new Map<string, Run[]>();
@@ -111,8 +120,62 @@ export function CampaignQueueManager({
     return map;
   }, [initialRuns]);
 
+  const allIds = initialItems.map((item) => item.id);
+  const failedIds = initialItems.filter((item) => item.status === "failed").map((item) => item.id);
+
+  const debugLogText = useMemo(() => {
+    const lines: string[] = [];
+
+    if (error) {
+      lines.push(`UI_ERROR: ${error}`);
+      lines.push("");
+    }
+
+    for (const item of initialItems) {
+      if (!item.error && item.status !== "failed") continue;
+      lines.push(`[QUEUE ITEM] ${item.id}`);
+      lines.push(`status: ${item.status}`);
+      lines.push(`topic: ${item.topicText ?? "—"}`);
+      lines.push(`title: ${item.title || "—"}`);
+      lines.push(`scheduled_at: ${item.scheduledAt ?? "—"}`);
+      lines.push(`published_at: ${item.publishedAt ?? "—"}`);
+      lines.push(`error: ${item.error ?? "—"}`);
+      lines.push("");
+    }
+
+    for (const run of initialRuns.slice(0, 20)) {
+      lines.push(`[RUN] ${run.id}`);
+      lines.push(`queue_item_id: ${run.queueItemId ?? "—"}`);
+      lines.push(`status: ${run.status}`);
+      lines.push(`started_at: ${run.startedAt}`);
+      lines.push(`error: ${run.error ?? "—"}`);
+      for (const step of run.steps) {
+        lines.push(`  - step: ${step.stepType}`);
+        lines.push(`    status: ${step.status}`);
+        lines.push(`    error: ${step.error ?? "—"}`);
+        if (step.outputJson) {
+          lines.push(`    output: ${JSON.stringify(step.outputJson)}`);
+        }
+      }
+      lines.push("");
+    }
+
+    return lines.join("\n").trim() || "Логов пока нет.";
+  }, [error, initialItems, initialRuns]);
+
   function toggleSelection(id: string) {
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  async function copyDebugLogs() {
+    try {
+      await navigator.clipboard.writeText(debugLogText);
+      setCopyState("done");
+    } catch {
+      setCopyState("error");
+    } finally {
+      window.setTimeout(() => setCopyState("idle"), 2000);
+    }
   }
 
   async function perform(action: string, handler: () => Promise<ActionResponse>) {
@@ -129,8 +192,6 @@ export function CampaignQueueManager({
       setLoading(null);
     }
   }
-
-  const allIds = initialItems.map((item) => item.id);
 
   return (
     <div className="space-y-6">
@@ -181,8 +242,14 @@ export function CampaignQueueManager({
             <Button
               type="button"
               variant="outline"
-              onClick={() => perform("retry", () => postJson(`/api/flows/${flowId}/queue/retry`, { queueItemIds: selectedIds }))}
-              disabled={loading !== null || selectedIds.length === 0}
+              onClick={() =>
+                perform("retry", () =>
+                  postJson(`/api/flows/${flowId}/queue/retry`, {
+                    queueItemIds: selectedIds.length > 0 ? selectedIds.filter((id) => failedIds.includes(id)) : failedIds
+                  })
+                )
+              }
+              disabled={loading !== null || failedIds.length === 0}
             >
               Повторить с ошибкой
             </Button>
@@ -286,6 +353,25 @@ export function CampaignQueueManager({
           </tbody>
         </table>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle>Диагностика и логи для копирования</CardTitle>
+          <Button type="button" variant="outline" size="sm" onClick={copyDebugLogs}>
+            {copyState === "done" ? "Скопировано" : copyState === "error" ? "Не удалось скопировать" : "Копировать логи"}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Если после кнопки генерации, публикации или повтора возникла ошибка, скопируйте этот блок и отправьте его целиком.
+          </p>
+          <textarea
+            readOnly
+            value={debugLogText}
+            className="min-h-[320px] w-full rounded-lg border bg-muted/20 p-3 font-mono text-xs"
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
