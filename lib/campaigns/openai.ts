@@ -1,5 +1,28 @@
 import { getServerEnv } from "@/lib/env";
 
+export function toPublicOpenAIErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("insufficient_quota") || (normalized.includes("429") && normalized.includes("quota"))) {
+    return "Не удалось выполнить запрос к OpenAI: закончилась квота или не настроен billing. Проверьте тариф и платежные настройки OpenAI.";
+  }
+
+  if (normalized.includes("429")) {
+    return "OpenAI временно отклонил запрос из-за лимитов. Повторите попытку позже.";
+  }
+
+  if (normalized.includes("openai_api_key is not configured")) {
+    return "Не настроен OPENAI_API_KEY на сервере.";
+  }
+
+  if (normalized.includes("openai request failed")) {
+    return "Не удалось выполнить запрос к OpenAI. Проверьте ключ API, billing и доступность модели.";
+  }
+
+  return "Не удалось выполнить запрос к OpenAI.";
+}
+
 function parseStrictJson<T>(content: string): T {
   const fenced = content.match(/```json\s*([\s\S]*?)```/i)?.[1];
   return JSON.parse(fenced ?? content) as T;

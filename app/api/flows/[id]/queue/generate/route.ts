@@ -1,6 +1,7 @@
-п»їimport { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getActiveUser } from "@/lib/active-user";
+import { toPublicOpenAIErrorMessage } from "@/lib/campaigns/openai";
 import { generateContentForQueueItems } from "@/lib/campaigns/service";
 
 const schema = z.object({
@@ -14,7 +15,7 @@ type Params = {
 export async function POST(request: NextRequest, { params }: Params) {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ" }, { status: 401 });
+    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -23,8 +24,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { id } = await params;
-  await generateContentForQueueItems(id, user.id, parsed.data.queueItemIds);
-  return NextResponse.json({ ok: true });
+  try {
+    const { id } = await params;
+    await generateContentForQueueItems(id, user.id, parsed.data.queueItemIds);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ error: toPublicOpenAIErrorMessage(error) }, { status: 400 });
+  }
 }
-

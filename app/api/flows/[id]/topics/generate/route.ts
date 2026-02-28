@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getActiveUser } from "@/lib/active-user";
+import { toPublicOpenAIErrorMessage } from "@/lib/campaigns/openai";
 import { generateTopicsForCampaign } from "@/lib/campaigns/service";
 
 type Params = {
@@ -9,11 +10,14 @@ type Params = {
 export async function POST(_: Request, { params }: Params) {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ" }, { status: 401 });
+    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
   }
 
-  const { id } = await params;
-  const result = await generateTopicsForCampaign(id, user.id);
-
-  return NextResponse.json(result);
+  try {
+    const { id } = await params;
+    const result = await generateTopicsForCampaign(id, user.id);
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json({ error: toPublicOpenAIErrorMessage(error) }, { status: 400 });
+  }
 }
