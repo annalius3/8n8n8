@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getActiveUser } from "@/lib/active-user";
 import { getFlowOrThrow } from "@/lib/campaigns/service";
 
@@ -19,3 +19,4 @@ export async function GET(_: Request, { params }: Params) {
     suggestions: flow.topicSuggestions
   });
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getActiveUser } from "@/lib/active-user";
 import { planScheduleForFlow } from "@/lib/campaigns/service";
 
@@ -16,3 +16,4 @@ export async function POST(_: Request, { params }: Params) {
   const result = await planScheduleForFlow(id, user.id);
   return NextResponse.json(result);
 }
+

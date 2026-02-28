@@ -1,6 +1,4 @@
-"use client";
-
-"use client";
+﻿"use client";
 
 import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,7 +42,7 @@ async function postJson(url: string, body: Record<string, unknown>) {
   });
   const data = (await response.json().catch(() => ({}))) as { error?: string };
   if (!response.ok) {
-    throw new Error(data.error ?? "Request failed");
+    throw new Error(data.error ?? "Не удалось выполнить запрос");
   }
 }
 
@@ -85,7 +83,7 @@ export function CampaignQueueManager({
       await handler();
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Request failed");
+      setError(requestError instanceof Error ? requestError.message : "Не удалось выполнить запрос");
     } finally {
       setLoading(null);
     }
@@ -179,7 +177,7 @@ export function CampaignQueueManager({
           <tbody>
             {initialItems.map((item) => (
               <Fragment key={item.id}>
-                <tr key={item.id} className="border-t align-top">
+                <tr className="border-t align-top">
                   <td className="p-3">
                     <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggleSelection(item.id)} />
                   </td>

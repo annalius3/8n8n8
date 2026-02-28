@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export function LeonardoSettingsForm({ hasKey, updatedAt }: { hasKey: boolean; u
       }
 
       setApiKey("");
-      setMessage("Leonardo API key сохранён.");
+      setMessage("Ключ Leonardo сохранён.");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Не удалось сохранить ключ Leonardo");
     } finally {
@@ -42,11 +42,13 @@ export function LeonardoSettingsForm({ hasKey, updatedAt }: { hasKey: boolean; u
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Change Leonardo key</CardTitle>
+        <CardTitle>Смена ключа Leonardo</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
-          {hasKey ? `Персональный Leonardo key уже сохранён.${updatedAt ? ` Обновлён: ${new Date(updatedAt).toLocaleString("ru-RU")}.` : ""}` : "Пока используется ключ из process.env.LEONARDO_API_KEY."}
+          {hasKey
+            ? `Персональный Leonardo key уже сохранён.${updatedAt ? ` Обновлён: ${new Date(updatedAt).toLocaleString("ru-RU")}.` : ""}`
+            : "Пока используется ключ из process.env.LEONARDO_API_KEY."}
         </div>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
@@ -62,7 +64,7 @@ export function LeonardoSettingsForm({ hasKey, updatedAt }: { hasKey: boolean; u
           {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" disabled={loading || apiKey.trim().length < 10}>
-            {loading ? "Сохраняю..." : "Save / Update"}
+            {loading ? "Сохраняю..." : "Сохранить / обновить"}
           </Button>
         </form>
       </CardContent>

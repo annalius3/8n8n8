@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -68,12 +68,12 @@ export function CampaignSettingsForm({
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось обновить campaign settings");
+        throw new Error(data.error ?? "Не удалось обновить настройки кампании");
       }
 
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось обновить campaign settings");
+      setError(requestError instanceof Error ? requestError.message : "Не удалось обновить настройки кампании");
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ export function CampaignSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Campaign settings</CardTitle>
+        <CardTitle>Настройки кампании</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -135,11 +135,7 @@ export function CampaignSettingsForm({
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={autopublishEnabled}
-              onChange={(event) => setAutopublishEnabled(event.target.checked)}
-            />
+            <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
             Автопубликация включена
           </label>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}

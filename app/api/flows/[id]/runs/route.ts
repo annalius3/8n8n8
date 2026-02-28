@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActiveUser } from "@/lib/active-user";
 
@@ -30,3 +30,4 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   return NextResponse.json({ runs });
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getActiveUser } from "@/lib/active-user";
 import { createCampaign, generateTopicsForCampaign } from "@/lib/campaigns/service";
@@ -36,3 +36,4 @@ export async function POST(request: NextRequest) {
     runId: result.runId
   });
 }
+

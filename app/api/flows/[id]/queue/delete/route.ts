@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getActiveUser } from "@/lib/active-user";
 import { deleteQueueItems } from "@/lib/campaigns/service";
@@ -27,3 +27,4 @@ export async function POST(request: NextRequest, { params }: Params) {
   const result = await deleteQueueItems(id, user.id, parsed.data.queueItemIds);
   return NextResponse.json(result);
 }
+

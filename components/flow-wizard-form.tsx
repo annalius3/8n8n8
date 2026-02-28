@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -139,11 +139,7 @@ export function FlowWizardForm() {
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={autopublishEnabled}
-                onChange={(event) => setAutopublishEnabled(event.target.checked)}
-              />
+              <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
               Включить автопубликацию по расписанию
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -161,7 +157,7 @@ export function FlowWizardForm() {
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
             <p className="font-medium text-foreground">1. Topic generation</p>
-            <p className="mt-1">Создастся campaign, JobRun и шаг `topic_generation` с логами входа и результата.</p>
+            <p className="mt-1">Создастся кампания, JobRun и шаг `topic_generation` с логами входа и результата.</p>
           </div>
           <div className="rounded-lg border p-3">
             <p className="font-medium text-foreground">2. Review Top 50</p>
@@ -169,7 +165,7 @@ export function FlowWizardForm() {
           </div>
           <div className="rounded-lg border p-3">
             <p className="font-medium text-foreground">3. Queue pipeline</p>
-            <p className="mt-1">Для элементов очереди будут доступны bulk-генерация текста и изображения, публикация и retry failed.</p>
+            <p className="mt-1">Для элементов очереди будут доступны bulk-генерация текста и изображения, публикация и повтор failed-элементов.</p>
           </div>
         </CardContent>
       </Card>

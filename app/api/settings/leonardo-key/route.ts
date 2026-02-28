@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { encryptToken } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
@@ -84,3 +84,4 @@ export async function POST(request: NextRequest) {
     updatedAt: connection.updatedAt
   });
 }
+
