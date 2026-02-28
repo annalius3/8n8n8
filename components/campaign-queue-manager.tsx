@@ -120,7 +120,7 @@ export function CampaignQueueManager({
               onClick={() => perform("generate-selected", () => postJson(`/api/flows/${flowId}/queue/generate`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Generate text + image
+              Сгенерировать текст и изображение
             </Button>
             <Button
               type="button"
@@ -143,7 +143,7 @@ export function CampaignQueueManager({
               onClick={() => perform("retry", () => postJson(`/api/flows/${flowId}/queue/retry`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Повторить failed
+              Повторить с ошибкой
             </Button>
             <Button
               type="button"
