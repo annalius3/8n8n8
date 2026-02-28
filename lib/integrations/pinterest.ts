@@ -14,7 +14,7 @@ export type PinterestPublishPayload = {
 
 export type PinterestPublishResult = {
   postId: string;
-  mode: "real" | "demo";
+  mode: "real";
 };
 
 type PinterestConnectionSecret = {
@@ -94,45 +94,41 @@ export async function listPinterestBoards(input: ListPinterestBoardsInput): Prom
 
 export async function publishToPinterest(payload: PinterestPublishPayload): Promise<PinterestPublishResult> {
   const connection = await findPinterestConnection(payload.userId, payload.connectionName);
+  if (!connection) {
+    throw new Error("Pinterest connection is not configured");
+  }
 
-  if (connection) {
-    const secret = parsePinterestSecret(connection.encryptedJson);
+  const secret = parsePinterestSecret(connection.encryptedJson);
 
-    if (!payload.boardId) {
-      throw new Error("Pinterest connection exists, but board_id is not configured");
-    }
+  if (!payload.boardId) {
+    throw new Error("Pinterest connection exists, but board_id is not configured");
+  }
 
-    if (!payload.imageUrl) {
-      throw new Error("Pinterest publish requires image_url for real API mode");
-    }
+  if (!payload.imageUrl) {
+    throw new Error("Pinterest publish requires image_url for real API mode");
+  }
 
-    const data = await pinterestFetch<{ id?: string }>("/pins", secret.accessToken, {
-      method: "POST",
-      body: JSON.stringify({
-        board_id: payload.boardId,
-        title: payload.title,
-        description: payload.description,
-        link: payload.linkUrl,
-        alt_text: payload.altText,
-        media_source: {
-          source_type: "image_url",
-          url: payload.imageUrl
-        }
-      })
-    });
+  const data = await pinterestFetch<{ id?: string }>("/pins", secret.accessToken, {
+    method: "POST",
+    body: JSON.stringify({
+      board_id: payload.boardId,
+      title: payload.title,
+      description: payload.description,
+      link: payload.linkUrl,
+      alt_text: payload.altText,
+      media_source: {
+        source_type: "image_url",
+        url: payload.imageUrl
+      }
+    })
+  });
 
-    if (!data.id) {
-      throw new Error("Pinterest API did not return pin id");
-    }
-
-    return {
-      postId: String(data.id),
-      mode: "real"
-    };
+  if (!data.id) {
+    throw new Error("Pinterest API did not return pin id");
   }
 
   return {
-    postId: `pin_${Date.now()}`,
-    mode: "demo"
+    postId: String(data.id),
+    mode: "real"
   };
 }

@@ -1,5 +1,5 @@
-import { getActiveUser } from "@/lib/active-user";
+import { requireAuthenticatedUser } from "@/lib/require-authenticated-user";
 
-export async function requireUser() {
-  return getActiveUser();
+export async function requireUser(nextPath = "/flows") {
+  return requireAuthenticatedUser(nextPath);
 }

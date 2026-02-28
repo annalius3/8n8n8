@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { LinkButton } from "@/components/ui/link-button";
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("demo@autoposting.local");
+  const [email, setEmail] = useState("");
   const [magicLink, setMagicLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const nextPath = searchParams.get("next") || "/flows";
@@ -42,15 +41,15 @@ export default function LoginPage() {
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>Авторизация по magic link</CardTitle>
+        <CardTitle>Вход по magic link</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Для демо-режима вход не обязателен. Эта страница нужна только если вы хотите проверить упрощённую авторизацию.
+          В реальном режиме авторизация обязательна. После входа вы сможете управлять потоками, логами и токенами подключений.
         </p>
         {callbackError === "auth_setup" ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Не удалось завершить вход. Скорее всего, production-база ещё не готова к записи через Prisma.
+            Не удалось завершить вход. Проверьте production-базу и миграции Prisma.
           </div>
         ) : null}
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -62,13 +61,10 @@ export default function LoginPage() {
         </form>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {magicLink ? (
-          <p className="text-sm">
+          <p className="text-sm break-all">
             Открыть ссылку: <a className="underline" href={magicLink}>{magicLink}</a>
           </p>
         ) : null}
-        <div className="border-t pt-4">
-          <LinkButton href="/flows" variant="outline">Продолжить в demo режиме</LinkButton>
-        </div>
       </CardContent>
     </Card>
   );

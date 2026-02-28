@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const user = await getActiveUser();
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const runs = await prisma.jobRun.findMany({
     where: {

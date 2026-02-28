@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveUser } from "@/lib/active-user";
 import { getCurrentUser } from "@/lib/auth";
 import { getServerEnv } from "@/lib/env";
 import { runSchedulerTick } from "@/lib/worker/scheduler";
@@ -22,11 +21,6 @@ export async function POST(request: NextRequest) {
     user = await getCurrentUser();
   } catch {
     user = null;
-  }
-
-  const allowDemoAccess = process.env.NODE_ENV !== "production";
-  if (!user && allowDemoAccess) {
-    user = await getActiveUser();
   }
 
   if (!user && !isTokenValid(request)) {

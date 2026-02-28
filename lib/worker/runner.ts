@@ -35,11 +35,11 @@ type ImageItem = {
 };
 
 type TextContext = TextItem & {
-  provider_mode: "real" | "demo" | "template";
+  provider_mode: "real" | "template";
 };
 
 type ImageContext = ImageItem & {
-  provider_mode: "real" | "demo";
+  provider_mode: "real";
 };
 
 type PublishContext = {
@@ -47,7 +47,7 @@ type PublishContext = {
   board_id?: string;
   post_id: string;
   source_uid?: string;
-  mode: "real" | "demo";
+  mode: "real";
 };
 
 async function logRunStep(input: {
@@ -129,21 +129,14 @@ function parseJsonFromModel(text: string): Record<string, any> {
   return JSON.parse(payload);
 }
 
-async function generateTextViaOpenAI(config: StepConfig, vars: Record<string, string>) {
+async function generateTextViaOpenAI(
+  config: StepConfig,
+  vars: Record<string, string>
+): Promise<{ pin_title: string; pin_description: string; hashtags: string[]; _mode: "real" }> {
   const mode = getIntegrationModes().openai;
   const apiKey = mode === "real" ? getServerEnv().OPENAI_API_KEY : undefined;
   if (!apiKey) {
-    const hashtags = (vars.hashtags ?? "")
-      .split(/\s+/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    return {
-      pin_title: `${vars.title || "Demo topic"} - quick overview`.slice(0, 90),
-      pin_description: `Demo AI copy:\n${vars.summary}\n\nRead more: ${vars.link_url}`.slice(0, 450),
-      hashtags,
-      _mode: "demo"
-    };
+    throw new Error("OPENAI_API_KEY is not configured");
   }
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -173,7 +166,13 @@ async function generateTextViaOpenAI(config: StepConfig, vars: Record<string, st
     throw new Error("OpenAI response is empty");
   }
 
-  return { ...parseJsonFromModel(content), _mode: "real" };
+  const parsed = parseJsonFromModel(content);
+  return {
+    pin_title: String(parsed.pin_title ?? ""),
+    pin_description: String(parsed.pin_description ?? ""),
+    hashtags: flattenHashtags(parsed.hashtags),
+    _mode: "real"
+  };
 }
 
 async function lockQueueItem(userId: string, statuses: QueueStatus[], lockCutoff: Date) {
@@ -445,21 +444,15 @@ export async function runFlowNow(flowId: string) {
           let pinTitle = "";
           let pinDescription = "";
           let hashtags = flattenHashtags(config.hashtags);
-          let providerMode: "real" | "demo" | "template" = "template";
+          let providerMode: "real" | "template" = "template";
 
           if (config.provider === "openai") {
-            try {
-              const ai = await generateTextViaOpenAI(config, vars);
-              pinTitle = String(ai.pin_title ?? "");
-              pinDescription = String(ai.pin_description ?? "");
-              const aiTags = flattenHashtags(ai.hashtags);
-              if (aiTags.length > 0) hashtags = aiTags;
-              providerMode = ai._mode === "real" ? "real" : "demo";
-            } catch (error) {
-              if (!config.fallback_to_template_step) {
-                throw error;
-              }
-            }
+            const ai = await generateTextViaOpenAI(config, vars);
+            pinTitle = String(ai.pin_title ?? "");
+            pinDescription = String(ai.pin_description ?? "");
+            const aiTags = flattenHashtags(ai.hashtags);
+            if (aiTags.length > 0) hashtags = aiTags;
+            providerMode = "real";
           }
 
           if (!pinTitle) pinTitle = applyTemplate(config.pin_title_template ?? "{title}", vars);
@@ -490,7 +483,7 @@ export async function runFlowNow(flowId: string) {
         context.text_items = textItems;
         context.text = {
           ...textItems[0],
-          provider_mode: config.provider === "openai" ? context.text?.provider_mode ?? "demo" : "template"
+          provider_mode: config.provider === "openai" ? context.text?.provider_mode ?? "real" : "template"
         };
 
         await logRunStep({
@@ -557,7 +550,7 @@ export async function runFlowNow(flowId: string) {
         context.image_items = imageItems;
         context.image = {
           ...imageItems[0],
-          provider_mode: context.image?.provider_mode ?? "demo"
+          provider_mode: context.image?.provider_mode ?? "real"
         };
 
         await logRunStep({
@@ -677,7 +670,7 @@ export async function runFlowNow(flowId: string) {
         context.publish_items = publishItems;
         context.publish = {
           ...publishItems[0],
-          mode: context.publish?.mode ?? "demo"
+          mode: context.publish?.mode ?? "real"
         };
 
         await logRunStep({

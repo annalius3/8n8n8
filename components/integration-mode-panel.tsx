@@ -1,4 +1,4 @@
-﻿import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIntegrationModeLabel, type IntegrationModes } from "@/lib/integrations/runtime";
 
@@ -9,7 +9,7 @@ type IntegrationModePanelProps = {
 const ITEMS: Array<{ key: keyof IntegrationModes; label: string; note: string }> = [
   { key: "openai", label: "OpenAI", note: "Генерация текста в шаге template" },
   { key: "leonardo", label: "Leonardo", note: "Генерация изображений" },
-  { key: "pinterest", label: "Pinterest", note: "Публикация пока работает как stub" },
+  { key: "pinterest", label: "Pinterest", note: "Публикация через сохранённый server-side token" },
   { key: "r2", label: "Cloudflare R2", note: "Хранение изображений" }
 ];
 
@@ -17,7 +17,7 @@ export function IntegrationModePanel({ modes }: IntegrationModePanelProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Режим интеграций</CardTitle>
+        <CardTitle>Состояние интеграций</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2">
         {ITEMS.map((item) => {

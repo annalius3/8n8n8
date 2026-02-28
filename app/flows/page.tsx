@@ -63,8 +63,8 @@ function getCompactPreview(flow: FlowWithMeta) {
   const context = (flow.runs[0]?.contextJson as Record<string, any> | null) ?? null;
 
   return {
-    title: context?.text?.pin_title ?? "Запустите поток, чтобы увидеть будущий заголовок поста.",
-    description: context?.text?.pin_description ?? "После первого запуска здесь появится краткий preview публикации.",
+    title: context?.text?.pin_title ?? "Запустите поток, чтобы увидеть итоговый заголовок поста.",
+    description: context?.text?.pin_description ?? "После первого реального запуска здесь появится preview публикации.",
     imageUrl: context?.image?.image_url ?? null,
     mode: context?.publish?.mode ?? null
   };
@@ -72,16 +72,16 @@ function getCompactPreview(flow: FlowWithMeta) {
 
 export default async function FlowsPage() {
   const modes = getIntegrationModes();
-  let flows: FlowWithMeta[] = [];
+  const user = await requireUser("/flows");
 
+  let flows: FlowWithMeta[] = [];
   try {
-    const user = await requireUser();
     flows = await loadFlows(user.id);
   } catch {
     return (
       <div className="space-y-6">
         <IntegrationModePanel modes={modes} />
-        <SetupRequiredCard details="Страница потоков зависит от Prisma и не может загрузиться, пока Vercel не подключён к Postgres." />
+        <SetupRequiredCard details="Страница потоков зависит от Prisma и не может загрузиться, пока база данных недоступна." />
       </div>
     );
   }
@@ -105,15 +105,15 @@ export default async function FlowsPage() {
         <CardContent className="grid gap-3 md:grid-cols-3">
           <div className="rounded-xl border bg-muted/30 p-4">
             <p className="text-sm font-medium">1. Источник</p>
-            <p className="mt-1 text-sm text-muted-foreground">RSS или очередь из базы. На этом шаге поток получает материал для публикации.</p>
+            <p className="mt-1 text-sm text-muted-foreground">RSS или очередь из базы данных.</p>
           </div>
           <div className="rounded-xl border bg-muted/30 p-4">
             <p className="text-sm font-medium">2. Обработка</p>
-            <p className="mt-1 text-sm text-muted-foreground">Текст и изображение можно генерировать в демо-режиме без реальных ключей.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Текст и изображение генерируются только через реальные интеграции.</p>
           </div>
           <div className="rounded-xl border bg-muted/30 p-4">
             <p className="text-sm font-medium">3. Публикация</p>
-            <p className="mt-1 text-sm text-muted-foreground">Даже без реального Pinterest вы увидите весь маршрут в логах и итоговый context.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Pinterest публикуется только через настроенное server-side подключение.</p>
           </div>
         </CardContent>
       </Card>
@@ -121,7 +121,7 @@ export default async function FlowsPage() {
       {flows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Потоков пока нет. Создайте первый поток и проверьте весь сценарий на демо-данных.
+            Потоков пока нет. Создайте первый поток и настройте реальные подключения.
           </CardContent>
         </Card>
       ) : null}
@@ -188,7 +188,7 @@ export default async function FlowsPage() {
                     <div className="space-y-3 p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-xs uppercase text-muted-foreground">Мини-preview</p>
-                        {preview.mode ? <Badge variant="outline">{preview.mode === "real" ? "Real API" : "Demo"}</Badge> : null}
+                        {preview.mode ? <Badge variant="outline">Real API</Badge> : null}
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{preview.title}</p>

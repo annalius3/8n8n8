@@ -14,7 +14,6 @@ import { IntegrationModePanel } from "@/components/integration-mode-panel";
 import { PostPreviewCard } from "@/components/post-preview-card";
 import { SourcePreviewCard } from "@/components/source-preview-card";
 import { FlowReadinessCard } from "@/components/flow-readiness-card";
-import { DemoRunBanner } from "@/components/demo-run-banner";
 import { SetupRequiredCard } from "@/components/setup-required-card";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
 import { LinkButton } from "@/components/ui/link-button";
@@ -33,8 +32,8 @@ function getStepCaption(type: string) {
     rss: "Забирает элементы из RSS и отсеивает уже опубликованные.",
     queue: "Берёт отложенный пост из базы и ставит lock на время обработки.",
     template: "Собирает финальный заголовок и описание поста.",
-    ai_image_leonardo: "Генерирует изображение или имитирует его в демо-сценарии.",
-    pinterest_publish: "Публикует пост в Pinterest или возвращает demo post id.",
+    ai_image_leonardo: "Генерирует изображение через Leonardo API.",
+    pinterest_publish: "Публикует пост в Pinterest через сохранённое подключение.",
     delay: "Делает паузу между шагами."
   };
 
@@ -51,14 +50,14 @@ function getStepMode(type: string, runtime: Record<string, any> | null) {
 
 function formatModeLabel(mode: string | null) {
   if (!mode) return null;
-  return mode === "real" ? "Real API" : "Demo";
+  return mode === "real" ? "Real API" : "Не настроено";
 }
 
 export default async function FlowEditorPage({ params }: Props) {
   const modes = getIntegrationModes();
+  const user = await requireUser("/flows");
 
   try {
-    const user = await requireUser();
     const { id } = await params;
 
     const flow = await prisma.flow.findFirst({
@@ -103,7 +102,6 @@ export default async function FlowEditorPage({ params }: Props) {
     const lastRun = flow.runs[0];
     const context = (lastRun?.contextJson as Record<string, any> | null) ?? null;
     const runtime = (context?.runtime as Record<string, any> | null) ?? null;
-    const isDemoRun = Boolean(runtime && Object.values(runtime).some((value) => value === "demo"));
     const preview = {
       title: context?.text?.pin_title ?? "Здесь появится заголовок после запуска",
       description: context?.text?.pin_description ?? "Здесь появится описание будущего поста",
@@ -134,8 +132,14 @@ export default async function FlowEditorPage({ params }: Props) {
     if (isQueueSource) {
       hints.push(`Сейчас в очереди pending items: ${queuePendingCount}. После публикации item перейдёт в статус published.`);
     }
-    if (modes.pinterest === "demo") {
-      hints.push("Публикация Pinterest пока работает как demo-stub: вы увидите post id и логи, но реальный Pinterest API ещё не подключён.");
+    if (modes.openai !== "real") {
+      hints.push("OpenAI не настроен. Шаг template с provider=openai завершится ошибкой.");
+    }
+    if (modes.leonardo !== "real") {
+      hints.push("Leonardo не настроен. Шаг ai_image_leonardo завершится ошибкой.");
+    }
+    if (modes.pinterest !== "real") {
+      hints.push("Pinterest не настроен. Сохраните токен на странице Подключения и укажите board_id в шаге публикации.");
     }
     if (lastRun?.error) {
       hints.push(`Последняя ошибка: ${lastRun.error}`);
@@ -185,10 +189,6 @@ export default async function FlowEditorPage({ params }: Props) {
     return (
       <div className="space-y-6">
         <IntegrationModePanel modes={modes} />
-        <DemoRunBanner
-          isDemo={isDemoRun}
-          text="Последний запуск проходил частично или полностью в demo-режиме. Preview и context полезны для проверки сценария, но не все внешние API вызывались по-настоящему."
-        />
         <div className="flex flex-wrap items-center gap-2">
           <LinkButton href="/flows" variant="outline">Назад к потокам</LinkButton>
           <RunNowButton flowId={flow.id} />
@@ -244,7 +244,7 @@ export default async function FlowEditorPage({ params }: Props) {
                   <p>1. Источник заполнит `context.source` данными RSS или очереди.</p>
                   <p>2. Шаг текста создаст pin title и pin description.</p>
                   <p>3. Шаг картинки добавит image URL в preview.</p>
-                  <p>4. Шаг публикации вернёт demo post id или реальный результат интеграции.</p>
+                  <p>4. Шаг публикации вернёт реальный post id интеграции.</p>
                 </CardContent>
               </Card>
             ) : null}

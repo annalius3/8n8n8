@@ -17,6 +17,7 @@ const createSchema = z.object({
 
 export async function GET() {
   const user = await getActiveUser();
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const flows = await prisma.flow.findMany({
     where: { userId: user.id },
@@ -38,6 +39,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const user = await getActiveUser();
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
@@ -101,8 +103,7 @@ export async function POST(request: NextRequest) {
               pin_description_template: input.textTemplate,
               hashtags: ["#energy", "#healing", "#mindfulness"],
               max_title_len: 100,
-              max_desc_len: 500,
-              fallback_to_template_step: true
+              max_desc_len: 500
             }
           },
           {

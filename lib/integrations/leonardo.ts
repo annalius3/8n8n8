@@ -13,7 +13,7 @@ export type LeonardoImageOptions = {
 
 export type LeonardoImageResult = {
   imageUrl: string;
-  mode: "real" | "demo";
+  mode: "real";
 };
 
 type CreateGenerationResponse = {
@@ -35,13 +35,7 @@ export async function generateLeonardoImage(prompt: string, options: LeonardoIma
   const mode = getIntegrationModes().leonardo;
   const apiKey = mode === "real" ? getServerEnv().LEONARDO_API_KEY : undefined;
   if (!apiKey) {
-    const width = options.width ?? 1024;
-    const height = options.height ?? 1024;
-    const text = encodeURIComponent("Demo Leonardo Image");
-    return {
-      imageUrl: `https://placehold.co/${width}x${height}/f4f7fb/1f2937?text=${text}`,
-      mode: "demo"
-    };
+    throw new Error("LEONARDO_API_KEY is not configured");
   }
 
   const createResponse = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", {

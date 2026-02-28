@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold">Autoposting Flow</h1>
-                <p className="text-sm text-muted-foreground">Сначала сценарий и визуализация, потом реальные ключи и OAuth.</p>
+                <p className="text-sm text-muted-foreground">Только реальная конфигурация, реальные ключи и реальные публикации.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {user ? (
@@ -30,8 +30,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">Demo режим</Badge>
-                    <span className="text-sm text-muted-foreground">Можно работать без входа</span>
+                    <Badge variant="outline">Требуется вход</Badge>
+                    <span className="text-sm text-muted-foreground">Авторизуйтесь для работы с потоками и подключениями</span>
                   </div>
                 )}
                 <nav className="flex items-center gap-2">
@@ -50,11 +50,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </nav>
               </div>
             </div>
-            {!user ? (
-              <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
-                Сейчас открыт демо-режим. Можно создавать потоки, запускать их и смотреть логи без обязательной авторизации.
-              </div>
-            ) : null}
           </header>
           {children}
         </div>
