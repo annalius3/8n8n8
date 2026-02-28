@@ -1,11 +1,13 @@
-import Link, { type LinkProps } from "next/link";
+import Link from "next/link";
 import { type AnchorHTMLAttributes } from "react";
 import { type VariantProps } from "class-variance-authority";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+type LinkHref = string | URL | { pathname: string; query?: Record<string, string | number | boolean | null | undefined> };
+
 type LinkButtonProps = {
-  href: LinkProps["href"];
+  href: LinkHref;
   className?: string;
 } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "className" | "href"> &
   VariantProps<typeof buttonVariants>;
