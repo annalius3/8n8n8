@@ -13,5 +13,6 @@ type LinkButtonProps = {
   VariantProps<typeof buttonVariants>;
 
 export function LinkButton({ className, variant, size, ...props }: LinkButtonProps) {
-  return <Link className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+  const { href, ...rest } = props;
+  return <Link href={href as any} className={cn(buttonVariants({ variant, size, className }))} {...rest} />;
 }
