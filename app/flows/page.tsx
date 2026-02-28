@@ -14,7 +14,20 @@ function formatDate(date: Date | null | undefined) {
 
 export default async function FlowsPage() {
   const user = await requireUser("/flows");
-  const modes = getIntegrationModes();
+  const [baseModes, hasPinterestConnection] = await Promise.all([
+    Promise.resolve(getIntegrationModes()),
+    prisma.connection.findFirst({
+      where: {
+        userId: user.id,
+        provider: "pinterest"
+      },
+      select: { id: true }
+    })
+  ]);
+  const modes = {
+    ...baseModes,
+    pinterest: hasPinterestConnection ? "real" : baseModes.pinterest
+  };
 
   const flows = await prisma.flow.findMany({
     where: { userId: user.id },
