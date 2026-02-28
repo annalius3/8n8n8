@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getActiveUser } from "@/lib/active-user";
 import { toPublicOpenAIErrorMessage } from "@/lib/campaigns/openai";
 import { generateTopicsForCampaign } from "@/lib/campaigns/service";

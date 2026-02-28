@@ -147,3 +147,22 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(_: NextRequest, { params }: Params) {
+  const user = await getActiveUser();
+  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+
+  const { id } = await params;
+  const flow = await prisma.flow.findFirst({
+    where: { id, userId: user.id },
+    select: { id: true }
+  });
+
+  if (!flow) return NextResponse.json({ error: "Поток не найден" }, { status: 404 });
+
+  await prisma.flow.delete({
+    where: { id: flow.id }
+  });
+
+  return NextResponse.json({ deleted: true });
+}

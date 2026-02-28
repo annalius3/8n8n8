@@ -1,4 +1,26 @@
-import { getServerEnv } from "@/lib/env";
+﻿import { getServerEnv } from "@/lib/env";
+
+function normalizeText(value: unknown) {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function uniqueTopics(values: unknown[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const normalized = normalizeText(value);
+    if (!normalized) continue;
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(normalized);
+  }
+
+  return result;
+}
 
 export function toPublicOpenAIErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error ?? "");
@@ -17,7 +39,7 @@ export function toPublicOpenAIErrorMessage(error: unknown) {
   }
 
   if (normalized.includes("openai request failed")) {
-    return "Не удалось выполнить запрос к OpenAI. Проверьте ключ API, billing и доступность модели.";
+    return "Не удалось выполнить запрос к OpenAI. Проверьте API-ключ, billing и доступность модели.";
   }
 
   return "Не удалось выполнить запрос к OpenAI.";
@@ -72,6 +94,37 @@ async function callOpenAI<T>(input: {
   return parseStrictJson<T>(content);
 }
 
+async function requestTopics(input: {
+  seedTopic: string;
+  language: "EN" | "RU" | "UA";
+  niche?: string | null;
+  audience?: string | null;
+  tone?: string | null;
+  count: number;
+  exclude?: string[];
+}) {
+  return callOpenAI<string[]>({
+    system:
+      "You generate topic ideas for social media campaigns. Return strict JSON only: an array of strings. No markdown, no commentary.",
+    prompt: [
+      `Seed topic: ${input.seedTopic}`,
+      `Language: ${input.language}`,
+      input.niche ? `Niche/angle: ${input.niche}` : null,
+      input.audience ? `Audience: ${input.audience}` : null,
+      input.tone ? `Tone: ${input.tone}` : null,
+      `Generate exactly ${input.count} distinct topic ideas.`,
+      input.exclude && input.exclude.length > 0
+        ? `Do not repeat any of these existing topics: ${JSON.stringify(input.exclude)}`
+        : null,
+      'Return strict JSON only: ["topic 1", "topic 2", ...].'
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    maxTokens: 1400,
+    temperature: 0.8
+  });
+}
+
 export async function generateTopicSuggestions(input: {
   seedTopic: string;
   language: "EN" | "RU" | "UA";
@@ -79,30 +132,39 @@ export async function generateTopicSuggestions(input: {
   audience?: string | null;
   tone?: string | null;
 }) {
-  const topics = await callOpenAI<string[]>({
-    system:
-      "You generate topic ideas for social media campaigns. Return strict JSON only: an array of exactly 50 strings. No markdown, no commentary.",
-    prompt: [
-      `Seed topic: ${input.seedTopic}`,
-      `Language: ${input.language}`,
-      input.niche ? `Niche/angle: ${input.niche}` : null,
-      input.audience ? `Audience: ${input.audience}` : null,
-      input.tone ? `Tone: ${input.tone}` : null,
-      "Generate exactly 50 distinct topic ideas.",
-      "Return strict JSON only: [\"topic 1\", \"topic 2\", ...]."
-    ]
-      .filter(Boolean)
-      .join("\n"),
-    maxTokens: 1400,
-    temperature: 0.8
-  });
+  let topics = uniqueTopics(
+    await requestTopics({
+      seedTopic: input.seedTopic,
+      language: input.language,
+      niche: input.niche,
+      audience: input.audience,
+      tone: input.tone,
+      count: 50
+    })
+  );
 
-  const cleaned = topics.map((item) => String(item).trim()).filter(Boolean);
-  if (cleaned.length !== 50) {
-    throw new Error(`OpenAI returned ${cleaned.length} topics instead of 50`);
+  for (let attempt = 0; attempt < 2 && topics.length < 50; attempt += 1) {
+    const remaining = 50 - topics.length;
+    const extra = uniqueTopics(
+      await requestTopics({
+        seedTopic: input.seedTopic,
+        language: input.language,
+        niche: input.niche,
+        audience: input.audience,
+        tone: input.tone,
+        count: remaining,
+        exclude: topics
+      })
+    );
+
+    topics = uniqueTopics([...topics, ...extra]);
   }
 
-  return cleaned;
+  if (topics.length < 50) {
+    throw new Error(`OpenAI returned ${topics.length} unique topics instead of 50`);
+  }
+
+  return topics.slice(0, 50);
 }
 
 export async function generateQueueItemContent(input: {
@@ -114,7 +176,7 @@ export async function generateQueueItemContent(input: {
 }) {
   const payload = await callOpenAI<{ title: string; description: string; hashtags?: string[] }>({
     system:
-      "You write Pinterest-ready content. Return strict JSON only: {\"title\":\"...\",\"description\":\"...\",\"hashtags\":[\"#tag\"]}. No markdown.",
+      'You write Pinterest-ready content. Return strict JSON only: {"title":"...","description":"...","hashtags":["#tag"]}. No markdown.',
     prompt: [
       `Language: ${input.language}`,
       `Topic: ${input.topic}`,
@@ -130,10 +192,10 @@ export async function generateQueueItemContent(input: {
     temperature: 0.7
   });
 
-  const title = String(payload.title ?? "").trim().slice(0, 90);
-  const description = String(payload.description ?? "").trim().slice(0, 450);
+  const title = normalizeText(payload.title).slice(0, 90);
+  const description = normalizeText(payload.description).slice(0, 450);
   const hashtags = Array.isArray(payload.hashtags)
-    ? payload.hashtags.map((tag) => String(tag).trim()).filter(Boolean)
+    ? payload.hashtags.map((tag) => normalizeText(tag)).filter(Boolean)
     : [];
 
   if (!title || !description) {

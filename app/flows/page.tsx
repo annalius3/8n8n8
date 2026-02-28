@@ -7,6 +7,8 @@ import { IntegrationModePanel } from "@/components/integration-mode-panel";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
 import { LinkButton } from "@/components/ui/link-button";
 import { SchedulerTickButton } from "@/components/scheduler-tick-button";
+import { FlowToggleButton } from "@/components/flow-toggle-button";
+import { DeleteFlowButton } from "@/components/delete-flow-button";
 
 function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
@@ -134,6 +136,8 @@ export default async function FlowsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
+                  <DeleteFlowButton flowId={flow.id} />
                   <LinkButton href={`/flows/${flow.id}` as any} variant="outline">Обзор</LinkButton>
                   <LinkButton href={`/flows/${flow.id}/topics` as any} variant="outline">Темы</LinkButton>
                   <LinkButton href={`/flows/${flow.id}/queue` as any} variant="outline">Очередь</LinkButton>

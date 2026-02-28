@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
 import { CampaignSettingsForm } from "@/components/campaign-settings-form";
 import { ExecutionTimeline } from "@/components/execution-timeline";
+import { FlowToggleButton } from "@/components/flow-toggle-button";
+import { DeleteFlowButton } from "@/components/delete-flow-button";
 
 function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
@@ -73,6 +75,8 @@ export default async function FlowOverviewPage({ params }: Props) {
         <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Темы</LinkButton>
         <LinkButton href={`/flows/${flow.id}/queue`} variant="outline">Очередь</LinkButton>
         <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
+        <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
+        <DeleteFlowButton flowId={flow.id} redirectToFlows />
       </div>
 
       <Card>
