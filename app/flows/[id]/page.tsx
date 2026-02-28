@@ -32,6 +32,7 @@ export default async function FlowOverviewPage({ params }: Props) {
     prisma.flow.findFirst({
       where: { id, userId: user.id },
       include: {
+        schedule: true,
         steps: { orderBy: { orderIndex: "asc" } },
         topicSuggestions: true,
         queueItems: {
@@ -128,6 +129,7 @@ export default async function FlowOverviewPage({ params }: Props) {
           initialTimezone={flow.timezone}
           initialStartTime={flow.startTime}
           initialAutopublishEnabled={flow.autopublishEnabled}
+          initialCron={flow.schedule?.cron}
           initialNiche={flow.niche}
           initialAudience={flow.audience}
           initialTone={flow.tone}

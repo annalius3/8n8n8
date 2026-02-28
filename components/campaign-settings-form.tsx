@@ -14,6 +14,50 @@ type BoardItem = {
   privacy?: string;
 };
 
+type IntervalUnit = "minutes" | "hours" | "days";
+
+function parseIntervalCron(cron?: string) {
+  if (!cron) return null;
+
+  const minuteMatch = cron.match(/^\*\/(\d+)\s+\*\s+\*\s+\*\s+\*$/);
+  if (minuteMatch) {
+    return { enabled: true, value: Number(minuteMatch[1]), unit: "minutes" as IntervalUnit };
+  }
+
+  const hourMatch = cron.match(/^(\d+)\s+\*\/(\d+)\s+\*\s+\*\s+\*$/);
+  if (hourMatch) {
+    return { enabled: true, value: Number(hourMatch[2]), unit: "hours" as IntervalUnit };
+  }
+
+  const dayMatch = cron.match(/^(\d+)\s+(\d+)\s+\*\/(\d+)\s+\*\s+\*$/);
+  if (dayMatch) {
+    return { enabled: true, value: Number(dayMatch[3]), unit: "days" as IntervalUnit };
+  }
+
+  return { enabled: false, value: 6, unit: "hours" as IntervalUnit };
+}
+
+function buildIntervalCron(input: { enabled: boolean; value: number; unit: IntervalUnit; startTime: string }) {
+  if (!input.enabled) {
+    return "0 0 * * *";
+  }
+
+  const safeValue = Math.max(1, Math.min(input.unit === "minutes" ? 59 : 30, Math.floor(input.value || 1)));
+  const [hourRaw, minuteRaw] = input.startTime.split(":");
+  const hour = Math.max(0, Math.min(23, Number(hourRaw ?? 0) || 0));
+  const minute = Math.max(0, Math.min(59, Number(minuteRaw ?? 0) || 0));
+
+  if (input.unit === "minutes") {
+    return `*/${safeValue} * * * *`;
+  }
+
+  if (input.unit === "hours") {
+    return `${minute} */${safeValue} * * *`;
+  }
+
+  return `${minute} ${hour} */${safeValue} * *`;
+}
+
 export function CampaignSettingsForm({
   flowId,
   initialName,
@@ -22,6 +66,7 @@ export function CampaignSettingsForm({
   initialTimezone,
   initialStartTime,
   initialAutopublishEnabled,
+  initialCron,
   initialNiche,
   initialAudience,
   initialTone,
@@ -36,6 +81,7 @@ export function CampaignSettingsForm({
   initialTimezone: string;
   initialStartTime: string;
   initialAutopublishEnabled: boolean;
+  initialCron?: string | null;
   initialNiche?: string | null;
   initialAudience?: string | null;
   initialTone?: string | null;
@@ -50,6 +96,14 @@ export function CampaignSettingsForm({
   const [timezone, setTimezone] = useState(initialTimezone);
   const [startTime, setStartTime] = useState(initialStartTime);
   const [autopublishEnabled, setAutopublishEnabled] = useState(initialAutopublishEnabled);
+  const initialInterval = parseIntervalCron(initialCron ?? undefined) ?? {
+    enabled: false,
+    value: 6,
+    unit: "hours" as IntervalUnit
+  };
+  const [useIntervalScheduling, setUseIntervalScheduling] = useState(initialInterval.enabled);
+  const [scheduleEveryValue, setScheduleEveryValue] = useState(initialInterval.value);
+  const [scheduleEveryUnit, setScheduleEveryUnit] = useState<IntervalUnit>(initialInterval.unit);
   const [niche, setNiche] = useState(initialNiche ?? "");
   const [audience, setAudience] = useState(initialAudience ?? "");
   const [tone, setTone] = useState(initialTone ?? "");
@@ -101,6 +155,12 @@ export function CampaignSettingsForm({
           timezone,
           startTime,
           autopublishEnabled,
+          cron: buildIntervalCron({
+            enabled: useIntervalScheduling,
+            value: scheduleEveryValue,
+            unit: scheduleEveryUnit,
+            startTime
+          }),
           niche,
           audience,
           tone,
@@ -155,13 +215,44 @@ export function CampaignSettingsForm({
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Timezone</Label>
+              <Label>Часовой пояс</Label>
               <Input value={timezone} onChange={(event) => setTimezone(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Start time</Label>
+              <Label>Время старта</Label>
               <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
             </div>
+          </div>
+          <div className="space-y-4 rounded-xl border p-4">
+            <div className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={useIntervalScheduling} onChange={(event) => setUseIntervalScheduling(event.target.checked)} />
+              <span>Публиковать по интервалу</span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[160px_1fr]">
+              <div className="space-y-2">
+                <Label>Каждые</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={scheduleEveryUnit === "minutes" ? 59 : 30}
+                  value={scheduleEveryValue}
+                  onChange={(event) => setScheduleEveryValue(Math.max(1, Number(event.target.value) || 1))}
+                  disabled={!useIntervalScheduling}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Единица</Label>
+                <Select value={scheduleEveryUnit} onChange={(event) => setScheduleEveryUnit(event.target.value as IntervalUnit)} disabled={!useIntervalScheduling}>
+                  <option value="minutes">минут</option>
+                  <option value="hours">часов</option>
+                  <option value="days">дней</option>
+                </Select>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Если интервал включён, очередь будет планироваться по схеме «каждые N минут/часов/дней». Если выключен, остаётся режим
+              распределения по количеству постов в день.
+            </p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">

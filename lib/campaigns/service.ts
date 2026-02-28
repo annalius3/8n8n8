@@ -1,7 +1,7 @@
 ﻿import { Prisma, QueueStatus, RunStatus, StepExecStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateTopicSuggestions, generateQueueItemContent } from "@/lib/campaigns/openai";
-import { computeScheduledDates } from "@/lib/campaigns/schedule";
+import { computeScheduledDates, computeScheduledDatesFromIntervalCron } from "@/lib/campaigns/schedule";
 import { generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
 import { applyTemplate } from "@/lib/worker/template";
@@ -70,6 +70,7 @@ export async function getFlowOrThrow(flowId: string, userId: string) {
   const flow = await prisma.flow.findFirst({
     where: { id: flowId, userId },
     include: {
+      schedule: true,
       steps: { orderBy: { orderIndex: "asc" } },
       topicSuggestions: { orderBy: { createdAt: "asc" } },
       queueItems: { orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }] },
@@ -294,12 +295,18 @@ export async function planScheduleForFlow(flowId: string, userId: string) {
       orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }]
     });
 
-    const scheduledDates = computeScheduledDates({
-      count: pendingItems.length,
-      postsPerDay: flow.postsPerDay,
-      timezone: flow.timezone,
-      startTime: flow.startTime
-    });
+    const scheduledDates =
+      computeScheduledDatesFromIntervalCron({
+        count: pendingItems.length,
+        cron: flow.schedule?.cron ?? "",
+        timezone: flow.schedule?.timezone ?? flow.timezone
+      }) ??
+      computeScheduledDates({
+        count: pendingItems.length,
+        postsPerDay: flow.postsPerDay,
+        timezone: flow.timezone,
+        startTime: flow.startTime
+      });
 
     for (let index = 0; index < pendingItems.length; index += 1) {
       await prisma.postQueueItem.update({

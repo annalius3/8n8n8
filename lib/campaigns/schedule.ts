@@ -1,3 +1,5 @@
+import { CronExpressionParser } from "cron-parser";
+
 function getTimeZoneOffsetMs(date: Date, timeZone: string) {
   const local = new Date(date.toLocaleString("en-US", { timeZone }));
   return local.getTime() - date.getTime();
@@ -14,6 +16,35 @@ function addDays(date: Date, days: number) {
   const copy = new Date(date);
   copy.setDate(copy.getDate() + days);
   return copy;
+}
+
+export function computeScheduledDatesFromIntervalCron(input: {
+  count: number;
+  cron: string;
+  timezone: string;
+  now?: Date;
+}) {
+  const cron = input.cron.trim();
+  const supportsIntervalMode =
+    /^\*\/\d+\s+\*\s+\*\s+\*\s+\*$/.test(cron) ||
+    /^\d+\s+\*\/\d+\s+\*\s+\*\s+\*$/.test(cron) ||
+    /^\d+\s+\d+\s+\*\/\d+\s+\*\s+\*$/.test(cron);
+
+  if (!supportsIntervalMode || input.count <= 0) {
+    return null;
+  }
+
+  const interval = CronExpressionParser.parse(cron, {
+    currentDate: input.now ?? new Date(),
+    tz: input.timezone
+  });
+
+  const output: Date[] = [];
+  for (let index = 0; index < input.count; index += 1) {
+    output.push(interval.next().toDate());
+  }
+
+  return output;
 }
 
 export function computeScheduledDates(input: {
