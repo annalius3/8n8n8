@@ -2,22 +2,17 @@
 
 ## After Any Code Change
 
-1. TypeScript
+1. Run the base automated checks:
 ```bash
-npx tsc --noEmit
+npm run check
 ```
 
-2. Mojibake / broken encoding scan
-```bash
-rg "пїЅ|���|����|Рў|Р°Р|РёР" app components lib prisma
-```
-
-3. Local production build
+2. Run local production build:
 ```bash
 npm run build
 ```
 
-4. Review changed files
+3. Review changed files:
 ```bash
 git diff --stat
 git status --short
@@ -188,7 +183,7 @@ Check:
 
 ## Minimal Smoke Test
 
-1. `npx tsc --noEmit`
+1. `npm run check`
 2. `npm run build`
 3. open `/flows/new`
 4. create a flow
@@ -200,12 +195,11 @@ Check:
 ## Notes
 
 - If only UI was changed:
-  - run typecheck
-  - scan for mojibake
+  - run `npm run check`
   - open the changed page manually
 
 - If API or services were changed:
-  - run typecheck
-  - run build
+  - run `npm run check`
+  - run `npm run build`
   - execute the matching user flow manually
   - inspect `/runs`
