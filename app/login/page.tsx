@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,11 @@ export default function LoginPage() {
             Открыть ссылку: <a className="underline" href={magicLink}>{magicLink}</a>
           </p>
         ) : null}
+        <div className="border-t pt-4">
+          <Link href="/flows">
+            <Button variant="outline">Продолжить в demo режиме</Button>
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

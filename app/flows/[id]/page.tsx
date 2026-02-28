@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
+import { QueueStatus } from "@prisma/client";
 import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { JsonView } from "@/components/json-view";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 import { IntegrationModePanel } from "@/components/integration-mode-panel";
 import { PostPreviewCard } from "@/components/post-preview-card";
+import { SourcePreviewCard } from "@/components/source-preview-card";
+import { FlowReadinessCard } from "@/components/flow-readiness-card";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 type Props = {
@@ -71,6 +74,26 @@ export default async function FlowEditorPage({ params }: Props) {
     notFound();
   }
 
+  const sourceStep = flow.steps.find((step) => ["rss", "queue", "source_rss", "source_queue"].includes(step.type));
+  const isQueueSource = sourceStep ? ["queue", "source_queue"].includes(sourceStep.type) : false;
+  const nextQueueItem = isQueueSource
+    ? await prisma.postQueueItem.findFirst({
+        where: {
+          userId: user.id,
+          status: QueueStatus.pending
+        },
+        orderBy: { createdAt: "asc" }
+      })
+    : null;
+  const queuePendingCount = isQueueSource
+    ? await prisma.postQueueItem.count({
+        where: {
+          userId: user.id,
+          status: QueueStatus.pending
+        }
+      })
+    : 0;
+
   const lastRun = flow.runs[0];
   const modes = getIntegrationModes();
   const context = (lastRun?.contextJson as Record<string, any> | null) ?? null;
@@ -85,6 +108,73 @@ export default async function FlowEditorPage({ params }: Props) {
     imageMode: context?.image?.provider_mode ?? null,
     publishMode: context?.publish?.mode ?? null
   };
+
+  const blockers: string[] = [];
+  const hints: string[] = [];
+
+  if (!flow.isEnabled) blockers.push("Поток выключен. Scheduler не будет его запускать, пока вы не включите flow.");
+  if (flow.schedule.isPaused) blockers.push("Расписание поставлено на паузу. Автоматический запуск сейчас остановлен.");
+  if (!sourceStep) blockers.push("Не найден шаг источника. Поток не понимает, откуда брать контент.");
+  if (isQueueSource && !nextQueueItem) blockers.push("Очередь пуста. Для queue-потока нужно добавить хотя бы один pending item.");
+  if (!flow.steps.some((step) => ["pinterest_publish", "publish_pinterest"].includes(step.type))) {
+    blockers.push("В потоке нет шага публикации. Сейчас он обработает данные, но ничего не отправит наружу.");
+  }
+
+  if (!lastRun) hints.push("Поток ещё не запускался. Нажмите «Запустить сейчас», чтобы заполнить preview, timeline и context.");
+  if (sourceStep && ["rss", "source_rss"].includes(sourceStep.type)) {
+    const cfg = (sourceStep.configJson ?? {}) as Record<string, any>;
+    hints.push(`RSS-источник читает feed: ${cfg.rss_url ?? "не указан"}. Если новых элементов нет, run завершится сообщением об отсутствии новых RSS items.`);
+  }
+  if (isQueueSource) {
+    hints.push(`Сейчас в очереди pending items: ${queuePendingCount}. После публикации item перейдёт в статус published.`);
+  }
+  if (modes.pinterest === "demo") {
+    hints.push("Публикация Pinterest пока работает как demo-stub: вы увидите post id и логи, но реальный Pinterest API ещё не подключён.");
+  }
+  if (lastRun?.error) {
+    hints.push(`Последняя ошибка: ${lastRun.error}`);
+  }
+
+  const sourcePreview = (() => {
+    if (!sourceStep) {
+      return {
+        sourceType: "unknown" as const,
+        sourceLabel: "Источник не настроен",
+        summary: "Добавьте шаг rss или queue, чтобы поток мог брать исходный материал.",
+        details: [
+          { label: "Следующий запуск", value: formatDate(flow.schedule.nextRunAt) },
+          { label: "Статус flow", value: flow.isEnabled ? "Включён" : "Выключен" }
+        ]
+      };
+    }
+
+    if (["rss", "source_rss"].includes(sourceStep.type)) {
+      const cfg = (sourceStep.configJson ?? {}) as Record<string, any>;
+      return {
+        sourceType: "rss" as const,
+        sourceLabel: cfg.rss_url ? `RSS: ${cfg.rss_url}` : "RSS URL не указан",
+        summary: "Поток будет брать новые элементы из RSS и пропускать уже опубликованные записи по dedupe-правилу.",
+        details: [
+          { label: "take", value: String(cfg.take ?? 1) },
+          { label: "dedupe platform", value: String(cfg.dedupe?.platform ?? "pinterest") },
+          { label: "Следующий запуск", value: formatDate(flow.schedule.nextRunAt) },
+          { label: "Последний запуск", value: formatDate(lastRun?.startedAt) }
+        ]
+      };
+    }
+
+    return {
+      sourceType: "queue" as const,
+      sourceLabel: nextQueueItem?.title ?? "Следующий pending item пока не найден",
+      summary: nextQueueItem?.body ?? "Когда в очереди появятся pending items, здесь будет показан следующий кандидат на публикацию.",
+      details: [
+        { label: "pending items", value: String(queuePendingCount) },
+        { label: "next item id", value: nextQueueItem?.id ?? "—" },
+        { label: "link_url", value: nextQueueItem?.linkUrl ?? "—" },
+        { label: "Следующий запуск", value: formatDate(flow.schedule.nextRunAt) }
+      ]
+    };
+  })();
 
   return (
     <div className="space-y-6">
@@ -204,6 +294,16 @@ export default async function FlowEditorPage({ params }: Props) {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SourcePreviewCard
+          sourceType={sourcePreview.sourceType}
+          sourceLabel={sourcePreview.sourceLabel}
+          summary={sourcePreview.summary}
+          details={sourcePreview.details}
+        />
+        <FlowReadinessCard blockers={blockers} hints={hints} />
       </div>
 
       <FlowEditor
