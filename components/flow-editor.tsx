@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,42 @@ type FlowEditorProps = {
   initialMaxRunsPerDay: number;
   initialIsPaused: boolean;
   initialSteps: Array<{ type: string; configJson: Record<string, unknown> }>;
+};
+
+const STEP_OPTIONS = [
+  ["schedule", "Расписание"],
+  ["rss", "Источник: RSS"],
+  ["queue", "Источник: Queue"],
+  ["delay", "Пауза"],
+  ["template", "Текст по шаблону"],
+  ["ai_image_leonardo", "Leonardo image"],
+  ["pinterest_publish", "Публикация в Pinterest"],
+  ["schedule_trigger", "schedule_trigger (legacy)"],
+  ["source_rss", "source_rss (legacy)"],
+  ["source_queue", "source_queue (legacy)"],
+  ["wait", "wait (legacy)"],
+  ["sleep", "sleep (legacy)"],
+  ["ai_text", "ai_text (legacy)"],
+  ["ai_image", "ai_image (legacy)"],
+  ["publish_pinterest", "publish_pinterest (legacy)"]
+] as const;
+
+const STEP_HELP: Record<string, string> = {
+  schedule: "Шаг хранит cron и ограничения по количеству запусков.",
+  rss: "Читает RSS, маппит поля и не берёт уже опубликованные элементы.",
+  queue: "Берёт запись из очереди и ставит lock на время обработки.",
+  delay: "Полезно для паузы между внешними API вызовами.",
+  template: "Собирает pin title и pin description из переменных context.",
+  ai_image_leonardo: "Генерирует картинку по prompt_template.",
+  pinterest_publish: "Публикует пост и пишет published_items.",
+  schedule_trigger: "Старое имя шага schedule.",
+  source_rss: "Старое имя шага rss.",
+  source_queue: "Старое имя шага queue.",
+  wait: "Старое имя шага delay.",
+  sleep: "Старое имя шага delay.",
+  ai_text: "Старое имя шага template / openai text.",
+  ai_image: "Старое имя шага ai_image_leonardo.",
+  publish_pinterest: "Старое имя шага pinterest_publish."
 };
 
 export function FlowEditor({
@@ -56,7 +92,7 @@ export function FlowEditor({
       updateStep(index, { configJson: parsed });
       setError(null);
     } catch {
-      setError("config_json должен быть корректным JSON");
+      setError(`config_json шага ${index + 1} должен быть корректным JSON`);
     }
   }
 
@@ -124,9 +160,9 @@ export function FlowEditor({
               />
             </div>
           </div>
-          <div className="flex gap-6 text-sm">
+          <div className="flex flex-wrap gap-6 text-sm">
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} /> Включен
+              <input type="checkbox" checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} /> Включён
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={isPaused} onChange={(e) => setIsPaused(e.target.checked)} /> Планировщик на паузе
@@ -137,41 +173,34 @@ export function FlowEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle>Шаги потока (упорядоченный список)</CardTitle>
+          <CardTitle>Шаги потока</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {steps.map((step, index) => (
-            <div key={`${index}-${step.type}`} className="rounded-lg border p-3">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <strong>Шаг #{index + 1}</strong>
+            <div key={`${index}-${step.type}`} className="rounded-xl border p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div>
+                  <strong>Шаг #{index + 1}</strong>
+                  <p className="mt-1 text-sm text-muted-foreground">{STEP_HELP[step.type] ?? "Настройте JSON ниже."}</p>
+                </div>
                 <Button size="sm" variant="outline" onClick={() => removeStep(index)}>
                   Удалить
                 </Button>
               </div>
-              <div className="mb-2 space-y-2">
-                <Label>Тип</Label>
+              <div className="mb-3 space-y-2">
+                <Label>Тип шага</Label>
                 <Select value={step.type} onChange={(e) => updateStep(index, { type: e.target.value })}>
-                  <option value="schedule">schedule</option>
-                  <option value="rss">rss</option>
-                  <option value="queue">queue</option>
-                  <option value="delay">delay</option>
-                  <option value="template">template</option>
-                  <option value="ai_image_leonardo">ai_image_leonardo</option>
-                  <option value="pinterest_publish">pinterest_publish</option>
-                  <option value="schedule_trigger">schedule_trigger (устар.)</option>
-                  <option value="source_rss">source_rss (устар.)</option>
-                  <option value="source_queue">source_queue (устар.)</option>
-                  <option value="wait">wait (устар.)</option>
-                  <option value="sleep">sleep (устар.)</option>
-                  <option value="ai_text">ai_text (устар.)</option>
-                  <option value="ai_image">ai_image (устар.)</option>
-                  <option value="publish_pinterest">publish_pinterest (устар.)</option>
+                  {STEP_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>config_json</Label>
                 <Textarea
-                  rows={5}
+                  rows={8}
                   defaultValue={JSON.stringify(step.configJson, null, 2)}
                   onBlur={(e) => updateStepConfig(index, e.target.value)}
                 />

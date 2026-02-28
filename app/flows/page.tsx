@@ -1,78 +1,165 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { RunNowButton } from "@/components/run-now-button";
 import { SchedulerTickButton } from "@/components/scheduler-tick-button";
 import { FlowToggleButton } from "@/components/flow-toggle-button";
 
-export default async function FlowsPage() {
-  const user = await requireUser();
+type FlowWithMeta = Awaited<ReturnType<typeof loadFlows>>[number];
 
-  const flows = await prisma.flow.findMany({
-    where: { userId: user.id },
-    include: { schedule: true, steps: { orderBy: { orderIndex: "asc" } } },
+async function loadFlows(userId: string) {
+  return prisma.flow.findMany({
+    where: { userId },
+    include: {
+      schedule: true,
+      steps: { orderBy: { orderIndex: "asc" } },
+      runs: {
+        orderBy: { startedAt: "desc" },
+        take: 1
+      }
+    },
     orderBy: { createdAt: "desc" }
   });
+}
+
+function getSourceLabel(flow: FlowWithMeta) {
+  const step = flow.steps.find((item) => ["rss", "queue", "source_rss", "source_queue"].includes(item.type));
+  if (!step) return "Не указан";
+  if (["rss", "source_rss"].includes(step.type)) return "RSS";
+  if (["queue", "source_queue"].includes(step.type)) return "Очередь из БД";
+  return step.type;
+}
+
+function getTargetLabel(flow: FlowWithMeta) {
+  const step = flow.steps.find((item) => ["pinterest_publish", "publish_pinterest"].includes(item.type));
+  if (!step) return "Не указан";
+  const config = step.configJson as { board_id?: string };
+  return config.board_id ? `Pinterest · board ${config.board_id}` : "Pinterest";
+}
+
+function getLastStatusBadge(flow: FlowWithMeta) {
+  const run = flow.runs[0];
+  if (!run) return <Badge variant="outline">Ещё не запускался</Badge>;
+  if (run.status === "failed") return <Badge variant="destructive">Ошибка</Badge>;
+  if (run.status === "running") return <Badge variant="secondary">Выполняется</Badge>;
+  return <Badge>Успешно</Badge>;
+}
+
+function formatDate(date: Date | null | undefined) {
+  return date ? date.toLocaleString("ru-RU") : "—";
+}
+
+function describeFlow(flow: FlowWithMeta) {
+  return `${getSourceLabel(flow)} -> ${flow.steps.map((step) => step.type).join(" -> ")}`;
+}
+
+export default async function FlowsPage() {
+  const user = await requireUser();
+  const flows = await loadFlows(user.id);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Потоки</CardTitle>
-          <div className="flex items-center gap-2">
+        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <CardTitle>Потоки автопостинга</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Здесь видно, откуда приходит контент, что с ним происходит и когда он будет опубликован.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <SchedulerTickButton />
             <Link href="/flows/new">
               <Button>Создать поток</Button>
             </Link>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Название</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Cron</TableHead>
-                <TableHead>Следующий запуск</TableHead>
-                <TableHead>Шаги</TableHead>
-                <TableHead>Действия</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {flows.map((flow) => (
-                <TableRow key={flow.id}>
-                  <TableCell>
-                    <Link href={`/flows/${flow.id}`} className="font-medium underline-offset-4 hover:underline">
-                      {flow.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {flow.isEnabled ? <Badge>включен</Badge> : <Badge variant="secondary">выключен</Badge>}
-                  </TableCell>
-                  <TableCell>{flow.schedule?.cron ?? "-"}</TableCell>
-                  <TableCell>{flow.schedule?.nextRunAt?.toLocaleString() ?? "-"}</TableCell>
-                  <TableCell>{flow.steps.length}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-2">
-                      <RunNowButton flowId={flow.id} />
-                      <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {flows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6}>Потоков пока нет.</TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-xl border bg-muted/30 p-4">
+            <p className="text-sm font-medium">1. Источник</p>
+            <p className="mt-1 text-sm text-muted-foreground">RSS или очередь из базы. На этом шаге поток получает материал для публикации.</p>
+          </div>
+          <div className="rounded-xl border bg-muted/30 p-4">
+            <p className="text-sm font-medium">2. Обработка</p>
+            <p className="mt-1 text-sm text-muted-foreground">Текст и изображение можно генерировать в демо-режиме без реальных ключей.</p>
+          </div>
+          <div className="rounded-xl border bg-muted/30 p-4">
+            <p className="text-sm font-medium">3. Публикация</p>
+            <p className="mt-1 text-sm text-muted-foreground">Даже без реального Pinterest вы увидите весь маршрут в логах и итоговый context.</p>
+          </div>
         </CardContent>
       </Card>
+
+      {flows.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Потоков пока нет. Создайте первый поток и проверьте весь сценарий на демо-данных.
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {flows.map((flow) => {
+          const lastRun = flow.runs[0];
+
+          return (
+            <Card key={flow.id} className="border-slate-200 shadow-sm">
+              <CardHeader className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <Link href={`/flows/${flow.id}`} className="text-lg font-semibold underline-offset-4 hover:underline">
+                      {flow.name}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">{describeFlow(flow)}</p>
+                  </div>
+                  {flow.isEnabled ? <Badge>Включён</Badge> : <Badge variant="secondary">Выключен</Badge>}
+                </div>
+                <div className="flex flex-wrap gap-2">{getLastStatusBadge(flow)}</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs uppercase text-muted-foreground">Источник</p>
+                    <p className="mt-1 text-sm font-medium">{getSourceLabel(flow)}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs uppercase text-muted-foreground">Цель</p>
+                    <p className="mt-1 text-sm font-medium">{getTargetLabel(flow)}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs uppercase text-muted-foreground">Расписание</p>
+                    <p className="mt-1 text-sm font-medium">{flow.schedule?.cron ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{flow.schedule?.timezone ?? "Europe/Kiev"}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs uppercase text-muted-foreground">Следующий запуск</p>
+                    <p className="mt-1 text-sm font-medium">{formatDate(flow.schedule?.nextRunAt)}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs uppercase text-muted-foreground">Последний запуск</p>
+                    <p className="mt-1 text-sm font-medium">{formatDate(lastRun?.startedAt)}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs uppercase text-muted-foreground">Шагов в потоке</p>
+                    <p className="mt-1 text-sm font-medium">{flow.steps.length}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <RunNowButton flowId={flow.id} />
+                  <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
+                  <Link href={`/flows/${flow.id}`}>
+                    <Button variant="outline">Открыть редактор</Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,9 +33,12 @@ export default function LoginPage() {
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>Вход по magic link</CardTitle>
+        <CardTitle>Авторизация по magic link</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Для демо-режима вход не обязателен. Эта страница нужна только если вы хотите проверить упрощённую авторизацию.
+        </p>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label>Email</Label>

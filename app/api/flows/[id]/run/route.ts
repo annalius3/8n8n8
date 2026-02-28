@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getActiveUser } from "@/lib/active-user";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
 import { runFlowNow } from "@/lib/worker/runner";
 
 type Params = {
@@ -8,8 +8,7 @@ type Params = {
 };
 
 export async function POST(_: NextRequest, { params }: Params) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getActiveUser();
 
   const { id } = await params;
   const flow = await prisma.flow.findFirst({

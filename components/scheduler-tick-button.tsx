@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,14 +13,14 @@ export function SchedulerTickButton() {
       return;
     }
 
-    const data = (await response.json()) as { started: number; checkedAt: string; due?: number };
+    const data = (await response.json()) as { started: number; due?: number };
     setStatus(`Запущено потоков: ${data.started}${data.due !== undefined ? ` из ${data.due}` : ""}`);
   }
 
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" onClick={onClick}>
-        Запустить планировщик
+        Проверить расписание
       </Button>
       {status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
     </div>

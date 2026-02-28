@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getActiveUser } from "@/lib/active-user";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
 import { computeNextRunAt } from "@/lib/worker/cron";
 
 const createSchema = z.object({
@@ -16,8 +16,7 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getActiveUser();
 
   const flows = await prisma.flow.findMany({
     where: { userId: user.id },
@@ -38,8 +37,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getActiveUser();
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
