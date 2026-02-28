@@ -10,6 +10,7 @@ import { FlowEditor } from "@/components/flow-editor";
 import { JsonView } from "@/components/json-view";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 import { IntegrationModePanel } from "@/components/integration-mode-panel";
+import { PostPreviewCard } from "@/components/post-preview-card";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 type Props = {
@@ -32,6 +33,19 @@ function getStepCaption(type: string) {
   };
 
   return map[type] ?? "Пользовательский шаг.";
+}
+
+function getStepMode(type: string, runtime: Record<string, any> | null) {
+  if (!runtime) return null;
+  if (["template", "ai_text"].includes(type)) return runtime.openai;
+  if (["ai_image_leonardo", "ai_image"].includes(type)) return runtime.leonardo;
+  if (["pinterest_publish", "publish_pinterest"].includes(type)) return runtime.pinterest;
+  return null;
+}
+
+function formatModeLabel(mode: string | null) {
+  if (!mode) return null;
+  return mode === "real" ? "Real API" : "Demo";
 }
 
 export default async function FlowEditorPage({ params }: Props) {
@@ -60,12 +74,16 @@ export default async function FlowEditorPage({ params }: Props) {
   const lastRun = flow.runs[0];
   const modes = getIntegrationModes();
   const context = (lastRun?.contextJson as Record<string, any> | null) ?? null;
+  const runtime = (context?.runtime as Record<string, any> | null) ?? null;
   const preview = {
     title: context?.text?.pin_title ?? "Здесь появится заголовок после запуска",
     description: context?.text?.pin_description ?? "Здесь появится описание будущего поста",
     imageUrl: context?.image?.image_url ?? null,
     linkUrl: context?.source?.link_url ?? null,
-    boardId: context?.publish?.board_id ?? ((flow.steps.find((step) => step.type === "pinterest_publish")?.configJson as any)?.board_id ?? null)
+    boardId: context?.publish?.board_id ?? ((flow.steps.find((step) => step.type === "pinterest_publish")?.configJson as any)?.board_id ?? null),
+    textMode: context?.text?.provider_mode ?? null,
+    imageMode: context?.image?.provider_mode ?? null,
+    publishMode: context?.publish?.mode ?? null
   };
 
   return (
@@ -78,61 +96,46 @@ export default async function FlowEditorPage({ params }: Props) {
         <RunNowButton flowId={flow.id} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
             <CardTitle>Как работает поток</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {flow.steps.map((step, index) => (
-              <div key={step.id} className="rounded-lg border p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">
-                      Шаг {index + 1}. <span className="font-mono">{step.type}</span>
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">{getStepCaption(step.type)}</p>
+            {flow.steps.map((step, index) => {
+              const stepMode = formatModeLabel(getStepMode(step.type, runtime));
+
+              return (
+                <div key={step.id} className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Шаг {index + 1}. <span className="font-mono">{step.type}</span>
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">{getStepCaption(step.type)}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {stepMode ? <Badge variant="outline">{stepMode}</Badge> : null}
+                      <Badge variant="outline">#{step.orderIndex + 1}</Badge>
+                    </div>
                   </div>
-                  <Badge variant="outline">#{step.orderIndex + 1}</Badge>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Предпросмотр публикации</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-lg border p-3">
-                <p className="text-xs uppercase text-muted-foreground">Заголовок</p>
-                <p className="mt-1 text-sm font-medium">{preview.title}</p>
-              </div>
-              <div className="rounded-lg border p-3">
-                <p className="text-xs uppercase text-muted-foreground">Описание</p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{preview.description}</p>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-lg border p-3">
-                  <p className="text-xs uppercase text-muted-foreground">Изображение</p>
-                  {preview.imageUrl ? (
-                    <a href={preview.imageUrl} className="mt-1 block break-all text-sm text-sky-700 underline" target="_blank">
-                      {preview.imageUrl}
-                    </a>
-                  ) : (
-                    <p className="mt-1 text-sm text-muted-foreground">Появится после запуска flow.</p>
-                  )}
-                </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-xs uppercase text-muted-foreground">Ссылка и board</p>
-                  <p className="mt-1 text-sm">{preview.linkUrl ?? "—"}</p>
-                  <p className="text-sm text-muted-foreground">board: {preview.boardId ?? "—"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PostPreviewCard
+            title={preview.title}
+            description={preview.description}
+            imageUrl={preview.imageUrl}
+            linkUrl={preview.linkUrl}
+            boardId={preview.boardId}
+            textMode={preview.textMode}
+            imageMode={preview.imageMode}
+            publishMode={preview.publishMode}
+          />
 
           <Card>
             <CardHeader>

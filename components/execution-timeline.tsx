@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 
 type TimelineStep = {
   id: string;
@@ -26,6 +26,15 @@ function getStatusLabel(status: TimelineStep["status"]) {
   return "Пропущен";
 }
 
+function getModeLabel(mode: string | null | undefined) {
+  if (!mode) return null;
+  if (mode === "demo") return "Demo";
+  if (mode === "real") return "Real API";
+  if (mode === "template") return "Template";
+  if (mode === "openai") return "OpenAI";
+  return mode;
+}
+
 export function ExecutionTimeline({ steps }: ExecutionTimelineProps) {
   if (steps.length === 0) {
     return <p className="text-sm text-muted-foreground">Шаги ещё не выполнялись.</p>;
@@ -47,7 +56,7 @@ export function ExecutionTimeline({ steps }: ExecutionTimelineProps) {
               <Badge variant={step.status === "failed" ? "destructive" : step.status === "skipped" ? "outline" : "secondary"}>
                 {getStatusLabel(step.status)}
               </Badge>
-              {step.mode ? <Badge variant="outline">{step.mode}</Badge> : null}
+              {getModeLabel(step.mode) ? <Badge variant="outline">{getModeLabel(step.mode)}</Badge> : null}
             </div>
             {step.error ? <p className="mt-2 text-sm text-red-700">{step.error}</p> : null}
           </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,13 @@ const STEP_HELP: Record<string, string> = {
   ai_image: "Старое имя шага ai_image_leonardo.",
   publish_pinterest: "Старое имя шага pinterest_publish."
 };
+
+function inferStepMode(type: string) {
+  if (["template", "ai_text"].includes(type)) return "Demo/Real через OPENAI_API_KEY";
+  if (["ai_image_leonardo", "ai_image"].includes(type)) return "Demo/Real через LEONARDO_API_KEY";
+  if (["pinterest_publish", "publish_pinterest"].includes(type)) return "Сейчас demo stub";
+  return null;
+}
 
 export function FlowEditor({
   flowId,
@@ -176,37 +184,44 @@ export function FlowEditor({
           <CardTitle>Шаги потока</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {steps.map((step, index) => (
-            <div key={`${index}-${step.type}`} className="rounded-xl border p-4">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <div>
-                  <strong>Шаг #{index + 1}</strong>
-                  <p className="mt-1 text-sm text-muted-foreground">{STEP_HELP[step.type] ?? "Настройте JSON ниже."}</p>
+          {steps.map((step, index) => {
+            const modeHint = inferStepMode(step.type);
+
+            return (
+              <div key={`${index}-${step.type}`} className="rounded-xl border p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong>Шаг #{index + 1}</strong>
+                      {modeHint ? <Badge variant="outline">{modeHint}</Badge> : null}
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{STEP_HELP[step.type] ?? "Настройте JSON ниже."}</p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => removeStep(index)}>
+                    Удалить
+                  </Button>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => removeStep(index)}>
-                  Удалить
-                </Button>
+                <div className="mb-3 space-y-2">
+                  <Label>Тип шага</Label>
+                  <Select value={step.type} onChange={(e) => updateStep(index, { type: e.target.value })}>
+                    {STEP_OPTIONS.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>config_json</Label>
+                  <Textarea
+                    rows={8}
+                    defaultValue={JSON.stringify(step.configJson, null, 2)}
+                    onBlur={(e) => updateStepConfig(index, e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="mb-3 space-y-2">
-                <Label>Тип шага</Label>
-                <Select value={step.type} onChange={(e) => updateStep(index, { type: e.target.value })}>
-                  {STEP_OPTIONS.map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>config_json</Label>
-                <Textarea
-                  rows={8}
-                  defaultValue={JSON.stringify(step.configJson, null, 2)}
-                  onBlur={(e) => updateStepConfig(index, e.target.value)}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={addStep}>
