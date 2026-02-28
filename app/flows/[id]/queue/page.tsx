@@ -36,7 +36,7 @@ export default async function FlowQueuePage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <LinkButton href="/flows" variant="outline">К списку кампаний</LinkButton>
+        <LinkButton href="/flows" variant="outline">К списку потоков</LinkButton>
         <LinkButton href={`/flows/${flow.id}`} variant="outline">Обзор</LinkButton>
         <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Темы</LinkButton>
       </div>

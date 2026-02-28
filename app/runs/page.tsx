@@ -84,7 +84,7 @@ export default async function RunsPage({ searchParams }: Props) {
       {runs.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Запусков пока не было. Нажмите «Запустить сейчас» на странице потока.
+            Запусков пока не было. Создайте поток, сгенерируйте темы и выполните действия в очереди.
           </CardContent>
         </Card>
       ) : null}

@@ -230,7 +230,8 @@ export async function addTopicsToQueue(flowId: string, userId: string, topicIds:
   const suggestions = await prisma.topicSuggestion.findMany({
     where: {
       flowId: flow.id,
-      id: { in: topicIds }
+      id: { in: topicIds },
+      selected: false
     },
     orderBy: { createdAt: "asc" }
   });
@@ -239,25 +240,44 @@ export async function addTopicsToQueue(flowId: string, userId: string, topicIds:
     return { created: 0 };
   }
 
+  const existingQueueTopics = new Set(
+    (
+      await prisma.postQueueItem.findMany({
+        where: {
+          flowId: flow.id,
+          userId,
+          topicText: { in: suggestions.map((item) => item.topicText) }
+        },
+        select: { topicText: true }
+      })
+    )
+      .map((item) => item.topicText)
+      .filter((item): item is string => Boolean(item))
+  );
+
+  const uniqueSuggestions = suggestions.filter((item) => !existingQueueTopics.has(item.topicText));
+
   await prisma.topicSuggestion.updateMany({
     where: { id: { in: suggestions.map((item) => item.id) } },
     data: { selected: true }
   });
 
-  await prisma.postQueueItem.createMany({
-    data: suggestions.map((suggestion) => ({
-      userId,
-      flowId: flow.id,
-      topicText: suggestion.topicText,
-      title: suggestion.topicText,
-      body: "",
-      status: QueueStatus.pending
-    }))
-  });
+  if (uniqueSuggestions.length > 0) {
+    await prisma.postQueueItem.createMany({
+      data: uniqueSuggestions.map((suggestion) => ({
+        userId,
+        flowId: flow.id,
+        topicText: suggestion.topicText,
+        title: suggestion.topicText,
+        body: "",
+        status: QueueStatus.pending
+      }))
+    });
+  }
 
   await planScheduleForFlow(flow.id, userId);
 
-  return { created: suggestions.length };
+  return { created: uniqueSuggestions.length };
 }
 
 export async function planScheduleForFlow(flowId: string, userId: string) {

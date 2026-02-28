@@ -43,7 +43,15 @@ export async function runSchedulerTick() {
       }
     },
     include: {
-      flow: true
+      flow: {
+        include: {
+          steps: {
+            select: {
+              type: true
+            }
+          }
+        }
+      }
     },
     orderBy: {
       nextRunAt: "asc"
@@ -66,8 +74,11 @@ export async function runSchedulerTick() {
       continue;
     }
 
-    await runFlowNow(schedule.flowId);
-    started += 1;
+    const hasLegacySourceStep = schedule.flow.steps.some((step) => step.type === "rss" || step.type === "queue");
+    if (hasLegacySourceStep) {
+      await runFlowNow(schedule.flowId);
+      started += 1;
+    }
   }
 
   const dueCampaigns = await prisma.flow.findMany({
