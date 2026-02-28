@@ -1,12 +1,12 @@
-﻿"use client";
+"use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
@@ -20,19 +20,23 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
 
-    const response = await fetch("/api/auth/magic-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, next: nextPath })
-    });
+    try {
+      const response = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next: nextPath })
+      });
 
-    if (!response.ok) {
-      setError("Не удалось создать magic link");
-      return;
+      if (!response.ok) {
+        setError("Не удалось создать magic link");
+        return;
+      }
+
+      const data = (await response.json()) as { magicLink: string };
+      setMagicLink(data.magicLink);
+    } catch {
+      setError("Не удалось связаться с сервером");
     }
-
-    const data = (await response.json()) as { magicLink: string };
-    setMagicLink(data.magicLink);
   }
 
   return (
@@ -63,9 +67,7 @@ export default function LoginPage() {
           </p>
         ) : null}
         <div className="border-t pt-4">
-          <Link href="/flows">
-            <Button variant="outline">Продолжить в demo режиме</Button>
-          </Link>
+          <LinkButton href="/flows" variant="outline">Продолжить в demo режиме</LinkButton>
         </div>
       </CardContent>
     </Card>

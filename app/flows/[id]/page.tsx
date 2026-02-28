@@ -17,6 +17,7 @@ import { FlowReadinessCard } from "@/components/flow-readiness-card";
 import { DemoRunBanner } from "@/components/demo-run-banner";
 import { SetupRequiredCard } from "@/components/setup-required-card";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
+import { LinkButton } from "@/components/ui/link-button";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -189,9 +190,7 @@ export default async function FlowEditorPage({ params }: Props) {
           text="Последний запуск проходил частично или полностью в demo-режиме. Preview и context полезны для проверки сценария, но не все внешние API вызывались по-настоящему."
         />
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/flows">
-            <Button variant="outline">Назад к потокам</Button>
-          </Link>
+          <LinkButton href="/flows" variant="outline">Назад к потокам</LinkButton>
           <RunNowButton flowId={flow.id} />
         </div>
 

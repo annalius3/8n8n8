@@ -86,6 +86,8 @@ export function FlowEditor({
   const [maxRunsPerDay, setMaxRunsPerDay] = useState(initialMaxRunsPerDay);
   const [isPaused, setIsPaused] = useState(initialIsPaused);
   const [steps, setSteps] = useState<StepItem[]>(initialSteps);
+  const [stepDrafts, setStepDrafts] = useState<string[]>(() => initialSteps.map((step) => JSON.stringify(step.configJson, null, 2)));
+  const [jsonErrors, setJsonErrors] = useState<Record<number, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -94,48 +96,82 @@ export function FlowEditor({
     setSteps((prev) => prev.map((step, i) => (i === index ? { ...step, ...patch } : step)));
   }
 
+  function updateDraft(index: number, value: string) {
+    setStepDrafts((prev) => prev.map((draft, i) => (i === index ? value : draft)));
+  }
+
   function updateStepConfig(index: number, configText: string) {
     try {
       const parsed = JSON.parse(configText) as Record<string, unknown>;
       updateStep(index, { configJson: parsed });
+      setJsonErrors((prev) => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
       setError(null);
     } catch {
-      setError(`config_json шага ${index + 1} должен быть корректным JSON`);
+      const message = `config_json шага ${index + 1} должен быть корректным JSON`;
+      setJsonErrors((prev) => ({ ...prev, [index]: message }));
+      setError(message);
     }
   }
 
   function addStep() {
     setSteps((prev) => [...prev, { type: "template", configJson: { pin_title_template: "{title}" } }]);
+    setStepDrafts((prev) => [...prev, JSON.stringify({ pin_title_template: "{title}" }, null, 2)]);
   }
 
   function removeStep(index: number) {
     setSteps((prev) => prev.filter((_, i) => i !== index));
+    setStepDrafts((prev) => prev.filter((_, i) => i !== index));
+    setJsonErrors((prev) => {
+      const next: Record<number, string> = {};
+      Object.entries(prev).forEach(([key, value]) => {
+        const currentIndex = Number(key);
+        if (currentIndex < index) next[currentIndex] = value;
+        if (currentIndex > index) next[currentIndex - 1] = value;
+      });
+      return next;
+    });
   }
 
   async function saveAll() {
-    setSaving(true);
-    setError(null);
-
-    const metaResponse = await fetch(`/api/flows/${flowId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, isEnabled, cron, timezone, maxRunsPerDay, isPaused })
-    });
-
-    const stepsResponse = await fetch(`/api/flows/${flowId}/steps`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ steps })
-    });
-
-    if (!metaResponse.ok || !stepsResponse.ok) {
-      setError("Не удалось сохранить поток");
-      setSaving(false);
+    if (Object.keys(jsonErrors).length > 0) {
+      setError("Исправьте ошибки JSON перед сохранением");
       return;
     }
 
-    setSaving(false);
-    router.refresh();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const metaResponse = await fetch(`/api/flows/${flowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, isEnabled, cron, timezone, maxRunsPerDay, isPaused })
+      });
+
+      const stepsResponse = await fetch(`/api/flows/${flowId}/steps`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ steps })
+      });
+
+      const metaData = (await metaResponse.json().catch(() => ({}))) as { error?: string };
+      const stepsData = (await stepsResponse.json().catch(() => ({}))) as { error?: string };
+
+      if (!metaResponse.ok || !stepsResponse.ok) {
+        setError(stepsData.error ?? metaData.error ?? "Не удалось сохранить поток");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError("Не удалось связаться с сервером");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -215,9 +251,11 @@ export function FlowEditor({
                   <Label>config_json</Label>
                   <Textarea
                     rows={8}
-                    defaultValue={JSON.stringify(step.configJson, null, 2)}
+                    value={stepDrafts[index] ?? JSON.stringify(step.configJson, null, 2)}
+                    onChange={(e) => updateDraft(index, e.target.value)}
                     onBlur={(e) => updateStepConfig(index, e.target.value)}
                   />
+                  {jsonErrors[index] ? <p className="text-xs text-red-600">{jsonErrors[index]}</p> : null}
                 </div>
               </div>
             );

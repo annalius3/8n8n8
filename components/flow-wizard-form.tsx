@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export function FlowWizardForm() {
@@ -51,31 +52,48 @@ export function FlowWizardForm() {
     setLoading(true);
     setError(null);
 
-    const response = await fetch("/api/flows", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        sourceType,
-        rssUrl,
-        cron,
-        timezone,
-        maxRunsPerDay,
-        textTemplate,
-        imagePromptTemplate
-      })
-    });
+    try {
+      const response = await fetch("/api/flows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          sourceType,
+          rssUrl,
+          cron,
+          timezone,
+          maxRunsPerDay,
+          textTemplate,
+          imagePromptTemplate
+        })
+      });
 
-    if (!response.ok) {
-      setError("Не удалось создать поток");
+      const created = (await response.json().catch(() => ({}))) as {
+        id?: string;
+        error?: string | { fieldErrors?: Record<string, string[]> };
+      };
+
+      if (!response.ok || !created.id) {
+        const message =
+          typeof created.error === "string"
+            ? created.error
+            : created.error?.fieldErrors
+              ? Object.values(created.error.fieldErrors)
+                  .flat()
+                  .filter(Boolean)
+                  .join(", ")
+              : "Не удалось создать поток";
+        setError(message);
+        return;
+      }
+
+      router.push(`/flows/${created.id}`);
+      router.refresh();
+    } catch {
+      setError("Не удалось связаться с сервером");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const created = (await response.json()) as { id: string };
-    router.push(`/flows/${created.id}`);
-    router.refresh();
-    setLoading(false);
   }
 
   return (
@@ -92,14 +110,10 @@ export function FlowWizardForm() {
             </div>
             <div className="space-y-2">
               <Label>Тип источника</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={sourceType}
-                onChange={(e) => setSourceType(e.target.value as "rss" | "queue")}
-              >
+              <Select value={sourceType} onChange={(e) => setSourceType(e.target.value as "rss" | "queue")}>
                 <option value="rss">RSS</option>
                 <option value="queue">Очередь (БД)</option>
-              </select>
+              </Select>
             </div>
             {sourceType === "rss" ? (
               <div className="space-y-2">

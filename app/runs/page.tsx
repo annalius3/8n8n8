@@ -1,13 +1,12 @@
-﻿import { requireUser } from "@/lib/require-user";
+import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { JsonView } from "@/components/json-view";
 import { ExecutionTimeline } from "@/components/execution-timeline";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { DemoRunBanner } from "@/components/demo-run-banner";
 import { SetupRequiredCard } from "@/components/setup-required-card";
+import { LinkButton } from "@/components/ui/link-button";
 
 type Props = {
   searchParams?: Promise<{ status?: string }>;
@@ -83,26 +82,10 @@ export default async function RunsPage({ searchParams }: Props) {
             Здесь видно весь путь выполнения: какие шаги сработали, что они получили на вход и что записали в output/context.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Link href="/runs">
-              <Button variant={activeStatus === "all" ? "default" : "outline"} size="sm">
-                Все
-              </Button>
-            </Link>
-            <Link href="/runs?status=success">
-              <Button variant={activeStatus === "success" ? "default" : "outline"} size="sm">
-                Успешные
-              </Button>
-            </Link>
-            <Link href="/runs?status=failed">
-              <Button variant={activeStatus === "failed" ? "default" : "outline"} size="sm">
-                Ошибки
-              </Button>
-            </Link>
-            <Link href="/runs?status=running">
-              <Button variant={activeStatus === "running" ? "default" : "outline"} size="sm">
-                Выполняются
-              </Button>
-            </Link>
+            <LinkButton href="/runs" variant={activeStatus === "all" ? "default" : "outline"} size="sm">Все</LinkButton>
+            <LinkButton href="/runs?status=success" variant={activeStatus === "success" ? "default" : "outline"} size="sm">Успешные</LinkButton>
+            <LinkButton href="/runs?status=failed" variant={activeStatus === "failed" ? "default" : "outline"} size="sm">Ошибки</LinkButton>
+            <LinkButton href="/runs?status=running" variant={activeStatus === "running" ? "default" : "outline"} size="sm">Выполняются</LinkButton>
           </div>
         </CardContent>
       </Card>

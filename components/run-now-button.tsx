@@ -13,17 +13,24 @@ export function RunNowButton({ flowId }: { flowId: string }) {
   async function runNow() {
     setLoading(true);
     setError(null);
+    setRunId(null);
 
-    const response = await fetch(`/api/flows/${flowId}/run`, { method: "POST" });
-    if (response.ok) {
-      const data = (await response.json()) as { runId: string };
+    try {
+      const response = await fetch(`/api/flows/${flowId}/run`, { method: "POST" });
+      const data = (await response.json().catch(() => ({}))) as { runId?: string; error?: string };
+
+      if (!response.ok || !data.runId) {
+        setError(data.error ?? "Запуск не удался");
+        return;
+      }
+
       setRunId(data.runId);
       router.refresh();
-    } else {
-      setError("Запуск не удался");
+    } catch {
+      setError("Не удалось связаться с сервером");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (

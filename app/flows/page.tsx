@@ -1,8 +1,7 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RunNowButton } from "@/components/run-now-button";
 import { SchedulerTickButton } from "@/components/scheduler-tick-button";
@@ -10,6 +9,7 @@ import { FlowToggleButton } from "@/components/flow-toggle-button";
 import { IntegrationModePanel } from "@/components/integration-mode-panel";
 import { SetupRequiredCard } from "@/components/setup-required-card";
 import { getIntegrationModes } from "@/lib/integrations/runtime";
+import { LinkButton } from "@/components/ui/link-button";
 
 type FlowWithMeta = Awaited<ReturnType<typeof loadFlows>>[number];
 
@@ -99,9 +99,7 @@ export default async function FlowsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <SchedulerTickButton />
-            <Link href="/flows/new">
-              <Button>Создать поток</Button>
-            </Link>
+            <LinkButton href="/flows/new">Создать поток</LinkButton>
           </div>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
@@ -138,7 +136,7 @@ export default async function FlowsPage() {
               <CardHeader className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
-                    <Link href={`/flows/${flow.id}`} className="text-lg font-semibold underline-offset-4 hover:underline">
+                    <Link href={`/flows/${flow.id}` as any} className="text-lg font-semibold underline-offset-4 hover:underline">
                       {flow.name}
                     </Link>
                     <p className="text-sm text-muted-foreground">{describeFlow(flow)}</p>
@@ -203,9 +201,7 @@ export default async function FlowsPage() {
                 <div className="flex flex-wrap gap-2">
                   <RunNowButton flowId={flow.id} />
                   <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
-                  <Link href={`/flows/${flow.id}`}>
-                    <Button variant="outline">Открыть редактор</Button>
-                  </Link>
+                  <LinkButton href={`/flows/${flow.id}` as any} variant="outline">Открыть редактор</LinkButton>
                 </div>
               </CardContent>
             </Card>

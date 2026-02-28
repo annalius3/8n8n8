@@ -7,27 +7,41 @@ import { Button } from "@/components/ui/button";
 export function FlowToggleButton({ flowId, initialEnabled }: { flowId: string; initialEnabled: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function toggle() {
     setLoading(true);
-    const response = await fetch(`/api/flows/${flowId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isEnabled: !enabled })
-    });
+    setError(null);
 
-    if (response.ok) {
+    try {
+      const response = await fetch(`/api/flows/${flowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isEnabled: !enabled })
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        setError(data.error ?? "Не удалось изменить статус потока");
+        return;
+      }
+
       setEnabled(!enabled);
       router.refresh();
+    } catch {
+      setError("Не удалось связаться с сервером");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
-    <Button variant="outline" onClick={toggle} disabled={loading}>
-      {loading ? "Сохранение..." : enabled ? "Выключить" : "Включить"}
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={toggle} disabled={loading}>
+        {loading ? "Сохранение..." : enabled ? "Выключить" : "Включить"}
+      </Button>
+      {error ? <span className="text-xs text-red-600">{error}</span> : null}
+    </div>
   );
 }

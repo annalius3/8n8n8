@@ -1,6 +1,5 @@
-﻿import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 
 type SetupRequiredCardProps = {
   title?: string;
@@ -28,12 +27,8 @@ export function SetupRequiredCard({
           </ul>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/api/health">
-            <Button variant="outline">Проверить health</Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="outline">Открыть авторизацию</Button>
-          </Link>
+          <LinkButton href="/api/health" variant="outline">Проверить health</LinkButton>
+          <LinkButton href="/login" variant="outline">Открыть авторизацию</LinkButton>
         </div>
       </CardContent>
     </Card>

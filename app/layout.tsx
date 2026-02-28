@@ -1,8 +1,8 @@
-﻿import Link from "next/link";
 import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LinkButton } from "@/components/ui/link-button";
 
 export const metadata = {
   title: "Autoposting Flow",
@@ -35,15 +35,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </div>
                 )}
                 <nav className="flex items-center gap-2">
-                  <Link href="/flows">
-                    <Button variant="outline">Потоки</Button>
-                  </Link>
-                  <Link href="/connections">
-                    <Button variant="outline">Подключения</Button>
-                  </Link>
-                  <Link href="/runs">
-                    <Button variant="outline">Запуски</Button>
-                  </Link>
+                  <LinkButton href="/flows" variant="outline">Потоки</LinkButton>
+                  <LinkButton href="/connections" variant="outline">Подключения</LinkButton>
+                  <LinkButton href="/runs" variant="outline">Запуски</LinkButton>
                   {user ? (
                     <form action="/api/auth/logout" method="post">
                       <Button type="submit" variant="secondary">
@@ -51,9 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       </Button>
                     </form>
                   ) : (
-                    <Link href="/login">
-                      <Button>Войти по magic link</Button>
-                    </Link>
+                    <LinkButton href="/login">Войти по magic link</LinkButton>
                   )}
                 </nav>
               </div>

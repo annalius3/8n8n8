@@ -1,15 +1,12 @@
-﻿import Link from "next/link";
 import { FlowWizardForm } from "@/components/flow-wizard-form";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { SetupRequiredCard } from "@/components/setup-required-card";
 
 export default async function NewFlowPage() {
   return (
     <div className="space-y-4">
       <div>
-        <Link href="/flows">
-          <Button variant="outline">Назад к потокам</Button>
-        </Link>
+        <LinkButton href="/flows" variant="outline">Назад к потокам</LinkButton>
       </div>
       <SetupRequiredCard
         title="Перед созданием потока нужно завершить настройку окружения"
