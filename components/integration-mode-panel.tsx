@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIntegrationModeLabel, type IntegrationModes } from "@/lib/integrations/runtime";
 
@@ -9,7 +9,7 @@ type IntegrationModePanelProps = {
 const ITEMS: Array<{ key: keyof IntegrationModes; label: string; note: string }> = [
   { key: "openai", label: "OpenAI", note: "Генерация текста в шаге template" },
   { key: "leonardo", label: "Leonardo", note: "Генерация изображений" },
-  { key: "pinterest", label: "Pinterest", note: "Публикация через сохранённый server-side token" },
+  { key: "pinterest", label: "Pinterest", note: "Публикация через сохранённый server-side токен пользователя" },
   { key: "r2", label: "Cloudflare R2", note: "Хранение изображений" }
 ];
 
@@ -27,7 +27,9 @@ export function IntegrationModePanel({ modes }: IntegrationModePanelProps) {
             <div key={item.key} className="rounded-lg border p-3">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-medium">{item.label}</p>
-                <Badge variant={mode === "real" ? "default" : "secondary"}>{getIntegrationModeLabel(mode)}</Badge>
+                <Badge variant={mode === "real" ? "default" : mode === "connection_required" ? "outline" : "secondary"}>
+                  {getIntegrationModeLabel(mode)}
+                </Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{item.note}</p>
             </div>

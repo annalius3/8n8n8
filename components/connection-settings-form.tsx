@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ function formatDate(value: string) {
 
 export function ConnectionSettingsForm({ initialConnections }: Props) {
   const [connections, setConnections] = useState(initialConnections);
-  const [name, setName] = useState("My Pinterest");
+  const [name, setName] = useState("Основной Pinterest");
   const [accessToken, setAccessToken] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -77,7 +77,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
               ? Object.entries(data.error.fieldErrors)
                   .flatMap(([, values]) => values ?? [])
                   .join(", ")
-              : "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435";
+              : "Не удалось сохранить подключение";
         throw new Error(message);
       }
 
@@ -89,11 +89,9 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
         return [savedConnection, ...next];
       });
       setAccessToken("");
-      setSaveMessage("\u0422\u043e\u043a\u0435\u043d \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d \u0432 \u0437\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u043c \u0432\u0438\u0434\u0435 \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0435.");
+      setSaveMessage("Токен сохранён в зашифрованном виде на сервере.");
     } catch (saveError) {
-      setError(
-        saveError instanceof Error ? saveError.message : "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0442\u043e\u043a\u0435\u043d"
-      );
+      setError(saveError instanceof Error ? saveError.message : "Не удалось сохранить токен");
     } finally {
       setIsSaving(false);
     }
@@ -109,15 +107,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
       const response = await fetch(`/api/connections/pinterest/boards?connectionName=${encodeURIComponent(name)}`);
       const data = (await response.json()) as { boards?: BoardItem[]; error?: string };
       if (!response.ok || !data.boards) {
-        throw new Error(data.error ?? "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c Pinterest");
+        throw new Error(data.error ?? "Не удалось проверить Pinterest");
       }
 
       setBoards(data.boards);
-      setSaveMessage(`Pinterest \u043e\u0442\u0432\u0435\u0442\u0438\u043b \u0443\u0441\u043f\u0435\u0448\u043d\u043e. \u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0434\u043e\u0441\u043e\u043a: ${data.boards.length}.`);
+      setSaveMessage(`Pinterest ответил успешно. Найдено досок: ${data.boards.length}.`);
     } catch (checkError) {
-      setError(
-        checkError instanceof Error ? checkError.message : "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c Pinterest"
-      );
+      setError(checkError instanceof Error ? checkError.message : "Не удалось проверить Pinterest");
     } finally {
       setIsChecking(false);
     }
@@ -127,17 +123,15 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Pinterest connection</CardTitle>
+          <CardTitle>Подключение Pinterest</CardTitle>
           <CardDescription>
-            {
-              "\u0422\u043e\u043a\u0435\u043d \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0435 \u0432 \u0437\u0430\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u043c \u0432\u0438\u0434\u0435. \u041f\u043e\u0441\u043b\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0438\u044f \u043a\u043b\u0438\u0435\u043d\u0442 \u0431\u043e\u043b\u044c\u0448\u0435 \u043d\u0435 \u043f\u043e\u043b\u0443\u0447\u0430\u0435\u0442 \u0435\u0433\u043e \u043e\u0431\u0440\u0430\u0442\u043d\u043e."
-            }
+            Токен хранится только на сервере в зашифрованном виде. После сохранения клиент больше не получает его обратно.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="connection-name">{"\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f"}</Label>
-            <Input id="connection-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="My Pinterest" />
+            <Label htmlFor="connection-name">Название подключения</Label>
+            <Input id="connection-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Основной Pinterest" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="access-token">Access token</Label>
@@ -149,26 +143,22 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
               placeholder="pina_..."
               autoComplete="off"
             />
-            <p className="text-xs text-muted-foreground">
-              {
-                "\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 \u043d\u043e\u0432\u044b\u0439 \u0442\u043e\u043a\u0435\u043d, \u043a\u043e\u0442\u043e\u0440\u044b\u0439 \u043d\u0435 \u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043b\u0441\u044f \u0432 \u0447\u0430\u0442\u0435, git \u0438\u043b\u0438 \u043b\u043e\u0433\u0430\u0445."
-              }
-            </p>
+            <p className="text-xs text-muted-foreground">Используйте новый токен, который не публиковался в чате, git или логах.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button onClick={saveConnection} disabled={isSaving || name.trim().length < 2 || accessToken.trim().length < 20}>
-              {isSaving ? "\u0421\u043e\u0445\u0440\u0430\u043d\u044f\u044e..." : "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0442\u043e\u043a\u0435\u043d"}
+              {isSaving ? "Сохраняю..." : "Сохранить токен"}
             </Button>
             <Button variant="outline" onClick={checkPinterest} disabled={isChecking || name.trim().length < 2}>
-              {isChecking ? "\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u044e..." : "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c Pinterest"}
+              {isChecking ? "Проверяю..." : "Проверить Pinterest"}
             </Button>
-            {existingConnection ? <Badge variant="outline">{"\u0415\u0441\u0442\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u043e\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435"}</Badge> : null}
+            {existingConnection ? <Badge variant="outline">Есть сохранённое подключение</Badge> : null}
           </div>
           {saveMessage ? <p className="text-sm text-emerald-700">{saveMessage}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           {boards.length > 0 ? (
             <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
-              <div className="text-sm font-medium">{"\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u044b\u0435 \u0434\u043e\u0441\u043a\u0438"}</div>
+              <div className="text-sm font-medium">Доступные доски</div>
               <div className="space-y-2">
                 {boards.map((board) => (
                   <div key={board.id} className="rounded-lg border bg-background px-3 py-2 text-sm">
@@ -187,15 +177,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>{"\u0421\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u044b\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f"}</CardTitle>
-          <CardDescription>{"\u0417\u0434\u0435\u0441\u044c \u043f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u044e\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0435 \u043c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0431\u0435\u0437 \u0442\u043e\u043a\u0435\u043d\u043e\u0432."}</CardDescription>
+          <CardTitle>Сохранённые подключения</CardTitle>
+          <CardDescription>Здесь показываются только безопасные метаданные без токенов.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {connections.length === 0 ? (
             <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-              {
-                "\u041f\u043e\u043a\u0430 \u043d\u0435\u0442 \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u044b\u0445 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0439. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435 Pinterest token, \u043f\u043e\u0442\u043e\u043c \u043f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u0441\u043f\u0438\u0441\u043e\u043a \u0434\u043e\u0441\u043e\u043a."
-              }
+              Пока нет сохранённых подключений. Сначала сохраните Pinterest token, потом проверьте список досок.
             </div>
           ) : (
             connections.map((connection) => (
@@ -205,11 +193,9 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                     <div className="font-medium">{connection.name}</div>
                     <div className="text-sm text-muted-foreground">{connection.provider}</div>
                   </div>
-                  <Badge variant="outline">{"\u0422\u043e\u043a\u0435\u043d \u0441\u043a\u0440\u044b\u0442"}</Badge>
+                  <Badge variant="outline">Токен скрыт</Badge>
                 </div>
-                <div className="mt-3 text-sm text-muted-foreground">
-                  {"\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e"}: {formatDate(connection.updatedAt)}
-                </div>
+                <div className="mt-3 text-sm text-muted-foreground">Обновлено: {formatDate(connection.updatedAt)}</div>
               </div>
             ))
           )}

@@ -1,15 +1,15 @@
-import { Prisma } from "@prisma/client";
+﻿import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { encryptToken } from "../lib/crypto";
 import { computeNextRunAt } from "../lib/worker/cron";
 
 async function main() {
   const user = await prisma.user.upsert({
-    where: { email: "demo@autoposting.local" },
+    where: { email: "owner@autoposting.local" },
     update: {},
     create: {
-      email: "demo@autoposting.local",
-      name: "Demo"
+      email: "owner@autoposting.local",
+      name: "Owner"
     }
   });
 
@@ -18,15 +18,15 @@ async function main() {
     update: {
       userId: user.id,
       provider: "pinterest",
-      name: "My Pinterest",
-      encryptedJson: encryptToken(JSON.stringify({ access_token: "demo_token" }))
+      name: "Основной Pinterest",
+      encryptedJson: encryptToken(JSON.stringify({ accessToken: "seed_invalid_token_replace_me" }))
     },
     create: {
       id: "seed-connection-pinterest",
       userId: user.id,
       provider: "pinterest",
-      name: "My Pinterest",
-      encryptedJson: encryptToken(JSON.stringify({ access_token: "demo_token" }))
+      name: "Основной Pinterest",
+      encryptedJson: encryptToken(JSON.stringify({ accessToken: "seed_invalid_token_replace_me" }))
     }
   });
 
@@ -37,15 +37,15 @@ async function main() {
     data: [
       {
         userId: user.id,
-        title: "Queue sample post #1",
-        body: "This is a queued post body.",
+        title: "Пост из очереди #1",
+        body: "Текст отложенного поста для проверки реального пайплайна.",
         linkUrl: "https://example.com/q1",
         imagePrompt: "cozy lifestyle photo"
       },
       {
         userId: user.id,
-        title: "Queue sample post #2",
-        body: "Second queued post.",
+        title: "Пост из очереди #2",
+        body: "Второй отложенный пост для ручного запуска.",
         linkUrl: "https://example.com/q2",
         imagePrompt: "minimalist visual"
       }
@@ -56,13 +56,13 @@ async function main() {
     where: { id: "seed-flow-rss-pinterest" },
     update: {
       userId: user.id,
-      name: "RSS -> AI text -> Leonardo -> Pinterest",
+      name: "RSS -> текст -> Leonardo -> Pinterest",
       isEnabled: true
     },
     create: {
       id: "seed-flow-rss-pinterest",
       userId: user.id,
-      name: "RSS -> AI text -> Leonardo -> Pinterest",
+      name: "RSS -> текст -> Leonardo -> Pinterest",
       isEnabled: true
     }
   });
@@ -120,7 +120,7 @@ async function main() {
       orderIndex: 4,
       type: "pinterest_publish",
       configJson: {
-        connection_name: "My Pinterest",
+        connection_name: "Основной Pinterest",
         board_id: "1234567890",
         title_from: "context.text.pin_title",
         description_from: "context.text.pin_description",
@@ -151,7 +151,7 @@ async function main() {
     }
   });
 
-  console.log("Seeded demo data for demo@autoposting.local");
+  console.log("Seeded starter data for owner@autoposting.local");
 }
 
 main()

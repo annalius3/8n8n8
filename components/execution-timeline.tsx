@@ -28,9 +28,9 @@ function getStatusLabel(status: TimelineStep["status"]) {
 
 function getModeLabel(mode: string | null | undefined) {
   if (!mode) return null;
-  if (mode === "demo") return "Demo";
-  if (mode === "real") return "Real API";
-  if (mode === "template") return "Template";
+  if (mode === "real") return "Реальный API";
+  if (mode === "template") return "Шаблон";
+  if (mode === "connection_required") return "Нужен токен";
   if (mode === "openai") return "OpenAI";
   return mode;
 }

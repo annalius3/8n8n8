@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,8 +63,8 @@ function getCompactPreview(flow: FlowWithMeta) {
   const context = (flow.runs[0]?.contextJson as Record<string, any> | null) ?? null;
 
   return {
-    title: context?.text?.pin_title ?? "Запустите поток, чтобы увидеть итоговый заголовок поста.",
-    description: context?.text?.pin_description ?? "После первого реального запуска здесь появится preview публикации.",
+    title: context?.text?.pin_title ?? "Запустите поток, чтобы увидеть итоговый заголовок публикации.",
+    description: context?.text?.pin_description ?? "После первого запуска здесь появится короткий предпросмотр будущей публикации.",
     imageUrl: context?.image?.image_url ?? null,
     mode: context?.publish?.mode ?? null
   };
@@ -188,7 +188,7 @@ export default async function FlowsPage() {
                     <div className="space-y-3 p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-xs uppercase text-muted-foreground">Мини-preview</p>
-                        {preview.mode ? <Badge variant="outline">Real API</Badge> : null}
+                        {preview.mode ? <Badge variant="outline">Реальный API</Badge> : null}
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{preview.title}</p>

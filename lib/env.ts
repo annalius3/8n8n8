@@ -1,4 +1,4 @@
-import { getIntegrationModes } from "@/lib/integrations/runtime";
+﻿import { getIntegrationModes } from "@/lib/integrations/runtime";
 import { z } from "zod";
 
 const requiredEnvSchema = z.object({
@@ -58,6 +58,7 @@ export function getIntegrationStatus() {
     leonardoConfigured: modes.leonardo === "real",
     openaiConfigured: modes.openai === "real",
     pinterestConfigured: modes.pinterest === "real",
+    pinterestRequiresConnection: modes.pinterest === "connection_required",
     r2Configured: modes.r2 === "real",
     modes
   };

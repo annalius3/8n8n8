@@ -1,4 +1,4 @@
-export type IntegrationMode = "real" | "missing";
+﻿export type IntegrationMode = "real" | "connection_required" | "missing";
 
 export type IntegrationModes = {
   openai: IntegrationMode;
@@ -11,7 +11,7 @@ export function getIntegrationModes(): IntegrationModes {
   return {
     openai: process.env.OPENAI_API_KEY ? "real" : "missing",
     leonardo: process.env.LEONARDO_API_KEY ? "real" : "missing",
-    pinterest: "missing",
+    pinterest: "connection_required",
     r2:
       process.env.R2_ENDPOINT && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET
         ? "real"
@@ -20,5 +20,7 @@ export function getIntegrationModes(): IntegrationModes {
 }
 
 export function getIntegrationModeLabel(mode: IntegrationMode) {
-  return mode === "real" ? "Реальный API" : "Не настроено";
+  if (mode === "real") return "Реальный API";
+  if (mode === "connection_required") return "Нужен токен";
+  return "Не настроено";
 }

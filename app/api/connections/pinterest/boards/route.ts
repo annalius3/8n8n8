@@ -5,7 +5,7 @@ import { listPinterestBoards } from "@/lib/integrations/pinterest";
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUserOrNull();
   if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
   }
 
   const connectionName = request.nextUrl.searchParams.get("connectionName") ?? undefined;
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ boards });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Pinterest request failed";
+    const message = error instanceof Error ? error.message : "Не удалось выполнить запрос к Pinterest";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

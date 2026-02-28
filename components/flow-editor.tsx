@@ -32,7 +32,7 @@ const STEP_OPTIONS = [
   ["queue", "Источник: Queue"],
   ["delay", "Пауза"],
   ["template", "Текст по шаблону"],
-  ["ai_image_leonardo", "Leonardo image"],
+  ["ai_image_leonardo", "Изображение Leonardo"],
   ["pinterest_publish", "Публикация в Pinterest"],
   ["schedule_trigger", "schedule_trigger (legacy)"],
   ["source_rss", "source_rss (legacy)"],
@@ -63,9 +63,9 @@ const STEP_HELP: Record<string, string> = {
 };
 
 function inferStepMode(type: string) {
-  if (["template", "ai_text"].includes(type)) return "Demo/Real через OPENAI_API_KEY";
-  if (["ai_image_leonardo", "ai_image"].includes(type)) return "Demo/Real через LEONARDO_API_KEY";
-  if (["pinterest_publish", "publish_pinterest"].includes(type)) return "Сейчас demo stub";
+  if (["template", "ai_text"].includes(type)) return "Требует OPENAI_API_KEY для real-режима";
+  if (["ai_image_leonardo", "ai_image"].includes(type)) return "Требует LEONARDO_API_KEY";
+  if (["pinterest_publish", "publish_pinterest"].includes(type)) return "Требует сохранённый Pinterest token";
   return null;
 }
 

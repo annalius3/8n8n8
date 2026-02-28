@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/require-user";
+﻿import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,7 +70,7 @@ export default async function RunsPage({ searchParams }: Props) {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Здесь видно весь путь выполнения: какие шаги сработали, что они получили на вход и что записали в output/context.
+            Здесь виден весь путь выполнения: какие шаги сработали, что они получили на вход и что записали в output/context.
           </p>
           <div className="flex flex-wrap gap-2">
             <LinkButton href="/runs" variant={activeStatus === "all" ? "default" : "outline"} size="sm">Все</LinkButton>
@@ -103,7 +103,7 @@ export default async function RunsPage({ searchParams }: Props) {
                   </div>
                   <Badge variant={runStatus.variant}>{runStatus.label}</Badge>
                 </div>
-                <div className="grid gap-3 md:grid-cols-3 text-sm">
+                <div className="grid gap-3 text-sm md:grid-cols-3">
                   <div className="rounded-lg border p-3">
                     <p className="text-xs uppercase text-muted-foreground">Старт</p>
                     <p className="mt-1">{formatDate(run.startedAt)}</p>

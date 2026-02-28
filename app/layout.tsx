@@ -1,4 +1,4 @@
-import "./globals.css";
+﻿import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

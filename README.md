@@ -87,7 +87,7 @@ npx prisma db seed
 npm run dev
 ```
 
-5. Открыть `http://localhost:3000/login`, ввести `demo@autoposting.local` и перейти по сгенерированной magic link.
+5. Открыть `http://localhost:3000/login`, ввести `owner@autoposting.local` или любой свой email и перейти по сгенерированной magic link.
 
 ## Продакшен-чеклист
 1. В Vercel выставить `Framework Preset = Next.js`
@@ -128,3 +128,4 @@ curl -X POST https://ваш-домен.vercel.app/api/scheduler/tick \
 2. Откройте `/runs` и проверьте `job_runs` и `job_run_steps`
 3. Вызовите `scheduler/tick` вручную и убедитесь, что появились новые запуски
 4. Откройте `/api/health` и убедитесь, что `ok: true`
+

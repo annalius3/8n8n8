@@ -9,7 +9,7 @@ type Params = {
 
 export async function POST(_: NextRequest, { params }: Params) {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
 
   const { id } = await params;
   const flow = await prisma.flow.findFirst({

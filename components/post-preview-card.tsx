@@ -14,9 +14,9 @@ type PostPreviewCardProps = {
 
 function modeLabel(mode: string | null | undefined) {
   if (!mode) return null;
-  if (mode === "demo") return "Demo";
-  if (mode === "real") return "Real API";
-  if (mode === "template") return "Template";
+  if (mode === "real") return "Реальный API";
+  if (mode === "template") return "Шаблон";
+  if (mode === "connection_required") return "Нужен токен";
   return mode;
 }
 
@@ -27,7 +27,7 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
     <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle>Preview post</CardTitle>
+          <CardTitle>Предпросмотр публикации</CardTitle>
           <div className="flex flex-wrap gap-2">
             {modeLabel(textMode) ? <Badge variant="outline">Текст: {modeLabel(textMode)}</Badge> : null}
             {modeLabel(imageMode) ? <Badge variant="outline">Изображение: {modeLabel(imageMode)}</Badge> : null}
@@ -38,7 +38,7 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
       <CardContent className="space-y-4">
         {!hasRuntimeData ? (
           <div className="rounded-lg border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
-            Поток ещё не запускался. После первого запуска здесь появится почти финальный вид будущего поста.
+            Поток ещё не запускался. После первого запуска здесь появится почти финальный вид будущей публикации.
           </div>
         ) : null}
         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
@@ -53,20 +53,20 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
           </div>
           <div className="space-y-3 p-4">
             <div>
-              <p className="text-xs uppercase text-muted-foreground">Pin title</p>
+              <p className="text-xs uppercase text-muted-foreground">Заголовок</p>
               <p className="mt-1 text-base font-semibold">{title}</p>
             </div>
             <div>
-              <p className="text-xs uppercase text-muted-foreground">Pin description</p>
+              <p className="text-xs uppercase text-muted-foreground">Описание</p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{description}</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-lg border p-3">
-                <p className="text-xs uppercase text-muted-foreground">Link URL</p>
+                <p className="text-xs uppercase text-muted-foreground">Ссылка</p>
                 <p className="mt-1 break-all text-sm">{linkUrl ?? "—"}</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="text-xs uppercase text-muted-foreground">Pinterest board</p>
+                <p className="text-xs uppercase text-muted-foreground">Доска Pinterest</p>
                 <p className="mt-1 text-sm">{boardId ?? "—"}</p>
               </div>
             </div>

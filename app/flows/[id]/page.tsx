@@ -50,7 +50,7 @@ function getStepMode(type: string, runtime: Record<string, any> | null) {
 
 function formatModeLabel(mode: string | null) {
   if (!mode) return null;
-  return mode === "real" ? "Real API" : "Не настроено";
+  return mode === "real" ? "Реальный API" : mode === "connection_required" ? "Нужен токен" : "Не настроено";
 }
 
 export default async function FlowEditorPage({ params }: Props) {
@@ -282,7 +282,7 @@ export default async function FlowEditorPage({ params }: Props) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Execution timeline</CardTitle>
+                <CardTitle>Таймлайн выполнения</CardTitle>
               </CardHeader>
               <CardContent>
                 <ExecutionTimeline
