@@ -137,6 +137,20 @@ export default async function FlowEditorPage({ params }: Props) {
             publishMode={preview.publishMode}
           />
 
+          {!lastRun ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Что увидеть после первого запуска</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>1. Источник заполнит `context.source` данными RSS или очереди.</p>
+                <p>2. Шаг текста создаст pin title и pin description.</p>
+                <p>3. Шаг картинки добавит image URL в preview.</p>
+                <p>4. Шаг публикации вернёт demo post id или реальный результат интеграции.</p>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardHeader>
               <CardTitle>Последний запуск</CardTitle>

@@ -58,6 +58,17 @@ function describeFlow(flow: FlowWithMeta) {
   return `${getSourceLabel(flow)} -> ${flow.steps.map((step) => step.type).join(" -> ")}`;
 }
 
+function getCompactPreview(flow: FlowWithMeta) {
+  const context = (flow.runs[0]?.contextJson as Record<string, any> | null) ?? null;
+
+  return {
+    title: context?.text?.pin_title ?? "Запустите поток, чтобы увидеть будущий заголовок поста.",
+    description: context?.text?.pin_description ?? "После первого запуска здесь появится краткий preview публикации.",
+    imageUrl: context?.image?.image_url ?? null,
+    mode: context?.publish?.mode ?? null
+  };
+}
+
 export default async function FlowsPage() {
   const user = await requireUser();
   const flows = await loadFlows(user.id);
@@ -108,6 +119,7 @@ export default async function FlowsPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         {flows.map((flow) => {
           const lastRun = flow.runs[0];
+          const preview = getCompactPreview(flow);
 
           return (
             <Card key={flow.id} className="border-slate-200 shadow-sm">
@@ -149,6 +161,30 @@ export default async function FlowsPage() {
                   <div className="rounded-lg border p-3">
                     <p className="text-xs uppercase text-muted-foreground">Шагов в потоке</p>
                     <p className="mt-1 text-sm font-medium">{flow.steps.length}</p>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+                  <div className="grid gap-0 md:grid-cols-[140px_1fr]">
+                    <div className="aspect-[4/5] border-b bg-gradient-to-br from-slate-100 via-white to-slate-200 md:border-b-0 md:border-r">
+                      {preview.imageUrl ? (
+                        <img src={preview.imageUrl} alt={preview.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center p-4 text-center text-xs text-muted-foreground">
+                          Пока без изображения
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs uppercase text-muted-foreground">Мини-preview</p>
+                        {preview.mode ? <Badge variant="outline">{preview.mode === "real" ? "Real API" : "Demo"}</Badge> : null}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{preview.title}</p>
+                        <p className="mt-2 max-h-24 overflow-hidden text-sm text-muted-foreground">{preview.description}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

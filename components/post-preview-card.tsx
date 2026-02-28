@@ -21,6 +21,8 @@ function modeLabel(mode: string | null | undefined) {
 }
 
 export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId, publishMode, textMode, imageMode }: PostPreviewCardProps) {
+  const hasRuntimeData = Boolean(imageUrl || linkUrl || boardId || publishMode || textMode || imageMode);
+
   return (
     <Card className="overflow-hidden">
       <CardHeader>
@@ -34,6 +36,11 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {!hasRuntimeData ? (
+          <div className="rounded-lg border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
+            Поток ещё не запускался. После первого запуска здесь появится почти финальный вид будущего поста.
+          </div>
+        ) : null}
         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
           <div className="aspect-[4/5] border-b bg-gradient-to-br from-slate-100 via-white to-slate-200">
             {imageUrl ? (
