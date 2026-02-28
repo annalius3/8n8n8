@@ -1,3 +1,5 @@
+import { getServerEnv } from "@/lib/env";
+
 export type LeonardoImageOptions = {
   negativePrompt?: string;
   width?: number;
@@ -28,7 +30,7 @@ type GetGenerationResponse = {
 };
 
 export async function generateLeonardoImage(prompt: string, options: LeonardoImageOptions = {}): Promise<LeonardoImageResult> {
-  const apiKey = process.env.LEONARDO_API_KEY;
+  const apiKey = getServerEnv().LEONARDO_API_KEY;
   if (!apiKey) {
     throw new Error("LEONARDO_API_KEY is not configured");
   }

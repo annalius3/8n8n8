@@ -1,10 +1,11 @@
 import crypto from "crypto";
+import { getServerEnv } from "@/lib/env";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 
 function getKey(): Buffer {
-  const raw = process.env.ENCRYPTION_KEY ?? "";
+  const raw = getServerEnv().ENCRYPTION_KEY;
 
   if (raw.length === 64) {
     return Buffer.from(raw, "hex");

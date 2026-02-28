@@ -1,14 +1,14 @@
-# Автопостинг Flow
+п»ї# РђРІС‚РѕРїРѕСЃС‚РёРЅРі Flow
 
-MVP-сервис потокового автопостинга в стиле упрощённого n8n.
+MVP-СЃРµСЂРІРёСЃ РїРѕС‚РѕРєРѕРІРѕРіРѕ Р°РІС‚РѕРїРѕСЃС‚РёРЅРіР° РІ СЃС‚РёР»Рµ СѓРїСЂРѕС‰С‘РЅРЅРѕРіРѕ n8n.
 
-## Стек
+## РЎС‚РµРє
 - Next.js App Router + TypeScript
 - Prisma + PostgreSQL
 - shadcn/ui + Tailwind
-- Авторизация: magic link
+- РђРІС‚РѕСЂРёР·Р°С†РёСЏ: magic link
 
-## Сущности Prisma
+## РЎСѓС‰РЅРѕСЃС‚Рё Prisma
 - User
 - Connection (`provider`, `name`, `encrypted_json`)
 - Flow
@@ -19,17 +19,18 @@ MVP-сервис потокового автопостинга в стиле упрощённого n8n.
 - JobRun
 - JobRunStep
 
-## Возможности
-- `/flows` — список потоков, запуск вручную, включение/выключение
-- `/flows/new` — мастер создания потока
-- `/flows/[id]` — редактор шагов списком, без drag&drop
-- `/runs` — история запусков и шагов
-- Планировщик проверяет `flow_schedules.next_run_at <= now` и запускает подходящие потоки
-- Runner выполняет шаги последовательно и хранит единый JSON `context`
-- Дедупликация RSS по `published_items`
-- Блокировка элементов очереди через `locked_at`
+## Р’РѕР·РјРѕР¶РЅРѕСЃС‚Рё
+- `/flows` вЂ” СЃРїРёСЃРѕРє РїРѕС‚РѕРєРѕРІ, Р·Р°РїСѓСЃРє РІСЂСѓС‡РЅСѓСЋ, РІРєР»СЋС‡РµРЅРёРµ Рё РІС‹РєР»СЋС‡РµРЅРёРµ
+- `/flows/new` вЂ” РјР°СЃС‚РµСЂ СЃРѕР·РґР°РЅРёСЏ РїРѕС‚РѕРєР°
+- `/flows/[id]` вЂ” СЂРµРґР°РєС‚РѕСЂ С€Р°РіРѕРІ СЃРїРёСЃРєРѕРј, Р±РµР· drag&drop
+- `/runs` вЂ” РёСЃС‚РѕСЂРёСЏ Р·Р°РїСѓСЃРєРѕРІ Рё С€Р°РіРѕРІ
+- РџР»Р°РЅРёСЂРѕРІС‰РёРє РїСЂРѕРІРµСЂСЏРµС‚ `flow_schedules.next_run_at <= now` Рё Р·Р°РїСѓСЃРєР°РµС‚ РїРѕРґС…РѕРґСЏС‰РёРµ РїРѕС‚РѕРєРё
+- Runner РІС‹РїРѕР»РЅСЏРµС‚ С€Р°РіРё РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ Рё С…СЂР°РЅРёС‚ РµРґРёРЅС‹Р№ JSON `context`
+- Р”РµРґСѓРїР»РёРєР°С†РёСЏ RSS РїРѕ `published_items`
+- Р‘Р»РѕРєРёСЂРѕРІРєР° СЌР»РµРјРµРЅС‚РѕРІ РѕС‡РµСЂРµРґРё С‡РµСЂРµР· `locked_at`
+- Healthcheck `GET /api/health` РґР»СЏ РїСЂРѕРІРµСЂРєРё env Рё Р±Р°Р·С‹ РґР°РЅРЅС‹С…
 
-## Поддерживаемые типы шагов
+## РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ С‚РёРїС‹ С€Р°РіРѕРІ
 - `schedule`
 - `rss`
 - `queue`
@@ -38,40 +39,41 @@ MVP-сервис потокового автопостинга в стиле упрощённого n8n.
 - `pinterest_publish`
 - `delay`
 
-Поддерживаются и старые алиасы: `schedule_trigger`, `source_rss`, `source_queue`, `ai_text`, `ai_image`, `publish_pinterest`, `wait`, `sleep`.
+РџРѕРґРґРµСЂР¶РёРІР°СЋС‚СЃСЏ Рё СЃС‚Р°СЂС‹Рµ Р°Р»РёР°СЃС‹: `schedule_trigger`, `source_rss`, `source_queue`, `ai_text`, `ai_image`, `publish_pinterest`, `wait`, `sleep`.
 
-## Безопасность
-- Секреты подключений шифруются через AES-256-GCM с `ENCRYPTION_KEY`
-- Токены не отдаются на клиент
-- `POST /api/scheduler/tick` защищён через `SCHEDULER_TOKEN` или авторизованного пользователя
+## Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ
+- РЎРµРєСЂРµС‚С‹ РїРѕРґРєР»СЋС‡РµРЅРёР№ С€РёС„СЂСѓСЋС‚СЃСЏ С‡РµСЂРµР· AES-256-GCM СЃ `ENCRYPTION_KEY`
+- РўРѕРєРµРЅС‹ РЅРµ РѕС‚РґР°СЋС‚СЃСЏ РЅР° РєР»РёРµРЅС‚
+- `POST /api/scheduler/tick` Р·Р°С‰РёС‰С‘РЅ С‡РµСЂРµР· `SCHEDULER_TOKEN` РёР»Рё Р°РІС‚РѕСЂРёР·РѕРІР°РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+- РЎРµСЂРІРµСЂРЅС‹Рµ env РїСЂРѕС…РѕРґСЏС‚ С†РµРЅС‚СЂР°Р»РёР·РѕРІР°РЅРЅСѓСЋ РІР°Р»РёРґР°С†РёСЋ
 
-## Переменные окружения
-Обязательные:
+## РџРµСЂРµРјРµРЅРЅС‹Рµ РѕРєСЂСѓР¶РµРЅРёСЏ
+РћР±СЏР·Р°С‚РµР»СЊРЅС‹Рµ:
 - `DATABASE_URL`
 - `AUTH_SECRET`
 - `ENCRYPTION_KEY`
-- `LEONARDO_API_KEY`
 - `SCHEDULER_TOKEN`
 
-Дополнительно:
-- `OPENAI_API_KEY` — если используете `provider=openai` в шаге `template`
-- `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` — если хотите складывать изображения Leonardo в Cloudflare R2
+РћРїС†РёРѕРЅР°Р»СЊРЅС‹Рµ РёРЅС‚РµРіСЂР°С†РёРё:
+- `LEONARDO_API_KEY` вЂ” РґР»СЏ С€Р°РіР° `ai_image_leonardo`
+- `OPENAI_API_KEY` вЂ” РµСЃР»Рё РёСЃРїРѕР»СЊР·СѓРµС‚Рµ `provider=openai` РІ С€Р°РіРµ `template`
+- `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` вЂ” РµСЃР»Рё С…РѕС‚РёС‚Рµ СЃРєР»Р°РґС‹РІР°С‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ Leonardo РІ Cloudflare R2
 - `NEXT_PUBLIC_BASE_URL`
 
-## Локальный запуск
-1. Скопировать env:
+## Р›РѕРєР°Р»СЊРЅС‹Р№ Р·Р°РїСѓСЃРє
+1. РЎРєРѕРїРёСЂРѕРІР°С‚СЊ env:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Установить зависимости:
+2. РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё:
 
 ```bash
 npm install
 ```
 
-3. Применить миграции, сгенерировать Prisma Client и сиды:
+3. РџСЂРёРјРµРЅРёС‚СЊ РјРёРіСЂР°С†РёРё, СЃРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ Prisma Client Рё СЃРёРґС‹:
 
 ```bash
 npx prisma migrate dev
@@ -79,35 +81,50 @@ npx prisma generate
 npx prisma db seed
 ```
 
-4. Запустить приложение:
+4. Р—Р°РїСѓСЃС‚РёС‚СЊ РїСЂРёР»РѕР¶РµРЅРёРµ:
 
 ```bash
 npm run dev
 ```
 
-5. Открыть `http://localhost:3000/login`, ввести `demo@autoposting.local` и перейти по сгенерированной magic link.
+5. РћС‚РєСЂС‹С‚СЊ `http://localhost:3000/login`, РІРІРµСЃС‚Рё `demo@autoposting.local` Рё РїРµСЂРµР№С‚Рё РїРѕ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅРѕР№ magic link.
 
-## Бесплатный продакшен: Vercel + GitHub Actions
-Если компьютер выключен, автоматизация может работать так:
+## РџСЂРѕРґР°РєС€РµРЅ-С‡РµРєР»РёСЃС‚
+1. Р’ Vercel РІС‹СЃС‚Р°РІРёС‚СЊ `Framework Preset = Next.js`
+2. РћСЃС‚Р°РІРёС‚СЊ `Output Directory` РїСѓСЃС‚С‹Рј
+3. Р”РѕР±Р°РІРёС‚СЊ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Рµ env РІ Vercel
+4. Р”РѕР±Р°РІРёС‚СЊ `DATABASE_URL` РІ GitHub Secrets РґР»СЏ workflow `Prisma Migrate Deploy`
+5. Р”РѕР±Р°РІРёС‚СЊ `APP_BASE_URL` Рё `SCHEDULER_TOKEN` РІ GitHub Secrets РґР»СЏ scheduler workflow
+6. РџРѕСЃР»Рµ РґРµРїР»РѕСЏ РїСЂРѕРІРµСЂРёС‚СЊ `GET /api/health`
 
-1. Деплой приложения в Vercel
-2. Добавление env-переменных в Vercel
-3. Добавление secrets в GitHub:
-- `APP_BASE_URL` = `https://ваш-проект.vercel.app`
-- `SCHEDULER_TOKEN` = тот же токен, что в Vercel
-4. Включение workflow `.github/workflows/scheduler-tick.yml`
+## GitHub Actions
+- `.github/workflows/build.yml` вЂ” СЃР±РѕСЂРєР° РЅР° РєР°Р¶РґС‹Р№ push Рё pull request
+- `.github/workflows/prisma-migrate.yml` вЂ” Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРёР№ `prisma migrate deploy` РЅР° `main`
+- `.github/workflows/scheduler-tick.yml` вЂ” РІРЅРµС€РЅРёР№ cron РґР»СЏ Vercel
 
-Workflow вызывает:
+## Р‘РµСЃРїР»Р°С‚РЅС‹Р№ РїСЂРѕРґР°РєС€РµРЅ: Vercel + GitHub Actions
+Р•СЃР»Рё РєРѕРјРїСЊСЋС‚РµСЂ РІС‹РєР»СЋС‡РµРЅ, Р°РІС‚РѕРјР°С‚РёР·Р°С†РёСЏ РјРѕР¶РµС‚ СЂР°Р±РѕС‚Р°С‚СЊ С‚Р°Рє:
+
+1. Р”РµРїР»РѕР№ РїСЂРёР»РѕР¶РµРЅРёСЏ РІ Vercel
+2. Р”РѕР±Р°РІР»РµРЅРёРµ env-РїРµСЂРµРјРµРЅРЅС‹С… РІ Vercel
+3. Р”РѕР±Р°РІР»РµРЅРёРµ secrets РІ GitHub:
+- `APP_BASE_URL` = `https://РІР°С€-РїСЂРѕРµРєС‚.vercel.app`
+- `SCHEDULER_TOKEN` = С‚РѕС‚ Р¶Рµ С‚РѕРєРµРЅ, С‡С‚Рѕ РІ Vercel
+- `DATABASE_URL` = production СЃС‚СЂРѕРєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Postgres
+4. Р’РєР»СЋС‡РµРЅРёРµ workflow `.github/workflows/scheduler-tick.yml`
+
+Workflow РІС‹Р·С‹РІР°РµС‚:
 - `POST {APP_BASE_URL}/api/scheduler/tick`
-- заголовок `x-scheduler-token: {SCHEDULER_TOKEN}`
+- Р·Р°РіРѕР»РѕРІРѕРє `x-scheduler-token: {SCHEDULER_TOKEN}`
 
-## Ручной запуск планировщика
+## Р СѓС‡РЅРѕР№ Р·Р°РїСѓСЃРє РїР»Р°РЅРёСЂРѕРІС‰РёРєР°
 ```bash
-curl -X POST https://ваш-домен.vercel.app/api/scheduler/tick \
-  -H "x-scheduler-token: ВАШ_ТОКЕН"
+curl -X POST https://РІР°С€-РґРѕРјРµРЅ.vercel.app/api/scheduler/tick \
+  -H "x-scheduler-token: Р’РђРЁ_РўРћРљР•Рќ"
 ```
 
-## Проверка работы
-1. Откройте `/flows` и нажмите «Запустить» на демо-потоке
-2. Откройте `/runs` и проверьте `job_runs` и `job_run_steps`
-3. Вызовите `scheduler/tick` вручную и убедитесь, что появились новые запуски
+## РџСЂРѕРІРµСЂРєР° СЂР°Р±РѕС‚С‹
+1. РћС‚РєСЂРѕР№С‚Рµ `/flows` Рё РЅР°Р¶РјРёС‚Рµ В«Р—Р°РїСѓСЃС‚РёС‚СЊВ» РЅР° РґРµРјРѕ-РїРѕС‚РѕРєРµ
+2. РћС‚РєСЂРѕР№С‚Рµ `/runs` Рё РїСЂРѕРІРµСЂСЊС‚Рµ `job_runs` Рё `job_run_steps`
+3. Р’С‹Р·РѕРІРёС‚Рµ `scheduler/tick` РІСЂСѓС‡РЅСѓСЋ Рё СѓР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ РїРѕСЏРІРёР»РёСЃСЊ РЅРѕРІС‹Рµ Р·Р°РїСѓСЃРєРё
+4. РћС‚РєСЂРѕР№С‚Рµ `/api/health` Рё СѓР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ `ok: true`

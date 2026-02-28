@@ -1,16 +1,13 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getServerEnv } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 const AUTH_COOKIE = "autoposting_session";
 
 function authSecret(): string {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_SECRET is required");
-  }
-  return secret;
+  return getServerEnv().AUTH_SECRET;
 }
 
 function sign(payload: string): string {
@@ -82,7 +79,7 @@ export function setAuthCookie(response: NextResponse, userId: string) {
   response.cookies.set(AUTH_COOKIE, createSessionToken(userId), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: getServerEnv().NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7
   });

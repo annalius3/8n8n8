@@ -1,4 +1,5 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getServerEnv } from "@/lib/env";
 
 type R2UploadInput = {
   imageUrl: string;
@@ -7,7 +8,7 @@ type R2UploadInput = {
 };
 
 function getRequired(name: string) {
-  const value = process.env[name];
+  const value = getServerEnv()[name as keyof ReturnType<typeof getServerEnv>];
   if (!value) {
     throw new Error(`${name} is required for R2 upload`);
   }
@@ -19,7 +20,7 @@ export async function uploadToR2({ imageUrl, objectPath, contentType = "image/jp
   const accessKeyId = getRequired("R2_ACCESS_KEY_ID");
   const secretAccessKey = getRequired("R2_SECRET_ACCESS_KEY");
   const bucket = getRequired("R2_BUCKET");
-  const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
+  const publicBaseUrl = getServerEnv().R2_PUBLIC_BASE_URL;
 
   const imageResponse = await fetch(imageUrl);
   if (!imageResponse.ok) {

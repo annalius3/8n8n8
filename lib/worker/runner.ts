@@ -1,4 +1,5 @@
 import { QueueStatus, RunStatus, StepExecStatus } from "@prisma/client";
+import { getServerEnv } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
@@ -112,7 +113,7 @@ function parseJsonFromModel(text: string): Record<string, any> {
 }
 
 async function generateTextViaOpenAI(config: StepConfig, vars: Record<string, string>) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = getServerEnv().OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
   }

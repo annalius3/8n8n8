@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { getServerEnv } from "@/lib/env";
 import { runSchedulerTick } from "@/lib/worker/scheduler";
 
 function isTokenValid(request: NextRequest) {
-  const expected = process.env.SCHEDULER_TOKEN;
+  const expected = getServerEnv().SCHEDULER_TOKEN;
   if (!expected) {
     return false;
   }
@@ -15,7 +16,12 @@ function isTokenValid(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
+  }
 
   if (!user && !isTokenValid(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
