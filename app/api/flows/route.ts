@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getActiveUser } from "@/lib/active-user";
 import { prisma } from "@/lib/prisma";
-import { createCampaign, generateTopicsForCampaign } from "@/lib/campaigns/service";
+import { createCampaign } from "@/lib/campaigns/service";
 
 const createSchema = z.object({
   name: z.string().trim().min(2).optional(),
@@ -19,7 +19,7 @@ const createSchema = z.object({
 
 export async function GET() {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
 
   const flows = await prisma.flow.findMany({
     where: { userId: user.id },
@@ -41,7 +41,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
@@ -50,12 +50,10 @@ export async function POST(request: NextRequest) {
   }
 
   const flow = await createCampaign(user.id, parsed.data);
-  const result = await generateTopicsForCampaign(flow.id, user.id);
 
   return NextResponse.json(
     {
-      flowId: result.flowId,
-      runId: result.runId
+      flowId: flow.id
     },
     { status: 201 }
   );

@@ -1,4 +1,4 @@
-п»ї"use client";
+"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -30,7 +30,7 @@ export function FlowWizardForm() {
     setError(null);
 
     try {
-      const response = await fetch("/api/flows/generate-topics", {
+      const response = await fetch("/api/flows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -58,7 +58,7 @@ export function FlowWizardForm() {
             ? data.error
             : data.error?.fieldErrors
               ? Object.values(data.error.fieldErrors).flat().filter(Boolean).join(", ")
-              : "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ 50 С‚РµРј";
+              : "Не удалось создать поток";
         setError(message);
         return;
       }
@@ -66,7 +66,7 @@ export function FlowWizardForm() {
       router.push(`/flows/${data.flowId}/topics`);
       router.refresh();
     } catch {
-      setError("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРІСЏР·Р°С‚СЊСЃСЏ СЃ СЃРµСЂРІРµСЂРѕРј");
+      setError("Не удалось связаться с сервером");
     } finally {
       setLoading(false);
     }
@@ -76,27 +76,27 @@ export function FlowWizardForm() {
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Card>
         <CardHeader>
-          <CardTitle>РЁР°Рі 1. РСЃС…РѕРґРЅР°СЏ С‚РµРјР°</CardTitle>
+          <CardTitle>Шаг 1. Исходная тема</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label>РќР°Р·РІР°РЅРёРµ РїРѕС‚РѕРєР°</Label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="РќР°РїСЂРёРјРµСЂ: Calm Energy Campaign" />
+              <Label>Название потока</Label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Calm Energy Campaign" />
             </div>
             <div className="space-y-2">
-              <Label>РСЃС…РѕРґРЅР°СЏ С‚РµРјР°</Label>
+              <Label>Исходная тема</Label>
               <Textarea
                 rows={3}
                 value={seedTopic}
                 onChange={(event) => setSeedTopic(event.target.value)}
-                placeholder="РќР°РїСЂРёРјРµСЂ: morning routine for calm energy"
+                placeholder="Например: morning routine for calm energy"
                 required
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>РЇР·С‹Рє</Label>
+                <Label>Язык</Label>
                 <Select value={language} onChange={(event) => setLanguage(event.target.value as "EN" | "RU" | "UA")}>
                   <option value="EN">EN</option>
                   <option value="RU">RU</option>
@@ -104,7 +104,7 @@ export function FlowWizardForm() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>РџРѕСЃС‚РѕРІ РІ РґРµРЅСЊ</Label>
+                <Label>Постов в день</Label>
                 <Input
                   type="number"
                   min={1}
@@ -140,11 +140,11 @@ export function FlowWizardForm() {
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-              Р’РєР»СЋС‡РёС‚СЊ Р°РІС‚РѕРїСѓР±Р»РёРєР°С†РёСЋ РїРѕ СЂР°СЃРїРёСЃР°РЅРёСЋ
+              Включить автопубликацию по расписанию
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Р“РµРЅРµСЂРёСЂСѓСЋ..." : "РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ 50 С‚РµРј"}
+              {loading ? "Создаю поток..." : "Перейти к генерации 50 тем"}
             </Button>
           </form>
         </CardContent>
@@ -152,20 +152,20 @@ export function FlowWizardForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Р§С‚Рѕ РїСЂРѕРёР·РѕР№РґС‘С‚ РґР°Р»СЊС€Рµ</CardTitle>
+          <CardTitle>Что произойдёт дальше</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">1. Р“РµРЅРµСЂР°С†РёСЏ С‚РµРј</p>
-            <p className="mt-1">РЎРѕР·РґР°СЃС‚СЃСЏ РїРѕС‚РѕРє, JobRun Рё С€Р°Рі `topic_generation` СЃ Р»РѕРіР°РјРё РІС…РѕРґР° Рё СЂРµР·СѓР»СЊС‚Р°С‚Р°.</p>
+            <p className="font-medium text-foreground">1. Создание потока</p>
+            <p className="mt-1">Сначала создастся сам поток с настройками языка, расписания и публикации.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">2. РџСЂРѕСЃРјРѕС‚СЂ 50 С‚РµРј</p>
-            <p className="mt-1">Р’С‹ РїРµСЂРµР№РґС‘С‚Рµ Рє СЃРїРёСЃРєСѓ РёР· 50 С‚РµРј, СЃРјРѕР¶РµС‚Рµ РёСЃРєР°С‚СЊ, РѕС‚РјРµС‡Р°С‚СЊ Рё РґРѕР±Р°РІР»СЏС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ С‚РµРјС‹ РІ РѕС‡РµСЂРµРґСЊ.</p>
+            <p className="font-medium text-foreground">2. Генерация тем</p>
+            <p className="mt-1">На следующем экране автоматически запустится генерация 50 тем с polling и логами выполнения.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">3. РћС‡РµСЂРµРґСЊ РєРѕРЅС‚РµРЅС‚Р°</p>
-            <p className="mt-1">Р”Р»СЏ СЌР»РµРјРµРЅС‚РѕРІ РѕС‡РµСЂРµРґРё Р±СѓРґСѓС‚ РґРѕСЃС‚СѓРїРЅС‹ bulk-РіРµРЅРµСЂР°С†РёСЏ С‚РµРєСЃС‚Р° Рё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ, РїСѓР±Р»РёРєР°С†РёСЏ Рё РїРѕРІС‚РѕСЂ failed-СЌР»РµРјРµРЅС‚РѕРІ.</p>
+            <p className="font-medium text-foreground">3. Очередь контента</p>
+            <p className="mt-1">После выбора тем вы добавите их в очередь, сгенерируете текст и изображение, а затем опубликуете.</p>
           </div>
         </CardContent>
       </Card>
