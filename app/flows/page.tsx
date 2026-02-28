@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { RunNowButton } from "@/components/run-now-button";
 import { SchedulerTickButton } from "@/components/scheduler-tick-button";
 import { FlowToggleButton } from "@/components/flow-toggle-button";
+import { IntegrationModePanel } from "@/components/integration-mode-panel";
+import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 type FlowWithMeta = Awaited<ReturnType<typeof loadFlows>>[number];
 
@@ -59,9 +61,11 @@ function describeFlow(flow: FlowWithMeta) {
 export default async function FlowsPage() {
   const user = await requireUser();
   const flows = await loadFlows(user.id);
+  const modes = getIntegrationModes();
 
   return (
     <div className="space-y-6">
+      <IntegrationModePanel modes={modes} />
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">

@@ -1,8 +1,9 @@
-import { QueueStatus, RunStatus, StepExecStatus } from "@prisma/client";
+﻿import { QueueStatus, RunStatus, StepExecStatus } from "@prisma/client";
 import { getServerEnv } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
+import { getIntegrationModes } from "@/lib/integrations/runtime";
 import { uploadToR2 } from "@/lib/storage/r2";
 import { fetchRssItems } from "@/lib/worker/rss";
 import { applyTemplate } from "@/lib/worker/template";
@@ -31,6 +32,22 @@ type TextItem = {
 type ImageItem = {
   prompt: string;
   image_url: string;
+};
+
+type TextContext = TextItem & {
+  provider_mode: "real" | "demo" | "template";
+};
+
+type ImageContext = ImageItem & {
+  provider_mode: "real" | "demo";
+};
+
+type PublishContext = {
+  platform: "pinterest";
+  board_id?: string;
+  post_id: string;
+  source_uid?: string;
+  mode: "real" | "demo";
 };
 
 async function logRunStep(input: {
@@ -113,9 +130,20 @@ function parseJsonFromModel(text: string): Record<string, any> {
 }
 
 async function generateTextViaOpenAI(config: StepConfig, vars: Record<string, string>) {
-  const apiKey = getServerEnv().OPENAI_API_KEY;
+  const mode = getIntegrationModes().openai;
+  const apiKey = mode === "real" ? getServerEnv().OPENAI_API_KEY : undefined;
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    const hashtags = (vars.hashtags ?? "")
+      .split(/\s+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return {
+      pin_title: `${vars.title || "Demo topic"} - quick overview`.slice(0, 90),
+      pin_description: `Demo AI copy:\n${vars.summary}\n\nRead more: ${vars.link_url}`.slice(0, 450),
+      hashtags,
+      _mode: "demo"
+    };
   }
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -145,7 +173,7 @@ async function generateTextViaOpenAI(config: StepConfig, vars: Record<string, st
     throw new Error("OpenAI response is empty");
   }
 
-  return parseJsonFromModel(content);
+  return { ...parseJsonFromModel(content), _mode: "real" };
 }
 
 async function lockQueueItem(userId: string, statuses: QueueStatus[], lockCutoff: Date) {
@@ -213,7 +241,12 @@ export async function runFlowNow(flowId: string) {
     text_items?: TextItem[];
     image_items?: ImageItem[];
     publish_items?: Array<{ platform: "pinterest"; board_id?: string; post_id: string; source_uid: string }>;
+    text?: TextContext;
+    image?: ImageContext;
+    publish?: PublishContext;
+    runtime?: ReturnType<typeof getIntegrationModes>;
   };
+  context.runtime = getIntegrationModes();
 
   let currentStepIndex = -1;
   let currentStepType = "unknown";
@@ -412,6 +445,7 @@ export async function runFlowNow(flowId: string) {
           let pinTitle = "";
           let pinDescription = "";
           let hashtags = flattenHashtags(config.hashtags);
+          let providerMode: "real" | "demo" | "template" = "template";
 
           if (config.provider === "openai") {
             try {
@@ -420,6 +454,7 @@ export async function runFlowNow(flowId: string) {
               pinDescription = String(ai.pin_description ?? "");
               const aiTags = flattenHashtags(ai.hashtags);
               if (aiTags.length > 0) hashtags = aiTags;
+              providerMode = ai._mode === "real" ? "real" : "demo";
             } catch (error) {
               if (!config.fallback_to_template_step) {
                 throw error;
@@ -443,17 +478,32 @@ export async function runFlowNow(flowId: string) {
             pin_description: pinDescription.slice(0, maxDescLen),
             hashtags
           });
+
+          context.text = {
+            pin_title: pinTitle.slice(0, maxTitleLen),
+            pin_description: pinDescription.slice(0, maxDescLen),
+            hashtags,
+            provider_mode: providerMode
+          };
         }
 
         context.text_items = textItems;
-        context.text = textItems[0];
+        context.text = {
+          ...textItems[0],
+          provider_mode: config.provider === "openai" ? context.text?.provider_mode ?? "demo" : "template"
+        };
 
         await logRunStep({
           jobRunId: run.id,
           stepIndex: index,
           stepType: step.type,
           inputJson: config,
-          outputJson: { count: textItems.length, first: textItems[0] },
+          outputJson: {
+            count: textItems.length,
+            first: textItems[0],
+            provider: config.provider ?? "template",
+            mode: config.provider === "openai" ? context.text.provider_mode : "template"
+          },
           status: StepExecStatus.success
         });
         continue;
@@ -501,17 +551,25 @@ export async function runFlowNow(flowId: string) {
           }
 
           imageItems.push({ prompt, image_url: imageUrl });
+          context.image = { prompt, image_url: imageUrl, provider_mode: result.mode };
         }
 
         context.image_items = imageItems;
-        context.image = imageItems[0];
+        context.image = {
+          ...imageItems[0],
+          provider_mode: context.image?.provider_mode ?? "demo"
+        };
 
         await logRunStep({
           jobRunId: run.id,
           stepIndex: index,
           stepType: step.type,
           inputJson: config,
-          outputJson: { count: imageItems.length, first: imageItems[0] },
+          outputJson: {
+            count: imageItems.length,
+            first: imageItems[0],
+            mode: context.image.provider_mode
+          },
           status: StepExecStatus.success
         });
         continue;
@@ -608,17 +666,30 @@ export async function runFlowNow(flowId: string) {
             post_id: publishResult.postId,
             source_uid: source.uid
           });
+          context.publish = {
+            platform: "pinterest",
+            board_id: config.board_id,
+            post_id: publishResult.postId,
+            mode: publishResult.mode
+          };
         }
 
         context.publish_items = publishItems;
-        context.publish = publishItems[0];
+        context.publish = {
+          ...publishItems[0],
+          mode: context.publish?.mode ?? "demo"
+        };
 
         await logRunStep({
           jobRunId: run.id,
           stepIndex: index,
           stepType: step.type,
           inputJson: config,
-          outputJson: { count: publishItems.length, first: publishItems[0] },
+          outputJson: {
+            count: publishItems.length,
+            first: publishItems[0],
+            mode: context.publish.mode
+          },
           status: StepExecStatus.success
         });
         continue;
@@ -706,3 +777,4 @@ export async function runFlowNow(flowId: string) {
 
   return run.id;
 }
+

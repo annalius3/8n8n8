@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { JsonView } from "@/components/json-view";
+import { ExecutionTimeline } from "@/components/execution-timeline";
 
 function translateRunStatus(status: string) {
   if (status === "failed") return { label: "Ошибка", variant: "destructive" as const };
@@ -94,6 +95,21 @@ export default async function RunsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <ExecutionTimeline
+                  steps={run.steps.map((step) => ({
+                    id: step.id,
+                    label: step.stepType,
+                    status: step.status,
+                    mode:
+                      typeof (step.outputJson as Record<string, any> | null)?.mode === "string"
+                        ? String((step.outputJson as Record<string, any>).mode)
+                        : typeof (step.outputJson as Record<string, any> | null)?.provider === "string"
+                          ? String((step.outputJson as Record<string, any>).provider)
+                          : null,
+                    error: step.error
+                  }))}
+                />
+
                 <div className="space-y-3">
                   {run.steps.map((step) => {
                     const stepStatus = translateStepStatus(step.status);

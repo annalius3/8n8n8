@@ -1,4 +1,5 @@
 import { getServerEnv } from "@/lib/env";
+import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 export type LeonardoImageOptions = {
   negativePrompt?: string;
@@ -12,6 +13,7 @@ export type LeonardoImageOptions = {
 
 export type LeonardoImageResult = {
   imageUrl: string;
+  mode: "real" | "demo";
 };
 
 type CreateGenerationResponse = {
@@ -30,9 +32,16 @@ type GetGenerationResponse = {
 };
 
 export async function generateLeonardoImage(prompt: string, options: LeonardoImageOptions = {}): Promise<LeonardoImageResult> {
-  const apiKey = getServerEnv().LEONARDO_API_KEY;
+  const mode = getIntegrationModes().leonardo;
+  const apiKey = mode === "real" ? getServerEnv().LEONARDO_API_KEY : undefined;
   if (!apiKey) {
-    throw new Error("LEONARDO_API_KEY is not configured");
+    const width = options.width ?? 1024;
+    const height = options.height ?? 1024;
+    const text = encodeURIComponent("Demo Leonardo Image");
+    return {
+      imageUrl: `https://placehold.co/${width}x${height}/f4f7fb/1f2937?text=${text}`,
+      mode: "demo"
+    };
   }
 
   const createResponse = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", {
@@ -84,7 +93,7 @@ export async function generateLeonardoImage(prompt: string, options: LeonardoIma
     const status = pollData.generations_by_pk?.status?.toUpperCase();
 
     if (imageUrl) {
-      return { imageUrl };
+      return { imageUrl, mode: "real" };
     }
 
     if (status === "FAILED") {

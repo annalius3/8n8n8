@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { RunNowButton } from "@/components/run-now-button";
 import { FlowEditor } from "@/components/flow-editor";
 import { JsonView } from "@/components/json-view";
+import { ExecutionTimeline } from "@/components/execution-timeline";
+import { IntegrationModePanel } from "@/components/integration-mode-panel";
+import { getIntegrationModes } from "@/lib/integrations/runtime";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -55,6 +58,7 @@ export default async function FlowEditorPage({ params }: Props) {
   }
 
   const lastRun = flow.runs[0];
+  const modes = getIntegrationModes();
   const context = (lastRun?.contextJson as Record<string, any> | null) ?? null;
   const preview = {
     title: context?.text?.pin_title ?? "Здесь появится заголовок после запуска",
@@ -66,6 +70,7 @@ export default async function FlowEditorPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
+      <IntegrationModePanel modes={modes} />
       <div className="flex flex-wrap items-center gap-2">
         <Link href="/flows">
           <Button variant="outline">Назад к потокам</Button>
@@ -157,6 +162,28 @@ export default async function FlowEditorPage({ params }: Props) {
               {lastRun?.error ? (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">{lastRun.error}</div>
               ) : null}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Execution timeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ExecutionTimeline
+                steps={(lastRun?.steps ?? []).map((step) => ({
+                  id: step.id,
+                  label: step.stepType,
+                  status: step.status,
+                  mode:
+                    typeof (step.outputJson as Record<string, any> | null)?.mode === "string"
+                      ? String((step.outputJson as Record<string, any>).mode)
+                      : typeof (step.outputJson as Record<string, any> | null)?.provider === "string"
+                        ? String((step.outputJson as Record<string, any>).provider)
+                        : null,
+                  error: step.error
+                }))}
+              />
             </CardContent>
           </Card>
         </div>

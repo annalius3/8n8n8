@@ -1,3 +1,4 @@
+import { getIntegrationModes } from "@/lib/integrations/runtime";
 import { z } from "zod";
 
 const requiredEnvSchema = z.object({
@@ -51,11 +52,13 @@ export function getServerEnv(): ServerEnv {
 }
 
 export function getIntegrationStatus() {
-  const env = process.env;
+  const modes = getIntegrationModes();
 
   return {
-    leonardoConfigured: Boolean(env.LEONARDO_API_KEY),
-    openaiConfigured: Boolean(env.OPENAI_API_KEY),
-    r2Configured: Boolean(env.R2_ENDPOINT && env.R2_ACCESS_KEY_ID && env.R2_SECRET_ACCESS_KEY && env.R2_BUCKET)
+    leonardoConfigured: modes.leonardo === "real",
+    openaiConfigured: modes.openai === "real",
+    pinterestConfigured: modes.pinterest === "real",
+    r2Configured: modes.r2 === "real",
+    modes
   };
 }

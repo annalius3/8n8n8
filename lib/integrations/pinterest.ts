@@ -14,6 +14,7 @@ export type PinterestPublishPayload = {
 
 export type PinterestPublishResult = {
   postId: string;
+  mode: "real" | "demo";
 };
 
 export async function publishToPinterest(payload: PinterestPublishPayload): Promise<PinterestPublishResult> {
@@ -30,6 +31,7 @@ export async function publishToPinterest(payload: PinterestPublishPayload): Prom
   }
 
   return {
-    postId: `pin_${Date.now()}`
+    postId: `pin_${Date.now()}`,
+    mode: "demo"
   };
 }
