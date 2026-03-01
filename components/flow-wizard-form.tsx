@@ -84,7 +84,7 @@ export function FlowWizardForm() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <div className="grid gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Step 1. Seed topic</CardTitle>
@@ -158,26 +158,6 @@ export function FlowWizardForm() {
               {loading ? "Creating flow..." : "Continue to generate 50 topics"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>What happens next</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
-          <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">1. Create the flow</p>
-            <p className="mt-1">First, the flow itself will be created with language, scheduling, and publishing settings.</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">2. Generate topics</p>
-            <p className="mt-1">On the next screen, generation of 50 topics will start automatically with polling and run logs.</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">3. Build the content queue</p>
-            <p className="mt-1">After choosing topics, you will add them to the queue, generate text and images, and then publish them.</p>
-          </div>
         </CardContent>
       </Card>
     </div>
