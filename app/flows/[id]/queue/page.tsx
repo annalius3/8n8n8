@@ -6,11 +6,13 @@ import { LinkButton } from "@/components/ui/link-button";
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ autostart?: string }>;
 };
 
-export default async function FlowQueuePage({ params }: Props) {
+export default async function FlowQueuePage({ params, searchParams }: Props) {
   const user = await requireUser("/flows");
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
 
   const flow = await prisma.flow.findFirst({
     where: { id, userId: user.id },
@@ -42,6 +44,7 @@ export default async function FlowQueuePage({ params }: Props) {
       </div>
       <CampaignQueueManager
         flowId={flow.id}
+        autoStartGenerate={resolvedSearchParams?.autostart === "1"}
         initialItems={flow.queueItems.map((item) => ({
           id: item.id,
           status: item.status,

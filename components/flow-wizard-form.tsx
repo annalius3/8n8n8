@@ -74,7 +74,7 @@ export function FlowWizardForm() {
         return;
       }
 
-      router.push(`/flows/${data.flowId}/topics`);
+      router.push(`/flows/${data.flowId}/queue?autostart=1`);
       router.refresh();
     } catch {
       setError("Failed to reach the server");
@@ -155,7 +155,7 @@ export function FlowWizardForm() {
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Creating flow..." : "Continue to generate 50 topics"}
+              {loading ? "Adding to queue..." : "Add to Queue"}
             </Button>
           </form>
         </CardContent>

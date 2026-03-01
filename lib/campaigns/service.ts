@@ -109,8 +109,7 @@ function getStepConfig(flow: FlowWithSteps, type: string) {
 export async function createCampaign(userId: string, input: CampaignInput) {
   const timezone = input.timezone?.trim() || "Europe/Kiev";
   const startTime = input.startTime?.trim() || getCurrentTimeForTimezone(timezone);
-
-  return prisma.flow.create({
+  const flow = await prisma.flow.create({
     data: {
       userId,
       name: input.name?.trim() || input.seedTopic.trim(),
@@ -177,6 +176,19 @@ export async function createCampaign(userId: string, input: CampaignInput) {
       }
     }
   });
+
+  await prisma.postQueueItem.create({
+    data: {
+      userId,
+      flowId: flow.id,
+      topicText: input.seedTopic.trim(),
+      title: "",
+      body: "",
+      status: QueueStatus.pending
+    }
+  });
+
+  return flow;
 }
 
 export async function generateTopicsForCampaign(flowId: string, userId: string) {

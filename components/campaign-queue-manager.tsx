@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,14 +94,17 @@ function getSuccessMessage(action: string, data: ActionResponse) {
 
 export function CampaignQueueManager({
   flowId,
+  autoStartGenerate = false,
   initialItems,
   initialRuns
 }: {
   flowId: string;
+  autoStartGenerate?: boolean;
   initialItems: QueueItem[];
   initialRuns: Run[];
 }) {
   const router = useRouter();
+  const autoStartRef = useRef(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +126,8 @@ export function CampaignQueueManager({
   const allIds = initialItems.map((item) => item.id);
   const failedIds = initialItems.filter((item) => item.status === "failed").map((item) => item.id);
   const readyIds = initialItems.filter((item) => item.status === "ready").map((item) => item.id);
+  const pendingIds = initialItems.filter((item) => item.status === "pending" || item.status === "failed").map((item) => item.id);
+  const generatedCount = initialItems.filter((item) => item.status === "ready" || item.status === "published" || item.status === "publishing").length;
   const selectedReadyIds = selectedIds.filter((id) => readyIds.includes(id));
   const selectedFailedIds = selectedIds.filter((id) => failedIds.includes(id));
   const criticalErrors = useMemo(() => {
@@ -220,6 +225,16 @@ export function CampaignQueueManager({
       setLoading(null);
     }
   }
+
+  useEffect(() => {
+    if (!autoStartGenerate || autoStartRef.current) return;
+    if (pendingIds.length === 0 || generatedCount > 0) return;
+
+    autoStartRef.current = true;
+    void perform("generate-selected", () =>
+      postJson(`/api/flows/${flowId}/queue/generate`, { queueItemIds: [pendingIds[0]] })
+    );
+  }, [autoStartGenerate, flowId, generatedCount, pendingIds]);
 
   return (
     <div className="space-y-6">
@@ -444,3 +459,4 @@ export function CampaignQueueManager({
     </div>
   );
 }
+
