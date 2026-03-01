@@ -122,6 +122,41 @@ export function CampaignQueueManager({
 
   const allIds = initialItems.map((item) => item.id);
   const failedIds = initialItems.filter((item) => item.status === "failed").map((item) => item.id);
+  const readyIds = initialItems.filter((item) => item.status === "ready").map((item) => item.id);
+  const selectedReadyIds = selectedIds.filter((id) => readyIds.includes(id));
+  const selectedFailedIds = selectedIds.filter((id) => failedIds.includes(id));
+  const criticalErrors = useMemo(() => {
+    const messages = new Set<string>();
+
+    if (error) {
+      messages.add(error);
+    }
+
+    for (const item of initialItems) {
+      if (item.error) {
+        messages.add(item.error);
+      }
+    }
+
+    for (const run of initialRuns) {
+      if (run.status === "failed" && run.error) {
+        messages.add(run.error);
+      }
+
+      for (const step of run.steps) {
+        if (step.status === "failed" && step.error) {
+          messages.add(step.error);
+        }
+      }
+    }
+
+    return Array.from(messages).map((message) => {
+      if (message.includes("Missing: ['boards:write', 'pins:write']")) {
+        return "Pinterest token не имеет прав на публикацию. Нужны scopes boards:write и pins:write.";
+      }
+      return message;
+    });
+  }, [error, initialItems, initialRuns]);
 
   const debugLogText = useMemo(() => {
     const lines: string[] = [];
@@ -167,6 +202,10 @@ export function CampaignQueueManager({
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
+  function selectIds(ids: string[]) {
+    setSelectedIds(ids);
+  }
+
   async function copyDebugLogs() {
     try {
       await navigator.clipboard.writeText(debugLogText);
@@ -201,6 +240,15 @@ export function CampaignQueueManager({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => selectIds(readyIds)} disabled={loading !== null || readyIds.length === 0}>
+              Выбрать готовые
+            </Button>
+            <Button type="button" variant="outline" onClick={() => selectIds(failedIds)} disabled={loading !== null || failedIds.length === 0}>
+              Выбрать ошибки
+            </Button>
+            <Button type="button" variant="outline" onClick={() => selectIds([])} disabled={loading !== null || selectedIds.length === 0}>
+              Снять выбор
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -226,8 +274,15 @@ export function CampaignQueueManager({
             </Button>
             <Button
               type="button"
-              onClick={() => perform("publish-selected", () => postJson(`/api/flows/${flowId}/queue/publish`, { queueItemIds: selectedIds }))}
-              disabled={loading !== null || selectedIds.length === 0}
+              onClick={() => {
+                if (selectedReadyIds.length === 0) {
+                  setError("Для публикации нужно выбрать элементы со статусом «Готово».");
+                  setSuccess(null);
+                  return;
+                }
+                void perform("publish-selected", () => postJson(`/api/flows/${flowId}/queue/publish`, { queueItemIds: selectedReadyIds }));
+              }}
+              disabled={loading !== null || selectedReadyIds.length === 0}
             >
               Опубликовать выбранные
             </Button>
@@ -245,7 +300,7 @@ export function CampaignQueueManager({
               onClick={() =>
                 perform("retry", () =>
                   postJson(`/api/flows/${flowId}/queue/retry`, {
-                    queueItemIds: selectedIds.length > 0 ? selectedIds.filter((id) => failedIds.includes(id)) : failedIds
+                    queueItemIds: selectedFailedIds.length > 0 ? selectedFailedIds : failedIds
                   })
                 )
               }
@@ -264,8 +319,26 @@ export function CampaignQueueManager({
           </div>
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          <p className="text-sm text-muted-foreground">
+            Для публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Сейчас выбрано готовых: {selectedReadyIds.length}.
+          </p>
         </CardContent>
       </Card>
+
+      {criticalErrors.length > 0 ? (
+        <Card className="border-red-200 bg-red-50/70">
+          <CardHeader>
+            <CardTitle className="text-red-700">Критические ошибки</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-red-700">
+            {criticalErrors.map((message) => (
+              <div key={message} className="rounded-md border border-red-200 bg-white/80 p-3">
+                {message}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full table-fixed text-sm">
@@ -288,7 +361,14 @@ export function CampaignQueueManager({
               <Fragment key={item.id}>
                 <tr className="border-t align-top">
                   <td className="p-3">
-                    <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggleSelection(item.id)} />
+                    <label className="flex cursor-pointer items-center justify-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => toggleSelection(item.id)}
+                      />
+                    </label>
                   </td>
                   <td className="p-3">
                     <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : "outline"}>
