@@ -14,6 +14,31 @@ function sign(payload: string): string {
   return crypto.createHmac("sha256", authSecret()).update(payload).digest("hex");
 }
 
+export function createSignedStateToken(payload: Record<string, unknown>, expiresInMinutes = 15): string {
+  const encodedPayload = Buffer.from(
+    JSON.stringify({
+      ...payload,
+      exp: Date.now() + expiresInMinutes * 60_000
+    })
+  ).toString("base64url");
+
+  return `${encodedPayload}.${sign(encodedPayload)}`;
+}
+
+export function verifySignedStateToken<T extends Record<string, unknown>>(token: string): (T & { exp: number }) | null {
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature) return null;
+  if (sign(payload) !== signature) return null;
+
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as T & { exp: number };
+    if (!parsed.exp || Date.now() > parsed.exp) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function createMagicToken(email: string, expiresInMinutes = 20): string {
   const expiresAt = Date.now() + expiresInMinutes * 60_000;
   const payload = Buffer.from(JSON.stringify({ email, exp: expiresAt })).toString("base64url");

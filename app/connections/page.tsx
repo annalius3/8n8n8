@@ -26,7 +26,7 @@ export default async function ConnectionsPage() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>Real server-side integration tokens are stored here. Only an authenticated user can access this page.</p>
-          <p>The Pinterest server flow is enabled here: token storage, access check, and board loading.</p>
+          <p>Pinterest can be connected through OAuth or by saving an existing access token as a fallback.</p>
         </CardContent>
       </Card>
       <ConnectionSettingsForm
