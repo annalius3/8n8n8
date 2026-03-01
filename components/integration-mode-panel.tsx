@@ -7,17 +7,17 @@ type IntegrationModePanelProps = {
 };
 
 const ITEMS: Array<{ key: keyof IntegrationModes; label: string; note: string }> = [
-  { key: "openai", label: "OpenAI", note: "Генерация текста в шаге template" },
-  { key: "leonardo", label: "Leonardo", note: "Генерация изображений" },
-  { key: "pinterest", label: "Pinterest", note: "Публикация через сохранённый server-side токен пользователя и board_id кампании" },
-  { key: "r2", label: "Cloudflare R2", note: "Хранение изображений" }
+  { key: "openai", label: "OpenAI", note: "Text generation in the template step" },
+  { key: "leonardo", label: "Leonardo", note: "Image generation" },
+  { key: "pinterest", label: "Pinterest", note: "Publishing through the user's saved server-side token and flow board_id" },
+  { key: "r2", label: "Cloudflare R2", note: "Image storage" }
 ];
 
 export function IntegrationModePanel({ modes }: IntegrationModePanelProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Состояние интеграций</CardTitle>
+        <CardTitle>Integration status</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2">
         {ITEMS.map((item) => {
@@ -39,3 +39,4 @@ export function IntegrationModePanel({ modes }: IntegrationModePanelProps) {
     </Card>
   );
 }
+

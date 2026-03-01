@@ -74,7 +74,7 @@ async function pinterestFetch<T>(path: string, accessToken: string, init?: Reque
 export async function listPinterestBoards(input: ListPinterestBoardsInput): Promise<PinterestBoard[]> {
   const connection = await findPinterestConnection(input.userId, input.connectionName);
   if (!connection) {
-    throw new Error("Сначала сохраните Pinterest token на странице Подключения");
+    throw new Error("Save a Pinterest token on the Connections page first");
   }
 
   const secret = parsePinterestSecret(connection.encryptedJson);
@@ -142,3 +142,4 @@ export async function publishToPinterest(payload: PinterestPublishPayload): Prom
     mode: "real"
   };
 }
+

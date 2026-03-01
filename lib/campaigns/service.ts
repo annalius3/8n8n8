@@ -164,7 +164,7 @@ export async function createCampaign(userId: string, input: CampaignInput) {
             orderIndex: 2,
             type: "pinterest_publish",
             configJson: {
-              connection_name: "Основной Pinterest",
+              connection_name: "Main Pinterest",
               board_id: "",
               title_from: "context.text.title",
               description_from: "context.text.description",

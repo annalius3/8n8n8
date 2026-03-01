@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ export function DeleteFlowButton({
   const [error, setError] = useState<string | null>(null);
 
   async function removeFlow() {
-    const confirmed = window.confirm("Удалить поток и все связанные темы, очередь и логи? Это действие нельзя отменить.");
+    const confirmed = window.confirm("Delete this flow and all related topics, queue items, and logs? This action cannot be undone.");
     if (!confirmed) return;
 
     setLoading(true);
@@ -29,7 +29,7 @@ export function DeleteFlowButton({
       const data = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "Не удалось удалить поток");
+        setError(data.error ?? "Failed to delete flow");
         return;
       }
 
@@ -38,7 +38,7 @@ export function DeleteFlowButton({
       }
       router.refresh();
     } catch {
-      setError("Не удалось связаться с сервером");
+      setError("Failed to reach the server");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export function DeleteFlowButton({
   return (
     <div className="flex items-center gap-2">
       <Button variant="destructive" onClick={removeFlow} disabled={loading}>
-        {loading ? "Удаление..." : "Удалить поток"}
+        {loading ? "Deleting..." : "Delete flow"}
       </Button>
       {error ? <span className="text-xs text-red-600">{error}</span> : null}
     </div>

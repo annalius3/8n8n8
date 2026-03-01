@@ -20,7 +20,8 @@ export function getIntegrationModes(): IntegrationModes {
 }
 
 export function getIntegrationModeLabel(mode: IntegrationMode) {
-  if (mode === "real") return "Реальный API";
-  if (mode === "connection_required") return "Нужен токен";
-  return "Не настроено";
+  if (mode === "real") return "Real API";
+  if (mode === "connection_required") return "Token required";
+  return "Not configured";
 }
+

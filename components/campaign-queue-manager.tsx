@@ -8,13 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 
 function translateQueueStatus(status: string) {
-  if (status === "pending") return "Ожидает";
-  if (status === "generating") return "Генерируется";
-  if (status === "ready") return "Готово";
-  if (status === "publishing") return "Публикуется";
-  if (status === "published") return "Опубликовано";
-  if (status === "failed") return "Ошибка";
-  if (status === "processing") return "Обрабатывается";
+  if (status === "pending") return "Pending";
+  if (status === "generating") return "Generating";
+  if (status === "ready") return "Ready";
+  if (status === "publishing") return "Publishing";
+  if (status === "published") return "Published";
+  if (status === "failed") return "Failed";
+  if (status === "processing") return "Processing";
   return status;
 }
 
@@ -63,33 +63,33 @@ async function postJson(url: string, body: Record<string, unknown>) {
   });
   const data = (await response.json().catch(() => ({}))) as ActionResponse;
   if (!response.ok) {
-    throw new Error(data.error ?? "Не удалось выполнить запрос");
+    throw new Error(data.error ?? "Failed to complete the request");
   }
   return data;
 }
 
 function getSuccessMessage(action: string, data: ActionResponse) {
-  if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
+  if (action === "plan") return `Schedule updated for ${data.count ?? 0} items.`;
   if (action === "generate-all") {
     if ((data.generated ?? 0) === 0 && (data.published ?? 0) === 0) {
-      return "Для автогенерации сейчас нет подходящих элементов: очередь уже обработана или пуста.";
+      return "No suitable items are available for auto-generation right now. The queue is either empty or already processed.";
     }
-    return `Обработано ${data.generated ?? 0} элементов: сгенерировано 3/меньше и опубликовано ${data.published ?? 0}.`;
+    return `Processed ${data.generated ?? 0} item(s): generated up to 3 and published ${data.published ?? 0}.`;
   }
   if (action === "generate-selected") {
-    return `Контент и изображения обновлены для ${data.processed ?? 0} элементов.`;
+    return `Text and images updated for ${data.processed ?? 0} item(s).`;
   }
   if (action === "publish-selected" || action === "publish-due") {
-    return `Опубликовано ${data.processed ?? 0} элементов.`;
+    return `Published ${data.processed ?? 0} item(s).`;
   }
   if (action === "retry") {
     if ((data.updated ?? 0) === 0) {
-      return "Элементов со статусом «Ошибка» для повторного запуска не найдено.";
+      return "No failed items were found for retry.";
     }
-    return `Повторно подготовлено ${data.updated ?? 0} элементов.`;
+    return `Prepared ${data.updated ?? 0} item(s) for retry.`;
   }
-  if (action === "delete") return `Удалено ${data.deleted ?? 0} элементов.`;
-  return "Действие выполнено.";
+  if (action === "delete") return `Deleted ${data.deleted ?? 0} item(s).`;
+  return "Action completed.";
 }
 
 export function CampaignQueueManager({
@@ -128,31 +128,20 @@ export function CampaignQueueManager({
   const criticalErrors = useMemo(() => {
     const messages = new Set<string>();
 
-    if (error) {
-      messages.add(error);
-    }
-
+    if (error) messages.add(error);
     for (const item of initialItems) {
-      if (item.error) {
-        messages.add(item.error);
-      }
+      if (item.error) messages.add(item.error);
     }
-
     for (const run of initialRuns) {
-      if (run.status === "failed" && run.error) {
-        messages.add(run.error);
-      }
-
+      if (run.status === "failed" && run.error) messages.add(run.error);
       for (const step of run.steps) {
-        if (step.status === "failed" && step.error) {
-          messages.add(step.error);
-        }
+        if (step.status === "failed" && step.error) messages.add(step.error);
       }
     }
 
     return Array.from(messages).map((message) => {
       if (message.includes("Missing: ['boards:write', 'pins:write']")) {
-        return "Pinterest token не имеет прав на публикацию. Нужны scopes boards:write и pins:write.";
+        return "The Pinterest token does not have publishing permissions. Required scopes: boards:write and pins:write.";
       }
       return message;
     });
@@ -195,7 +184,7 @@ export function CampaignQueueManager({
       lines.push("");
     }
 
-    return lines.join("\n").trim() || "Логов пока нет.";
+    return lines.join("\n").trim() || "No logs yet.";
   }, [error, initialItems, initialRuns]);
 
   function toggleSelection(id: string) {
@@ -226,7 +215,7 @@ export function CampaignQueueManager({
       setSuccess(getSuccessMessage(action, result));
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось выполнить запрос");
+      setError(requestError instanceof Error ? requestError.message : "Failed to complete the request");
     } finally {
       setLoading(null);
     }
@@ -236,18 +225,18 @@ export function CampaignQueueManager({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Очередь / Конвейер контента</CardTitle>
+          <CardTitle>Queue / Content pipeline</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => selectIds(readyIds)} disabled={loading !== null || readyIds.length === 0}>
-              Выбрать готовые
+              Select ready
             </Button>
             <Button type="button" variant="outline" onClick={() => selectIds(failedIds)} disabled={loading !== null || failedIds.length === 0}>
-              Выбрать ошибки
+              Select failed
             </Button>
             <Button type="button" variant="outline" onClick={() => selectIds([])} disabled={loading !== null || selectedIds.length === 0}>
-              Снять выбор
+              Clear selection
             </Button>
             <Button
               type="button"
@@ -255,14 +244,14 @@ export function CampaignQueueManager({
               onClick={() => perform("plan", () => postJson(`/api/flows/${flowId}/queue/plan-schedule`, {}))}
               disabled={loading !== null}
             >
-              Спланировать расписание
+              Plan schedule
             </Button>
             <Button
               type="button"
               onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }))}
               disabled={loading !== null || allIds.length === 0}
             >
-              Сгенерировать 3 и опубликовать 1
+              Prepare next 3 and publish 1
             </Button>
             <Button
               type="button"
@@ -270,13 +259,13 @@ export function CampaignQueueManager({
               onClick={() => perform("generate-selected", () => postJson(`/api/flows/${flowId}/queue/generate`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Сгенерировать текст и изображение
+              Generate text and image
             </Button>
             <Button
               type="button"
               onClick={() => {
                 if (selectedReadyIds.length === 0) {
-                  setError("Для публикации нужно выбрать элементы со статусом «Готово».");
+                  setError('Select items with status "Ready" before publishing.');
                   setSuccess(null);
                   return;
                 }
@@ -284,7 +273,7 @@ export function CampaignQueueManager({
               }}
               disabled={loading !== null || selectedReadyIds.length === 0}
             >
-              Опубликовать выбранные
+              Publish selected
             </Button>
             <Button
               type="button"
@@ -292,7 +281,7 @@ export function CampaignQueueManager({
               onClick={() => perform("publish-due", () => postJson(`/api/flows/${flowId}/queue/publish`, { dueOnly: true }))}
               disabled={loading !== null}
             >
-              Опубликовать запланированные
+              Publish due now
             </Button>
             <Button
               type="button"
@@ -306,7 +295,7 @@ export function CampaignQueueManager({
               }
               disabled={loading !== null || failedIds.length === 0}
             >
-              Повторить с ошибкой
+              Retry failed
             </Button>
             <Button
               type="button"
@@ -314,13 +303,13 @@ export function CampaignQueueManager({
               onClick={() => perform("delete", () => postJson(`/api/flows/${flowId}/queue/delete`, { queueItemIds: selectedIds }))}
               disabled={loading !== null || selectedIds.length === 0}
             >
-              Удалить выбранные
+              Delete selected
             </Button>
           </div>
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <p className="text-sm text-muted-foreground">
-            Для публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Сейчас выбрано готовых: {selectedReadyIds.length}.
+            Select only items with status <span className="font-medium">Ready</span> for publishing. Ready items selected: {selectedReadyIds.length}.
           </p>
         </CardContent>
       </Card>
@@ -328,7 +317,7 @@ export function CampaignQueueManager({
       {criticalErrors.length > 0 ? (
         <Card className="border-red-200 bg-red-50/70">
           <CardHeader>
-            <CardTitle className="text-red-700">Критические ошибки</CardTitle>
+            <CardTitle className="text-red-700">Critical errors</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-red-700">
             {criticalErrors.map((message) => (
@@ -345,15 +334,15 @@ export function CampaignQueueManager({
           <thead className="bg-muted/40 text-left">
             <tr>
               <th className="p-3"></th>
-              <th className="w-28 p-3">Статус</th>
-              <th className="w-48 p-3">Тема</th>
-              <th className="w-48 p-3">Заголовок</th>
-              <th className="w-[340px] p-3">Описание</th>
-              <th className="w-28 p-3">Изображение</th>
-              <th className="w-40 p-3">Запланировано</th>
-              <th className="w-40 p-3">Опубликовано</th>
-              <th className="w-52 p-3">Ошибка</th>
-              <th className="p-3">Логи</th>
+              <th className="w-28 p-3">Status</th>
+              <th className="w-48 p-3">Topic</th>
+              <th className="w-48 p-3">Title</th>
+              <th className="w-[340px] p-3">Description</th>
+              <th className="w-28 p-3">Image</th>
+              <th className="w-40 p-3">Scheduled</th>
+              <th className="w-40 p-3">Published</th>
+              <th className="w-52 p-3">Error</th>
+              <th className="p-3">Logs</th>
             </tr>
           </thead>
           <tbody>
@@ -385,14 +374,14 @@ export function CampaignQueueManager({
                   <td className="p-3">
                     {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="h-20 w-20 rounded-md object-cover" /> : "—"}
                   </td>
-                  <td className="p-3">{item.scheduledAt ? new Date(item.scheduledAt).toLocaleString("ru-RU") : "—"}</td>
-                  <td className="p-3">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("ru-RU") : "—"}</td>
+                  <td className="p-3">{item.scheduledAt ? new Date(item.scheduledAt).toLocaleString("en-US") : "—"}</td>
+                  <td className="p-3">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("en-US") : "—"}</td>
                   <td className="p-3 text-red-600">
                     <div className="max-w-[200px] break-words">{item.error ?? "—"}</div>
                   </td>
                   <td className="p-3">
                     <Button type="button" variant="outline" size="sm" onClick={() => setExpandedItemId(expandedItemId === item.id ? null : item.id)}>
-                      Показать логи
+                      View logs
                     </Button>
                   </td>
                 </tr>
@@ -405,7 +394,7 @@ export function CampaignQueueManager({
                             <Card key={run.id}>
                               <CardHeader>
                                 <CardTitle className="text-base">
-                                  Run {run.id} · {new Date(run.startedAt).toLocaleString("ru-RU")}
+                                  Run {run.id} · {new Date(run.startedAt).toLocaleString("en-US")}
                                 </CardTitle>
                               </CardHeader>
                               <CardContent>
@@ -422,7 +411,7 @@ export function CampaignQueueManager({
                             </Card>
                           ))
                         ) : (
-                          <p className="text-sm text-muted-foreground">Для этого элемента пока нет логов.</p>
+                          <p className="text-sm text-muted-foreground">No logs yet for this item.</p>
                         )}
                       </div>
                     </td>
@@ -436,14 +425,14 @@ export function CampaignQueueManager({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle>Диагностика и логи для копирования</CardTitle>
+          <CardTitle>Diagnostics and copy-ready logs</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={copyDebugLogs}>
-            {copyState === "done" ? "Скопировано" : copyState === "error" ? "Не удалось скопировать" : "Копировать логи"}
+            {copyState === "done" ? "Copied" : copyState === "error" ? "Copy failed" : "Copy logs"}
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Если после кнопки генерации, публикации или повтора возникла ошибка, скопируйте этот блок и отправьте его целиком.
+            If generation, publishing, or retry fails, copy this block and send it as-is.
           </p>
           <textarea
             readOnly

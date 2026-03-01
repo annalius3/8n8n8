@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+﻿import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type FlowReadinessCardProps = {
@@ -10,7 +10,7 @@ export function FlowReadinessCard({ blockers, hints }: FlowReadinessCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Почему поток может не сработать</CardTitle>
+        <CardTitle>Why this flow may not run</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -24,7 +24,7 @@ export function FlowReadinessCard({ blockers, hints }: FlowReadinessCardProps) {
           ) : (
             <div className="flex gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>Критичных блокеров не найдено. Поток готов к запуску в текущем режиме.</span>
+              <span>No critical blockers found. The flow is ready to run in its current mode.</span>
             </div>
           )}
         </div>

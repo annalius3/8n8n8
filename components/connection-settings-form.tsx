@@ -26,7 +26,7 @@ type Props = {
 };
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
@@ -34,7 +34,7 @@ function formatDate(value: string) {
 
 export function ConnectionSettingsForm({ initialConnections }: Props) {
   const [connections, setConnections] = useState(initialConnections);
-  const [name, setName] = useState("Основной Pinterest");
+  const [name, setName] = useState("Main Pinterest");
   const [accessToken, setAccessToken] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -77,7 +77,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
               ? Object.entries(data.error.fieldErrors)
                   .flatMap(([, values]) => values ?? [])
                   .join(", ")
-              : "Не удалось сохранить подключение";
+              : "Failed to save the connection";
         throw new Error(message);
       }
 
@@ -89,9 +89,9 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
         return [savedConnection, ...next];
       });
       setAccessToken("");
-      setSaveMessage("Токен сохранён в зашифрованном виде на сервере.");
+      setSaveMessage("The token was saved in encrypted form on the server.");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Не удалось сохранить токен");
+      setError(saveError instanceof Error ? saveError.message : "Failed to save the token");
     } finally {
       setIsSaving(false);
     }
@@ -107,13 +107,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
       const response = await fetch(`/api/connections/pinterest/boards?connectionName=${encodeURIComponent(name)}`);
       const data = (await response.json()) as { boards?: BoardItem[]; error?: string };
       if (!response.ok || !data.boards) {
-        throw new Error(data.error ?? "Не удалось проверить Pinterest");
+        throw new Error(data.error ?? "Failed to check Pinterest");
       }
 
       setBoards(data.boards);
-      setSaveMessage(`Pinterest ответил успешно. Найдено досок: ${data.boards.length}.`);
+      setSaveMessage(`Pinterest responded successfully. Boards found: ${data.boards.length}.`);
     } catch (checkError) {
-      setError(checkError instanceof Error ? checkError.message : "Не удалось проверить Pinterest");
+      setError(checkError instanceof Error ? checkError.message : "Failed to check Pinterest");
     } finally {
       setIsChecking(false);
     }
@@ -123,15 +123,15 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Подключение Pinterest</CardTitle>
+          <CardTitle>Pinterest connection</CardTitle>
           <CardDescription>
-            Токен хранится только на сервере в зашифрованном виде. После сохранения клиент больше не получает его обратно.
+            The token is stored only on the server in encrypted form. After saving it, the client never receives it back.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="connection-name">Название подключения</Label>
-            <Input id="connection-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Основной Pinterest" />
+            <Label htmlFor="connection-name">Connection name</Label>
+            <Input id="connection-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Main Pinterest" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="access-token">Access token</Label>
@@ -143,22 +143,22 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
               placeholder="pina_..."
               autoComplete="off"
             />
-            <p className="text-xs text-muted-foreground">Используйте новый токен, который не публиковался в чате, git или логах.</p>
+            <p className="text-xs text-muted-foreground">Use a new token that has never been posted in chat, git, or logs.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button onClick={saveConnection} disabled={isSaving || name.trim().length < 2 || accessToken.trim().length < 20}>
-              {isSaving ? "Сохраняю..." : "Сохранить токен"}
+              {isSaving ? "Saving..." : "Save token"}
             </Button>
             <Button variant="outline" onClick={checkPinterest} disabled={isChecking || name.trim().length < 2}>
-              {isChecking ? "Проверяю..." : "Проверить Pinterest"}
+              {isChecking ? "Checking..." : "Check Pinterest"}
             </Button>
-            {existingConnection ? <Badge variant="outline">Есть сохранённое подключение</Badge> : null}
+            {existingConnection ? <Badge variant="outline">Saved connection exists</Badge> : null}
           </div>
           {saveMessage ? <p className="text-sm text-emerald-700">{saveMessage}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           {boards.length > 0 ? (
             <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
-              <div className="text-sm font-medium">Доступные доски</div>
+              <div className="text-sm font-medium">Available boards</div>
               <div className="space-y-2">
                 {boards.map((board) => (
                   <div key={board.id} className="rounded-lg border bg-background px-3 py-2 text-sm">
@@ -177,13 +177,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Сохранённые подключения</CardTitle>
-          <CardDescription>Здесь показываются только безопасные метаданные без токенов.</CardDescription>
+          <CardTitle>Saved connections</CardTitle>
+          <CardDescription>Only safe metadata is shown here. Tokens are never exposed.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {connections.length === 0 ? (
             <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-              Пока нет сохранённых подключений. Сначала сохраните Pinterest token, потом проверьте список досок.
+              No saved connections yet. Save a Pinterest token first, then check the board list.
             </div>
           ) : (
             connections.map((connection) => (
@@ -193,9 +193,9 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                     <div className="font-medium">{connection.name}</div>
                     <div className="text-sm text-muted-foreground">{connection.provider}</div>
                   </div>
-                  <Badge variant="outline">Токен скрыт</Badge>
+                  <Badge variant="outline">Token hidden</Badge>
                 </div>
-                <div className="mt-3 text-sm text-muted-foreground">Обновлено: {formatDate(connection.updatedAt)}</div>
+                <div className="mt-3 text-sm text-muted-foreground">Updated: {formatDate(connection.updatedAt)}</div>
               </div>
             ))
           )}
@@ -204,3 +204,4 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
     </div>
   );
 }
+

@@ -11,7 +11,7 @@ const schema = z.object({
 export async function GET() {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const secret = await prisma.connection.findFirst({
@@ -37,7 +37,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -84,4 +84,5 @@ export async function POST(request: NextRequest) {
     updatedAt: connection.updatedAt
   });
 }
+
 

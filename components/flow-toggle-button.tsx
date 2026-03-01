@@ -23,14 +23,14 @@ export function FlowToggleButton({ flowId, initialEnabled }: { flowId: string; i
       const data = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "Не удалось изменить статус потока");
+        setError(data.error ?? "Failed to update flow status");
         return;
       }
 
       setEnabled(!enabled);
       router.refresh();
     } catch {
-      setError("Не удалось связаться с сервером");
+      setError("Failed to reach the server");
     } finally {
       setLoading(false);
     }
@@ -39,9 +39,10 @@ export function FlowToggleButton({ flowId, initialEnabled }: { flowId: string; i
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" onClick={toggle} disabled={loading}>
-        {loading ? "Сохранение..." : enabled ? "Выключить" : "Включить"}
+        {loading ? "Saving..." : enabled ? "Disable" : "Enable"}
       </Button>
       {error ? <span className="text-xs text-red-600">{error}</span> : null}
     </div>
   );
 }
+

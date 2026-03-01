@@ -27,22 +27,22 @@ export function toPublicOpenAIErrorMessage(error: unknown) {
   const normalized = message.toLowerCase();
 
   if (normalized.includes("insufficient_quota") || (normalized.includes("429") && normalized.includes("quota"))) {
-    return "Не удалось выполнить запрос к OpenAI: закончилась квота или не настроен billing. Проверьте тариф и платежные настройки OpenAI.";
+    return "OpenAI request failed: quota exceeded or billing is not configured. Check your OpenAI billing settings.";
   }
 
   if (normalized.includes("429")) {
-    return "OpenAI временно отклонил запрос из-за лимитов. Повторите попытку позже.";
+    return "OpenAI temporarily rejected the request because of rate limits. Try again later.";
   }
 
   if (normalized.includes("openai_api_key is not configured")) {
-    return "Не настроен OPENAI_API_KEY на сервере.";
+    return "OPENAI_API_KEY is not configured on the server.";
   }
 
   if (normalized.includes("openai request failed")) {
-    return "Не удалось выполнить запрос к OpenAI. Проверьте API-ключ, billing и доступность модели.";
+    return "OpenAI request failed. Check the API key, billing, and model availability.";
   }
 
-  return "Не удалось выполнить запрос к OpenAI.";
+  return "OpenAI request failed.";
 }
 
 function parseStrictJson<T>(content: string): T {
@@ -208,3 +208,4 @@ export async function generateQueueItemContent(input: {
     hashtags
   };
 }
+

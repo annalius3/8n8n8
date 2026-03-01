@@ -15,7 +15,7 @@ type Params = {
 export async function POST(request: NextRequest, { params }: Params) {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -34,4 +34,5 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   return NextResponse.json(result);
 }
+
 

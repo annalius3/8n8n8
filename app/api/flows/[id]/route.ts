@@ -28,7 +28,7 @@ const patchSchema = z.object({
 
 export async function GET(_: NextRequest, { params }: Params) {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const { id } = await params;
   const flow = await prisma.flow.findFirst({
@@ -47,7 +47,7 @@ export async function GET(_: NextRequest, { params }: Params) {
 
 export async function PATCH(request: NextRequest, { params }: Params) {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const { id } = await params;
   const body = await request.json();
@@ -103,7 +103,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const existingConfig = (existingPublishStep?.configJson ?? {}) as Record<string, unknown>;
     const nextConfig = {
       ...existingConfig,
-      connection_name: data.pinterestConnectionName ?? String(existingConfig.connection_name ?? "Основной Pinterest"),
+      connection_name: data.pinterestConnectionName ?? String(existingConfig.connection_name ?? "Main Pinterest"),
       board_id: data.pinterestBoardId ?? String(existingConfig.board_id ?? "")
     };
 
@@ -122,7 +122,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           orderIndex: maxOrderIndex + 1,
           type: "pinterest_publish",
           configJson: {
-            connection_name: data.pinterestConnectionName ?? "Основной Pinterest",
+            connection_name: data.pinterestConnectionName ?? "Main Pinterest",
             board_id: data.pinterestBoardId ?? "",
             title_from: "context.text.title",
             description_from: "context.text.description",
@@ -150,7 +150,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
 export async function DELETE(_: NextRequest, { params }: Params) {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const { id } = await params;
   const flow = await prisma.flow.findFirst({
@@ -158,7 +158,7 @@ export async function DELETE(_: NextRequest, { params }: Params) {
     select: { id: true }
   });
 
-  if (!flow) return NextResponse.json({ error: "Поток не найден" }, { status: 404 });
+  if (!flow) return NextResponse.json({ error: "Flow not found" }, { status: 404 });
 
   await prisma.flow.delete({
     where: { id: flow.id }
@@ -166,3 +166,4 @@ export async function DELETE(_: NextRequest, { params }: Params) {
 
   return NextResponse.json({ deleted: true });
 }
+

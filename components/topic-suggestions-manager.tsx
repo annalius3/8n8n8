@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -47,7 +47,7 @@ export function TopicSuggestionsManager({
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState(initialSuggestions);
   const [runs, setRuns] = useState(initialRuns.filter(isTopicGenerationRun));
-  const [selectedIds, setSelectedIds] = useState<string[]>(initialSuggestions.filter((item) => item.selected).map((item) => item.id));
+  const [selectedIds, setSelectedIds] = useState(initialSuggestions.filter((item) => item.selected).map((item) => item.id));
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,11 +78,11 @@ export function TopicSuggestionsManager({
     };
 
     if (!topicsResponse.ok) {
-      throw new Error(topicsData.error ?? "Не удалось обновить список тем");
+      throw new Error(topicsData.error ?? "Failed to refresh topics");
     }
 
     if (!runsResponse.ok) {
-      throw new Error(runsData.error ?? "Не удалось обновить логи запуска");
+      throw new Error(runsData.error ?? "Failed to refresh run logs");
     }
 
     const nextSuggestions = topicsData.suggestions ?? [];
@@ -124,10 +124,10 @@ export function TopicSuggestionsManager({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось запустить генерацию тем");
+        throw new Error(data.error ?? "Failed to start topic generation");
       }
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось запустить генерацию тем");
+      setError(requestError instanceof Error ? requestError.message : "Failed to start topic generation");
     } finally {
       window.clearInterval(poll);
       generationStartedRef.current = false;
@@ -186,13 +186,13 @@ export function TopicSuggestionsManager({
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось добавить темы в очередь");
+        throw new Error(data.error ?? "Failed to add topics to the queue");
       }
 
       router.push(`/flows/${flowId}/queue`);
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось добавить темы в очередь");
+      setError(requestError instanceof Error ? requestError.message : "Failed to add topics to the queue");
     } finally {
       setLoading(false);
     }
@@ -204,22 +204,22 @@ export function TopicSuggestionsManager({
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Шаг 2. Просмотр 50 тем</CardTitle>
+          <CardTitle>Step 2. Review 50 topics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {generating ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Идёт генерация 50 тем. Список и логи обновляются автоматически.
+              Topic generation is in progress. The topic list and run logs refresh automatically.
             </div>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Поиск по темам" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search topics" />
             <Button type="button" variant="outline" onClick={() => setSelectedIds(filtered.map((item) => item.id))} disabled={generating || filtered.length === 0}>
-              Выбрать все
+              Select all
             </Button>
             <Button type="button" variant="outline" onClick={() => setSelectedIds([])} disabled={generating || selectedIds.length === 0}>
-              Снять выбор
+              Deselect all
             </Button>
           </div>
 
@@ -234,19 +234,19 @@ export function TopicSuggestionsManager({
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                {generating ? "Темы ещё генерируются..." : "Тем пока нет. Нажмите «Запустить генерацию», чтобы получить 50 тем."}
+                {generating ? "Topics are still being generated..." : "No topics yet. Click \"Start generation\" to get 50 topic suggestions."}
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="button" variant="outline" disabled={generating} onClick={() => void startGeneration()}>
-              {generating ? "Генерирую..." : "Запустить генерацию"}
+              {generating ? "Generating..." : "Start generation"}
             </Button>
             <Button type="button" disabled={loading || selectedIds.length === 0 || generating} onClick={addSelectedToQueue}>
-              {loading ? "Добавляю..." : "Добавить выбранные в очередь"}
+              {loading ? "Adding..." : "Add selected to queue"}
             </Button>
-            <span className="text-sm text-muted-foreground">Выбрано: {selectedIds.length}</span>
+            <span className="text-sm text-muted-foreground">Selected: {selectedIds.length}</span>
           </div>
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -255,15 +255,15 @@ export function TopicSuggestionsManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>Последний запуск генерации тем</CardTitle>
+          <CardTitle>Latest topic generation run</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {lastRun ? (
             <>
               <div className="rounded-lg border p-3 text-sm">
                 <p>Run ID: {lastRun.id}</p>
-                <p className="text-muted-foreground">Статус: {lastRun.status}</p>
-                <p className="text-muted-foreground">Старт: {new Date(lastRun.startedAt).toLocaleString("ru-RU")}</p>
+                <p className="text-muted-foreground">Status: {lastRun.status}</p>
+                <p className="text-muted-foreground">Started: {new Date(lastRun.startedAt).toLocaleString("en-US")}</p>
                 {lastRun.error ? <p className="mt-2 text-red-600">{lastRun.error}</p> : null}
               </div>
               <ExecutionTimeline
@@ -277,7 +277,7 @@ export function TopicSuggestionsManager({
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">Логи появятся после первого запуска генерации тем.</p>
+            <p className="text-sm text-muted-foreground">Run logs will appear after the first topic generation starts.</p>
           )}
         </CardContent>
       </Card>

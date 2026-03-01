@@ -13,7 +13,7 @@ const createConnectionSchema = z.object({
 export async function GET() {
   const user = await getAuthenticatedUserOrNull();
   if (!user) {
-    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const connections = await prisma.connection.findMany({
@@ -34,7 +34,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUserOrNull();
   if (!user) {
-    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -90,3 +90,4 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ connection }, { status: existing ? 200 : 201 });
 }
+

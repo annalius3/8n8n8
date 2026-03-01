@@ -5,48 +5,48 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
 
 export const metadata = {
-  title: "Autoposting Flow",
-  description: "Визуальный MVP для автопостинга по шагам"
+  title: "Scheduled Publishing",
+  description: "Visual MVP for scheduled publishing workflows"
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
 
   return (
-    <html lang="ru">
+    <html lang="en">
       <body>
         <div className="container-page space-y-6">
           <header className="space-y-4 rounded-2xl border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold">Autoposting Flow</h1>
-                <p className="text-sm text-muted-foreground">Только реальная конфигурация, реальные ключи и реальные публикации.</p>
+                <h1 className="text-2xl font-bold">Scheduled Publishing</h1>
+                <p className="text-sm text-muted-foreground">Plan content, prepare assets, and publish on schedule.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {user ? (
                   <div className="flex items-center gap-2">
-                    <Badge>Авторизован</Badge>
+                    <Badge>Signed in</Badge>
                     <span className="text-sm text-muted-foreground">{user.email}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">Требуется вход</Badge>
-                    <span className="text-sm text-muted-foreground">Авторизуйтесь для работы с потоками и подключениями</span>
+                    <Badge variant="outline">Sign-in required</Badge>
+                    <span className="text-sm text-muted-foreground">Sign in to manage flows and connections</span>
                   </div>
                 )}
                 <nav className="flex items-center gap-2">
-                  <LinkButton href="/flows" variant="outline">Потоки</LinkButton>
-                  <LinkButton href="/connections" variant="outline">Подключения</LinkButton>
-                  <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
-                  <LinkButton href="/runs" variant="outline">Запуски</LinkButton>
+                  <LinkButton href="/flows" variant="outline">Flows</LinkButton>
+                  <LinkButton href="/connections" variant="outline">Connections</LinkButton>
+                  <LinkButton href="/settings" variant="outline">Settings</LinkButton>
+                  <LinkButton href="/runs" variant="outline">Runs</LinkButton>
                   {user ? (
                     <form action="/api/auth/logout" method="post">
                       <Button type="submit" variant="secondary">
-                        Выйти
+                        Sign out
                       </Button>
                     </form>
                   ) : (
-                    <LinkButton href="/login">Войти по magic link</LinkButton>
+                    <LinkButton href="/login">Sign in with magic link</LinkButton>
                   )}
                 </nav>
               </div>

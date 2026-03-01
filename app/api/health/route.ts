@@ -18,7 +18,7 @@ export async function GET() {
 
   const payload = {
     ok: envOk && databaseOk,
-    app: "autoposting-flow",
+    app: "scheduled-publishing",
     timestamp: new Date().toISOString(),
     checks: {
       env: envOk

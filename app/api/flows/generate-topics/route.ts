@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function POST() {
   return NextResponse.json(
     {
-      error: "Маршрут устарел. Используйте POST /api/flows для создания потока и POST /api/flows/[id]/topics/generate для генерации тем."
+      error: "This route is deprecated. Use POST /api/flows to create a flow and POST /api/flows/[id]/topics/generate to generate topics."
     },
     { status: 410 }
   );
 }
+

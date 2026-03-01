@@ -9,11 +9,12 @@ type Params = {
 export async function POST(_: Request, { params }: Params) {
   const user = await getActiveUser();
   if (!user) {
-    return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const { id } = await params;
   const result = await planScheduleForFlow(id, user.id);
   return NextResponse.json(result);
 }
+
 

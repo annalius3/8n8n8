@@ -27,21 +27,21 @@ async function loadRuns(userId: string, status: "all" | "success" | "failed" | "
 }
 
 function translateRunStatus(status: string) {
-  if (status === "failed") return { label: "Ошибка", variant: "destructive" as const };
-  if (status === "success") return { label: "Успешно", variant: "default" as const };
-  if (status === "running") return { label: "Выполняется", variant: "secondary" as const };
+  if (status === "failed") return { label: "Failed", variant: "destructive" as const };
+  if (status === "success") return { label: "Success", variant: "default" as const };
+  if (status === "running") return { label: "Running", variant: "secondary" as const };
   return { label: status, variant: "outline" as const };
 }
 
 function translateStepStatus(status: string) {
-  if (status === "failed") return { label: "Ошибка", variant: "destructive" as const };
-  if (status === "success") return { label: "Успешно", variant: "default" as const };
-  if (status === "skipped") return { label: "Пропущен", variant: "outline" as const };
+  if (status === "failed") return { label: "Failed", variant: "destructive" as const };
+  if (status === "success") return { label: "Success", variant: "default" as const };
+  if (status === "skipped") return { label: "Skipped", variant: "outline" as const };
   return { label: status, variant: "outline" as const };
 }
 
 function formatDate(date: Date | null | undefined) {
-  return date ? date.toLocaleString("ru-RU") : "—";
+  return date ? date.toLocaleString("en-US") : "—";
 }
 
 export default async function RunsPage({ searchParams }: Props) {
@@ -57,7 +57,7 @@ export default async function RunsPage({ searchParams }: Props) {
   } catch {
     return (
       <div className="space-y-6">
-        <SetupRequiredCard details="Страница запусков требует рабочее подключение к базе данных." />
+        <SetupRequiredCard details="The runs page requires a working database connection." />
       </div>
     );
   }
@@ -66,17 +66,17 @@ export default async function RunsPage({ searchParams }: Props) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Логи запусков</CardTitle>
+          <CardTitle>Run logs</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Здесь виден весь путь выполнения: какие шаги сработали, что они получили на вход и что записали в output/context.
+            This page shows the full execution path: which steps ran, what they received as input, and what they wrote to output/context.
           </p>
           <div className="flex flex-wrap gap-2">
-            <LinkButton href="/runs" variant={activeStatus === "all" ? "default" : "outline"} size="sm">Все</LinkButton>
-            <LinkButton href="/runs?status=success" variant={activeStatus === "success" ? "default" : "outline"} size="sm">Успешные</LinkButton>
-            <LinkButton href="/runs?status=failed" variant={activeStatus === "failed" ? "default" : "outline"} size="sm">Ошибки</LinkButton>
-            <LinkButton href="/runs?status=running" variant={activeStatus === "running" ? "default" : "outline"} size="sm">Выполняются</LinkButton>
+            <LinkButton href="/runs" variant={activeStatus === "all" ? "default" : "outline"} size="sm">All</LinkButton>
+            <LinkButton href="/runs?status=success" variant={activeStatus === "success" ? "default" : "outline"} size="sm">Successful</LinkButton>
+            <LinkButton href="/runs?status=failed" variant={activeStatus === "failed" ? "default" : "outline"} size="sm">Failed</LinkButton>
+            <LinkButton href="/runs?status=running" variant={activeStatus === "running" ? "default" : "outline"} size="sm">Running</LinkButton>
           </div>
         </CardContent>
       </Card>
@@ -84,7 +84,7 @@ export default async function RunsPage({ searchParams }: Props) {
       {runs.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Запусков пока не было. Создайте поток, сгенерируйте темы и выполните действия в очереди.
+            No runs yet. Create a flow, generate topics, and run actions in the queue.
           </CardContent>
         </Card>
       ) : null}
@@ -105,15 +105,15 @@ export default async function RunsPage({ searchParams }: Props) {
                 </div>
                 <div className="grid gap-3 text-sm md:grid-cols-3">
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Старт</p>
+                    <p className="text-xs uppercase text-muted-foreground">Started</p>
                     <p className="mt-1">{formatDate(run.startedAt)}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Завершение</p>
+                    <p className="text-xs uppercase text-muted-foreground">Finished</p>
                     <p className="mt-1">{formatDate(run.finishedAt)}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Ошибка</p>
+                    <p className="text-xs uppercase text-muted-foreground">Error</p>
                     <p className="mt-1 text-sm text-muted-foreground">{run.error ?? "—"}</p>
                   </div>
                 </div>
@@ -143,7 +143,7 @@ export default async function RunsPage({ searchParams }: Props) {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium">
-                              Шаг {step.stepIndex + 1}. <span className="font-mono">{step.stepType}</span>
+                              Step {step.stepIndex + 1}. <span className="font-mono">{step.stepType}</span>
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {formatDate(step.startedAt)} {"->"} {formatDate(step.finishedAt)}
@@ -159,11 +159,11 @@ export default async function RunsPage({ searchParams }: Props) {
                         <div className="mt-3 grid gap-3 xl:grid-cols-2">
                           <div>
                             <p className="mb-2 text-xs uppercase text-muted-foreground">Input JSON</p>
-                            <JsonView value={step.inputJson} emptyLabel="Нет входных данных" />
+                            <JsonView value={step.inputJson} emptyLabel="No input data" />
                           </div>
                           <div>
                             <p className="mb-2 text-xs uppercase text-muted-foreground">Output JSON</p>
-                            <JsonView value={step.outputJson} emptyLabel="Нет выходных данных" />
+                            <JsonView value={step.outputJson} emptyLabel="No output data" />
                           </div>
                         </div>
                       </div>
@@ -173,7 +173,7 @@ export default async function RunsPage({ searchParams }: Props) {
 
                 <div>
                   <p className="mb-2 text-xs uppercase text-muted-foreground">Context JSON</p>
-                  <JsonView value={run.contextJson} emptyLabel="Context не был сохранён" />
+                  <JsonView value={run.contextJson} emptyLabel="Context was not saved" />
                 </div>
               </CardContent>
             </Card>

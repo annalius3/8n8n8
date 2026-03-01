@@ -22,11 +22,11 @@ export default async function ConnectionsPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Подключения</CardTitle>
+          <CardTitle>Connections</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>Здесь хранятся реальные серверные токены интеграций. Доступ к этой странице есть только у авторизованного пользователя.</p>
-          <p>Сейчас подключён серверный контур для Pinterest: сохранение токена, проверка доступа и получение списка досок.</p>
+          <p>Real server-side integration tokens are stored here. Only an authenticated user can access this page.</p>
+          <p>The Pinterest server flow is enabled here: token storage, access check, and board loading.</p>
         </CardContent>
       </Card>
       <ConnectionSettingsForm

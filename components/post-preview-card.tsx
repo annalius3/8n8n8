@@ -14,9 +14,9 @@ type PostPreviewCardProps = {
 
 function modeLabel(mode: string | null | undefined) {
   if (!mode) return null;
-  if (mode === "real") return "Реальный API";
-  if (mode === "template") return "Шаблон";
-  if (mode === "connection_required") return "Нужен токен";
+  if (mode === "real") return "Real API";
+  if (mode === "template") return "Template";
+  if (mode === "connection_required") return "Token required";
   return mode;
 }
 
@@ -27,18 +27,18 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
     <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle>Предпросмотр публикации</CardTitle>
+          <CardTitle>Post preview</CardTitle>
           <div className="flex flex-wrap gap-2">
-            {modeLabel(textMode) ? <Badge variant="outline">Текст: {modeLabel(textMode)}</Badge> : null}
-            {modeLabel(imageMode) ? <Badge variant="outline">Изображение: {modeLabel(imageMode)}</Badge> : null}
-            {modeLabel(publishMode) ? <Badge variant="secondary">Публикация: {modeLabel(publishMode)}</Badge> : null}
+            {modeLabel(textMode) ? <Badge variant="outline">Text: {modeLabel(textMode)}</Badge> : null}
+            {modeLabel(imageMode) ? <Badge variant="outline">Image: {modeLabel(imageMode)}</Badge> : null}
+            {modeLabel(publishMode) ? <Badge variant="secondary">Publishing: {modeLabel(publishMode)}</Badge> : null}
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {!hasRuntimeData ? (
           <div className="rounded-lg border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
-            Поток ещё не запускался. После первого запуска здесь появится почти финальный вид будущей публикации.
+            This flow has not run yet. After the first run, the near-final post preview will appear here.
           </div>
         ) : null}
         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
@@ -47,26 +47,26 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
               <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
-                После запуска здесь появится изображение для будущего пина.
+                The generated image preview will appear here after the first run.
               </div>
             )}
           </div>
           <div className="space-y-3 p-4">
             <div>
-              <p className="text-xs uppercase text-muted-foreground">Заголовок</p>
+              <p className="text-xs uppercase text-muted-foreground">Title</p>
               <p className="mt-1 text-base font-semibold">{title}</p>
             </div>
             <div>
-              <p className="text-xs uppercase text-muted-foreground">Описание</p>
+              <p className="text-xs uppercase text-muted-foreground">Description</p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{description}</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-lg border p-3">
-                <p className="text-xs uppercase text-muted-foreground">Ссылка</p>
+                <p className="text-xs uppercase text-muted-foreground">Link</p>
                 <p className="mt-1 break-all text-sm">{linkUrl ?? "—"}</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="text-xs uppercase text-muted-foreground">Доска Pinterest</p>
+                <p className="text-xs uppercase text-muted-foreground">Pinterest board</p>
                 <p className="mt-1 text-sm">{boardId ?? "—"}</p>
               </div>
             </div>
@@ -76,3 +76,4 @@ export function PostPreviewCard({ title, description, imageUrl, linkUrl, boardId
     </Card>
   );
 }
+

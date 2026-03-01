@@ -27,29 +27,29 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("Не удалось создать magic link");
+        setError("Failed to create a magic link");
         return;
       }
 
       const data = (await response.json()) as { magicLink: string };
       setMagicLink(data.magicLink);
     } catch {
-      setError("Не удалось связаться с сервером");
+      setError("Failed to reach the server");
     }
   }
 
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>Вход по magic link</CardTitle>
+        <CardTitle>Sign in with magic link</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          В реальном режиме авторизация обязательна. После входа вы сможете управлять потоками, логами и токенами подключений.
+          Authentication is required in real mode. After signing in, you will be able to manage flows, logs, and connection tokens.
         </p>
         {callbackError === "auth_setup" ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Не удалось завершить вход. Проверьте production-базу и миграции Prisma.
+            Sign-in could not be completed. Check the production database and Prisma migrations.
           </div>
         ) : null}
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -57,12 +57,12 @@ export default function LoginPage() {
             <Label>Email</Label>
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <Button type="submit">Создать magic link</Button>
+          <Button type="submit">Create magic link</Button>
         </form>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {magicLink ? (
           <p className="text-sm break-all">
-            Открыть ссылку: <a className="underline" href={magicLink}>{magicLink}</a>
+            Open link: <a className="underline" href={magicLink}>{magicLink}</a>
           </p>
         ) : null}
       </CardContent>

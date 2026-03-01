@@ -11,14 +11,14 @@ import { FlowToggleButton } from "@/components/flow-toggle-button";
 import { DeleteFlowButton } from "@/components/delete-flow-button";
 
 function formatDate(date: Date | null | undefined) {
-  return date ? date.toLocaleString("ru-RU") : "—";
+  return date ? date.toLocaleString("en-US") : "—";
 }
 
 function translateRunStatus(status: string | undefined) {
-  if (status === "success") return "Успешно";
-  if (status === "failed") return "Ошибка";
-  if (status === "running") return "Выполняется";
-  return "ещё не было запусков";
+  if (status === "success") return "Success";
+  if (status === "failed") return "Failed";
+  if (status === "running") return "Running";
+  return "no runs yet";
 }
 
 export default async function FlowsPage() {
@@ -61,15 +61,15 @@ export default async function FlowsPage() {
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>Потоки автопостинга</CardTitle>
+            <CardTitle>Scheduled publishing flows</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Здесь создаются потоки: от исходной темы до списка тем, очереди контента и автопостинга.
+              Build flows from a seed topic to scheduled content, queue management, and controlled publishing.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <SchedulerTickButton />
-            <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
-            <LinkButton href="/flows/new">Создать поток</LinkButton>
+            <LinkButton href="/settings" variant="outline">Settings</LinkButton>
+            <LinkButton href="/flows/new">Create flow</LinkButton>
           </div>
         </CardHeader>
       </Card>
@@ -77,7 +77,7 @@ export default async function FlowsPage() {
       {flows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Пока нет потоков. Создайте первый поток через мастер исходной темы.
+            No flows yet. Create your first one from a seed topic.
           </CardContent>
         </Card>
       ) : null}
@@ -97,50 +97,50 @@ export default async function FlowsPage() {
                     <Link href={`/flows/${flow.id}` as any} className="text-lg font-semibold underline-offset-4 hover:underline">
                       {flow.name}
                     </Link>
-                    <p className="mt-1 text-sm text-muted-foreground">Исходная тема: {flow.seedTopic ?? "—"}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Seed topic: {flow.seedTopic ?? "—"}</p>
                   </div>
-                  {flow.isEnabled ? <Badge>Включён</Badge> : <Badge variant="secondary">Выключен</Badge>}
+                  {flow.isEnabled ? <Badge>Enabled</Badge> : <Badge variant="secondary">Disabled</Badge>}
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <Badge variant="outline">{flow.language}</Badge>
-                  <Badge variant="outline">{flow.postsPerDay} постов/день</Badge>
+                  <Badge variant="outline">{flow.postsPerDay} posts/day</Badge>
                   <Badge variant="outline">{flow.timezone}</Badge>
-                  <Badge variant="outline">старт {flow.startTime}</Badge>
-                  {flow.autopublishEnabled ? <Badge>автопубликация</Badge> : <Badge variant="secondary">ручная публикация</Badge>}
+                  <Badge variant="outline">start {flow.startTime}</Badge>
+                  {flow.autopublishEnabled ? <Badge>scheduled publishing</Badge> : <Badge variant="secondary">manual publishing</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Темы</p>
+                    <p className="text-xs uppercase text-muted-foreground">Topics</p>
                     <p className="mt-1 text-sm font-medium">{flow.topicSuggestions.length}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Очередь</p>
+                    <p className="text-xs uppercase text-muted-foreground">Queue</p>
                     <p className="mt-1 text-sm font-medium">{flow.queueItems.length}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Ожидают / Готовы</p>
+                    <p className="text-xs uppercase text-muted-foreground">Pending / ready</p>
                     <p className="mt-1 text-sm font-medium">{pending} / {ready}</p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs uppercase text-muted-foreground">Опубликовано</p>
+                    <p className="text-xs uppercase text-muted-foreground">Published</p>
                     <p className="mt-1 text-sm font-medium">{published}</p>
                   </div>
                 </div>
 
                 <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                  <p>Последний запуск: {formatDate(lastRun?.startedAt)}</p>
-                  <p>Статус: {translateRunStatus(lastRun?.status)}</p>
+                  <p>Last run: {formatDate(lastRun?.startedAt)}</p>
+                  <p>Status: {translateRunStatus(lastRun?.status)}</p>
                   {lastRun?.error ? <p className="mt-2 text-red-600">{lastRun.error}</p> : null}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
                   <DeleteFlowButton flowId={flow.id} />
-                  <LinkButton href={`/flows/${flow.id}` as any} variant="outline">Обзор</LinkButton>
-                  <LinkButton href={`/flows/${flow.id}/topics` as any} variant="outline">Темы</LinkButton>
-                  <LinkButton href={`/flows/${flow.id}/queue` as any} variant="outline">Очередь</LinkButton>
+                  <LinkButton href={`/flows/${flow.id}` as any} variant="outline">Overview</LinkButton>
+                  <LinkButton href={`/flows/${flow.id}/topics` as any} variant="outline">Topics</LinkButton>
+                  <LinkButton href={`/flows/${flow.id}/queue` as any} variant="outline">Queue</LinkButton>
                 </div>
               </CardContent>
             </Card>

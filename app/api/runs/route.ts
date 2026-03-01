@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getActiveUser } from "@/lib/active-user";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const user = await getActiveUser();
-  if (!user) return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const runs = await prisma.jobRun.findMany({
     where: {
@@ -26,3 +26,4 @@ export async function GET() {
 
   return NextResponse.json(runs);
 }
+

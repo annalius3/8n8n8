@@ -1,10 +1,10 @@
-type JsonViewProps = {
+﻿type JsonViewProps = {
   value: unknown;
   emptyLabel?: string;
   className?: string;
 };
 
-export function JsonView({ value, emptyLabel = "Нет данных", className = "" }: JsonViewProps) {
+export function JsonView({ value, emptyLabel = "No data", className = "" }: JsonViewProps) {
   if (value === null || value === undefined) {
     return <p className={`text-sm text-muted-foreground ${className}`.trim()}>{emptyLabel}</p>;
   }

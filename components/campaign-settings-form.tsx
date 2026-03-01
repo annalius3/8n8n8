@@ -18,7 +18,9 @@ type IntervalUnit = "minutes" | "hours" | "days";
 type ScheduleMode = "posts_per_day" | "interval";
 
 function parseIntervalCron(cron?: string) {
-  if (!cron) return null;
+  if (!cron) {
+    return null;
+  }
 
   const minuteMatch = cron.match(/^\*\/(\d+)\s+\*\s+\*\s+\*\s+\*$/);
   if (minuteMatch) {
@@ -117,7 +119,7 @@ export function CampaignSettingsForm({
 
   async function loadBoards() {
     if (!pinterestConnectionName.trim()) {
-      setError("Сначала выберите Pinterest-подключение");
+      setError("Select a Pinterest connection first");
       return;
     }
 
@@ -128,7 +130,7 @@ export function CampaignSettingsForm({
       const response = await fetch(`/api/connections/pinterest/boards?connectionName=${encodeURIComponent(pinterestConnectionName)}`);
       const data = (await response.json().catch(() => ({}))) as { boards?: BoardItem[]; error?: string };
       if (!response.ok || !data.boards) {
-        throw new Error(data.error ?? "Не удалось загрузить список досок");
+        throw new Error(data.error ?? "Failed to load boards");
       }
 
       setBoards(data.boards);
@@ -136,7 +138,7 @@ export function CampaignSettingsForm({
         setPinterestBoardId(data.boards[0].id);
       }
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить список досок");
+      setError(requestError instanceof Error ? requestError.message : "Failed to load boards");
       setBoards([]);
     } finally {
       setBoardsLoading(false);
@@ -175,12 +177,12 @@ export function CampaignSettingsForm({
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Не удалось обновить настройки потока");
+        throw new Error(data.error ?? "Failed to update flow settings");
       }
 
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось обновить настройки потока");
+      setError(requestError instanceof Error ? requestError.message : "Failed to update flow settings");
     } finally {
       setLoading(false);
     }
@@ -189,17 +191,17 @@ export function CampaignSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Параметры потока</CardTitle>
+        <CardTitle>Flow settings</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
-            <Label>Название</Label>
+            <Label>Name</Label>
             <Input value={name} onChange={(event) => setName(event.target.value)} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Язык</Label>
+              <Label>Language</Label>
               <Select value={language} onChange={(event) => setLanguage(event.target.value)}>
                 <option value="EN">EN</option>
                 <option value="RU">RU</option>
@@ -207,7 +209,7 @@ export function CampaignSettingsForm({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Постов в день</Label>
+              <Label>Posts per day</Label>
               <Input
                 type="number"
                 min={1}
@@ -219,31 +221,31 @@ export function CampaignSettingsForm({
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Часовой пояс</Label>
+              <Label>Timezone</Label>
               <Input value={timezone} onChange={(event) => setTimezone(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Время старта</Label>
+              <Label>Start time</Label>
               <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
             </div>
           </div>
           <div className="space-y-4 rounded-xl border p-4">
             <div className="space-y-2">
-              <Label>Режим расписания</Label>
+              <Label>Schedule mode</Label>
               <Select value={scheduleMode} onChange={(event) => setScheduleMode(event.target.value as ScheduleMode)}>
-                <option value="posts_per_day">Определённое количество публикаций в день</option>
-                <option value="interval">Публиковать по интервалу</option>
+                <option value="posts_per_day">Fixed number of posts per day</option>
+                <option value="interval">Publish by interval</option>
               </Select>
             </div>
             {scheduleMode === "posts_per_day" ? (
               <p className="text-xs text-muted-foreground">
-                Очередь будет распределяться равномерно в течение дня. Количество публикаций берётся из поля «Постов в день».
+                The queue will be spread evenly during the day. The number of publications is taken from the "Posts per day" field.
               </p>
             ) : (
               <>
                 <div className="grid gap-4 md:grid-cols-[160px_1fr]">
                   <div className="space-y-2">
-                    <Label>Каждые</Label>
+                    <Label>Every</Label>
                     <Input
                       type="number"
                       min={1}
@@ -253,59 +255,58 @@ export function CampaignSettingsForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Единица</Label>
+                    <Label>Unit</Label>
                     <Select value={scheduleEveryUnit} onChange={(event) => setScheduleEveryUnit(event.target.value as IntervalUnit)}>
-                      <option value="minutes">минут</option>
-                      <option value="hours">часов</option>
-                      <option value="days">дней</option>
+                      <option value="minutes">minutes</option>
+                      <option value="hours">hours</option>
+                      <option value="days">days</option>
                     </Select>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Используйте этот режим только если нужен жёсткий интервал между публикациями. Для обычного автопостинга лучше режим
-                  «Определённое количество публикаций в день».
+                  Use this mode only when you need a strict interval between publications. For most scheduled publishing cases, the daily-posts mode is better.
                 </p>
               </>
             )}
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Ниша</Label>
+              <Label>Niche</Label>
               <Input value={niche} onChange={(event) => setNiche(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Аудитория</Label>
+              <Label>Audience</Label>
               <Input value={audience} onChange={(event) => setAudience(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Тон</Label>
+              <Label>Tone</Label>
               <Input value={tone} onChange={(event) => setTone(event.target.value)} />
             </div>
           </div>
 
           <div className="space-y-4 rounded-xl border p-4">
             <div className="space-y-2">
-              <Label>Pinterest-подключение</Label>
+              <Label>Pinterest connection</Label>
               <Select value={pinterestConnectionName} onChange={(event) => setPinterestConnectionName(event.target.value)}>
-                <option value="">Выберите подключение</option>
+                <option value="">Select a connection</option>
                 {availablePinterestConnections.map((connectionName) => (
                   <option key={connectionName} value={connectionName}>
                     {connectionName}
                   </option>
                 ))}
               </Select>
-              <p className="text-xs text-muted-foreground">Если списка нет, сначала сохраните токен на странице Подключения.</p>
+              <p className="text-xs text-muted-foreground">If the list is empty, save a token first on the Connections page.</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button type="button" variant="outline" onClick={loadBoards} disabled={boardsLoading || !pinterestConnectionName.trim()}>
-                {boardsLoading ? "Загружаю доски..." : "Загрузить доски"}
+                {boardsLoading ? "Loading boards..." : "Load boards"}
               </Button>
             </div>
 
             {boards.length > 0 ? (
               <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
-                <p className="text-sm font-medium">Доступные доски</p>
+                <p className="text-sm font-medium">Available boards</p>
                 {boards.map((board) => (
                   <button
                     key={board.id}
@@ -325,17 +326,17 @@ export function CampaignSettingsForm({
 
             <div className="space-y-2">
               <Label>Board ID</Label>
-              <Input value={pinterestBoardId} onChange={(event) => setPinterestBoardId(event.target.value)} placeholder="Например: 1234567890" />
+              <Input value={pinterestBoardId} onChange={(event) => setPinterestBoardId(event.target.value)} placeholder="For example: 1234567890" />
             </div>
           </div>
 
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-            Автопубликация включена
+            Scheduled publishing enabled
           </label>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" disabled={loading}>
-            {loading ? "Сохраняю..." : "Сохранить настройки"}
+            {loading ? "Saving..." : "Save settings"}
           </Button>
         </form>
       </CardContent>

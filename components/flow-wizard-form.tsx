@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,13 +34,6 @@ export function FlowWizardForm() {
   const [autopublishEnabled, setAutopublishEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const startTimeTouchedRef = useRef(false);
-
-  useEffect(() => {
-    if (!startTimeTouchedRef.current) {
-      setStartTime(getCurrentTimeForTimezone(timezone));
-    }
-  }, [timezone]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -76,7 +69,7 @@ export function FlowWizardForm() {
             ? data.error
             : data.error?.fieldErrors
               ? Object.values(data.error.fieldErrors).flat().filter(Boolean).join(", ")
-              : "Не удалось создать поток";
+              : "Failed to create flow";
         setError(message);
         return;
       }
@@ -84,7 +77,7 @@ export function FlowWizardForm() {
       router.push(`/flows/${data.flowId}/topics`);
       router.refresh();
     } catch {
-      setError("Не удалось связаться с сервером");
+      setError("Failed to reach the server");
     } finally {
       setLoading(false);
     }
@@ -94,27 +87,27 @@ export function FlowWizardForm() {
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Шаг 1. Исходная тема</CardTitle>
+          <CardTitle>Step 1. Seed topic</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label>Название потока</Label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Calm Energy Campaign" />
+              <Label>Flow name</Label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="For example: Calm Energy Campaign" />
             </div>
             <div className="space-y-2">
-              <Label>Исходная тема</Label>
+              <Label>Seed topic</Label>
               <Textarea
                 rows={3}
                 value={seedTopic}
                 onChange={(event) => setSeedTopic(event.target.value)}
-                placeholder="Например: morning routine for calm energy"
+                placeholder="For example: morning routine for calm energy"
                 required
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Язык</Label>
+                <Label>Language</Label>
                 <Select value={language} onChange={(event) => setLanguage(event.target.value as "EN" | "RU" | "UA")}>
                   <option value="EN">EN</option>
                   <option value="RU">RU</option>
@@ -122,7 +115,7 @@ export function FlowWizardForm() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Постов в день</Label>
+                <Label>Posts per day</Label>
                 <Input
                   type="number"
                   min={1}
@@ -153,23 +146,16 @@ export function FlowWizardForm() {
               </div>
               <div className="space-y-2">
                 <Label>Start time</Label>
-                <Input
-                  type="time"
-                  value={startTime}
-                  onChange={(event) => {
-                    startTimeTouchedRef.current = true;
-                    setStartTime(event.target.value);
-                  }}
-                />
+                <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-              Включить автопубликацию по расписанию
+              Enable scheduled publishing
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Создаю поток..." : "Перейти к генерации 50 тем"}
+              {loading ? "Creating flow..." : "Continue to generate 50 topics"}
             </Button>
           </form>
         </CardContent>
@@ -177,20 +163,20 @@ export function FlowWizardForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Что произойдёт дальше</CardTitle>
+          <CardTitle>What happens next</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">1. Создание потока</p>
-            <p className="mt-1">Сначала создастся сам поток с настройками языка, расписания и публикации.</p>
+            <p className="font-medium text-foreground">1. Create the flow</p>
+            <p className="mt-1">First, the flow itself will be created with language, scheduling, and publishing settings.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">2. Генерация тем</p>
-            <p className="mt-1">На следующем экране автоматически запустится генерация 50 тем с polling и логами выполнения.</p>
+            <p className="font-medium text-foreground">2. Generate topics</p>
+            <p className="mt-1">On the next screen, generation of 50 topics will start automatically with polling and run logs.</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="font-medium text-foreground">3. Очередь контента</p>
-            <p className="mt-1">После выбора тем вы добавите их в очередь, сгенерируете текст и изображение, а затем опубликуете.</p>
+            <p className="font-medium text-foreground">3. Build the content queue</p>
+            <p className="mt-1">After choosing topics, you will add them to the queue, generate text and images, and then publish them.</p>
           </div>
         </CardContent>
       </Card>
