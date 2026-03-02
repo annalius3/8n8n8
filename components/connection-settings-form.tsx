@@ -40,6 +40,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
   const [accessToken, setAccessToken] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [boards, setBoards] = useState<BoardItem[]>([]);
@@ -124,6 +125,42 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
     }
   }
 
+  async function disconnectPinterest() {
+    if (!existingConnection) {
+      return;
+    }
+
+    setError(null);
+    setSaveMessage(null);
+    setBoards([]);
+    setIsDisconnecting(true);
+
+    try {
+      const response = await fetch("/api/connections", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "pinterest",
+          name
+        })
+      });
+
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to disconnect Pinterest");
+      }
+
+      setConnections((current) => current.filter((item) => !(item.provider === "pinterest" && item.name === name)));
+      setAccessToken("");
+      setBoards([]);
+      setSaveMessage("Pinterest was disconnected. You can now reconnect from a clean state.");
+    } catch (disconnectError) {
+      setError(disconnectError instanceof Error ? disconnectError.message : "Failed to disconnect Pinterest");
+    } finally {
+      setIsDisconnecting(false);
+    }
+  }
+
   function startPinterestOAuth() {
     setError(null);
     setSaveMessage(null);
@@ -179,7 +216,12 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                 Click the red button, continue on Pinterest, approve the requested scopes, and return here with a connected status.
               </p>
             </div>
-            <Button variant="destructive" onClick={startPinterestOAuth}>Connect Pinterest</Button>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="destructive" onClick={startPinterestOAuth}>Connect Pinterest</Button>
+              <Button variant="outline" onClick={disconnectPinterest} disabled={!existingConnection || isDisconnecting}>
+                {isDisconnecting ? "Disconnecting..." : "Disconnect Pinterest"}
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-xl border p-4">

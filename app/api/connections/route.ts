@@ -10,6 +10,11 @@ const createConnectionSchema = z.object({
   accessToken: z.string().trim().min(20)
 });
 
+const deleteConnectionSchema = z.object({
+  provider: z.literal("pinterest"),
+  name: z.string().trim().min(2).max(80)
+});
+
 export async function GET() {
   const user = await getAuthenticatedUserOrNull();
   if (!user) {
@@ -89,5 +94,37 @@ export async function POST(request: NextRequest) {
       });
 
   return NextResponse.json({ connection }, { status: existing ? 200 : 201 });
+}
+
+export async function DELETE(request: NextRequest) {
+  const user = await getAuthenticatedUserOrNull();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const parsed = deleteConnectionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const existing = await prisma.connection.findFirst({
+    where: {
+      userId: user.id,
+      provider: parsed.data.provider,
+      name: parsed.data.name
+    },
+    select: { id: true }
+  });
+
+  if (!existing) {
+    return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+  }
+
+  await prisma.connection.delete({
+    where: { id: existing.id }
+  });
+
+  return NextResponse.json({ ok: true });
 }
 
