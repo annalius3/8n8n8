@@ -162,14 +162,24 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
             <Input id="connection-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Main Pinterest" />
           </div>
 
+          {existingConnection ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              Status: Connected. This connection already has a saved Pinterest token on the server.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+              Status: Not connected yet. Start the Pinterest OAuth flow below.
+            </div>
+          )}
+
           <div className="rounded-xl border bg-muted/30 p-4">
             <div className="mb-3">
               <div className="font-medium">Preferred: Pinterest OAuth</div>
               <p className="mt-1 text-sm text-muted-foreground">
-                This stores the Pinterest access token server-side after the OAuth callback. No token is typed into the browser.
+                Click the red button, continue on Pinterest, approve the requested scopes, and return here with a connected status.
               </p>
             </div>
-            <Button onClick={startPinterestOAuth}>Connect with Pinterest OAuth</Button>
+            <Button variant="destructive" onClick={startPinterestOAuth}>Connect Pinterest</Button>
           </div>
 
           <div className="rounded-xl border p-4">
@@ -242,7 +252,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                     <div className="font-medium">{connection.name}</div>
                     <div className="text-sm text-muted-foreground">{connection.provider}</div>
                   </div>
-                  <Badge variant="outline">Secret hidden</Badge>
+                  <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Connected</Badge>
                 </div>
                 <div className="mt-3 text-sm text-muted-foreground">Updated: {formatDate(connection.updatedAt)}</div>
               </div>
