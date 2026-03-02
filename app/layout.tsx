@@ -57,6 +57,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <span>Scheduled Publishing</span>
             <nav className="flex items-center gap-3">
               <a className="underline underline-offset-4" href="/privacy">Privacy Policy</a>
+              <a className="underline underline-offset-4" href="/terms">Terms of Service</a>
+              <a className="underline underline-offset-4" href="/support">Support</a>
+              <a className="underline underline-offset-4" href="/data-deletion">Data Deletion</a>
             </nav>
           </footer>
         </div>
