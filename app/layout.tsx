@@ -53,6 +53,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </header>
           {children}
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm text-muted-foreground">
+            <span>Scheduled Publishing</span>
+            <nav className="flex items-center gap-3">
+              <a className="underline underline-offset-4" href="/privacy">Privacy Policy</a>
+            </nav>
+          </footer>
         </div>
       </body>
     </html>
