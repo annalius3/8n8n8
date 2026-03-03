@@ -10,6 +10,7 @@ const ITEMS: Array<{ key: keyof IntegrationModes; label: string; note: string }>
   { key: "openai", label: "OpenAI", note: "Text generation in the template step" },
   { key: "leonardo", label: "Leonardo", note: "Image generation" },
   { key: "pinterest", label: "Pinterest", note: "Publishing through the user's saved server-side token and flow board_id" },
+  { key: "telegram", label: "Telegram", note: "Publication notifications after successful publish" },
   { key: "r2", label: "Cloudflare R2", note: "Image storage" }
 ];
 

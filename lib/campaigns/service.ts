@@ -4,6 +4,7 @@ import { generateTopicSuggestions, generateQueueItemContent } from "@/lib/campai
 import { computeRandomScheduledDates, computeScheduledDates, computeScheduledDatesFromIntervalCron } from "@/lib/campaigns/schedule";
 import { deleteLeonardoGeneration, generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
+import { isTelegramConfigured, sendTelegramPublishNotification } from "@/lib/integrations/telegram";
 import { applyTemplate } from "@/lib/worker/template";
 
 const DEFAULT_SITE_LINK = "https://www.b2bleadgenerationtools.com/";
@@ -594,13 +595,55 @@ export async function publishQueueItems(input: {
         }
       });
 
+      if (isTelegramConfigured()) {
+        try {
+          await sendTelegramPublishNotification({
+            flowName: flow.name,
+            title: item.title,
+            postId: publishResult.postId,
+            linkUrl: item.linkUrl ?? DEFAULT_SITE_LINK
+          });
+
+          await createRunStep({
+            runId: run.id,
+            stepIndex: 1,
+            stepType: "telegram_notification",
+            status: StepExecStatus.success,
+            inputJson: {
+              post_id: publishResult.postId,
+              flow_name: flow.name
+            },
+            outputJson: {
+              sent: true
+            }
+          });
+        } catch (error) {
+          const telegramError = error instanceof Error ? error.message : "Telegram notification failed";
+          await createRunStep({
+            runId: run.id,
+            stepIndex: 1,
+            stepType: "telegram_notification",
+            status: StepExecStatus.failed,
+            error: telegramError
+          });
+        }
+      } else {
+        await createRunStep({
+          runId: run.id,
+          stepIndex: 1,
+          stepType: "telegram_notification",
+          status: StepExecStatus.skipped,
+          error: "Telegram notifications are not configured"
+        });
+      }
+
       let cleanupError: string | null = null;
       if (item.imageGenerationId) {
         try {
           await deleteLeonardoGeneration(item.imageGenerationId, input.userId);
           await createRunStep({
             runId: run.id,
-            stepIndex: 1,
+            stepIndex: 2,
             stepType: "image_cleanup",
             status: StepExecStatus.success,
             inputJson: {
@@ -614,7 +657,7 @@ export async function publishQueueItems(input: {
           cleanupError = error instanceof Error ? error.message : "Leonardo cleanup failed";
           await createRunStep({
             runId: run.id,
-            stepIndex: 1,
+            stepIndex: 2,
             stepType: "image_cleanup",
             status: StepExecStatus.failed,
             error: cleanupError,

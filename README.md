@@ -41,6 +41,8 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 ## Content generation
 - `OPENAI_API_KEY`
 - `LEONARDO_API_KEY`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
 
 ## OAuth
 - `GOOGLE_CLIENT_ID`
@@ -103,3 +105,6 @@ npm run dev
 6. Create a flow and continue to `/queue`
 7. Generate content
 8. Publish selected items
+
+## Telegram notifications
+- If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are configured, the app sends a Telegram message after each successful Pinterest publish.

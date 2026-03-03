@@ -21,6 +21,8 @@ const optionalEnvSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   PINTEREST_CLIENT_ID: z.string().min(1).optional(),
   PINTEREST_CLIENT_SECRET: z.string().min(1).optional(),
+  TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+  TELEGRAM_CHAT_ID: z.string().min(1).optional(),
   DIRECT_URL: z.string().min(1).optional(),
   R2_ENDPOINT: z.string().url().optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),
@@ -64,6 +66,7 @@ export function getIntegrationStatus() {
     openaiConfigured: modes.openai === "real",
     pinterestConfigured: modes.pinterest === "real",
     pinterestRequiresConnection: modes.pinterest === "connection_required",
+    telegramConfigured: modes.telegram === "real",
     r2Configured: modes.r2 === "real",
     modes
   };
