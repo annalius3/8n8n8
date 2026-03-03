@@ -6,11 +6,13 @@ import { LinkButton } from "@/components/ui/link-button";
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ autoQueue?: string }>;
 };
 
-export default async function FlowTopicsPage({ params }: Props) {
+export default async function FlowTopicsPage({ params, searchParams }: Props) {
   const user = await requireUser("/flows");
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
 
   const flow = await prisma.flow.findFirst({
     where: { id, userId: user.id },
@@ -51,6 +53,7 @@ export default async function FlowTopicsPage({ params }: Props) {
       </div>
       <TopicSuggestionsManager
         flowId={flow.id}
+        autoQueue={resolvedSearchParams?.autoQueue === "1"}
         initialSuggestions={flow.topicSuggestions.map((item) => ({
           id: item.id,
           topicText: item.topicText,

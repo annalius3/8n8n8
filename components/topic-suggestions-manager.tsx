@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,17 +33,22 @@ function isTopicGenerationRun(run: Run) {
   return run.steps.some((step) => step.stepType === "topic_generation");
 }
 
-export function TopicSuggestionsManager({
-  flowId,
-  initialSuggestions,
-  initialRuns
-}: {
+type Props = {
   flowId: string;
+  autoQueue?: boolean;
   initialSuggestions: TopicSuggestion[];
   initialRuns: Run[];
-}) {
+};
+
+export function TopicSuggestionsManager({
+  flowId,
+  autoQueue = false,
+  initialSuggestions,
+  initialRuns
+}: Props) {
   const router = useRouter();
   const generationStartedRef = useRef(false);
+  const autoQueueStartedRef = useRef(false);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState(initialSuggestions);
   const [runs, setRuns] = useState(initialRuns.filter(isTopicGenerationRun));
@@ -173,7 +178,7 @@ export function TopicSuggestionsManager({
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
-  async function addSelectedToQueue() {
+  async function addTopicsToQueue(topicIds: string[]) {
     setLoading(true);
     setError(null);
 
@@ -181,7 +186,7 @@ export function TopicSuggestionsManager({
       const response = await fetch(`/api/flows/${flowId}/topics/add-to-queue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topicIds: selectedIds })
+        body: JSON.stringify({ topicIds })
       });
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -189,7 +194,7 @@ export function TopicSuggestionsManager({
         throw new Error(data.error ?? "Не удалось добавить темы в очередь");
       }
 
-      router.push(`/flows/${flowId}/queue`);
+      router.push(`/flows/${flowId}/queue?autostart=1`);
       router.refresh();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Не удалось добавить темы в очередь");
@@ -197,6 +202,19 @@ export function TopicSuggestionsManager({
       setLoading(false);
     }
   }
+
+  async function addSelectedToQueue() {
+    await addTopicsToQueue(selectedIds);
+  }
+
+  useEffect(() => {
+    if (!autoQueue || autoQueueStartedRef.current) return;
+    if (generating || loading) return;
+    if (suggestions.length === 0) return;
+
+    autoQueueStartedRef.current = true;
+    void addTopicsToQueue(suggestions.map((item) => item.id));
+  }, [autoQueue, generating, loading, suggestions]);
 
   const lastRun = runs[0];
 
@@ -207,6 +225,12 @@ export function TopicSuggestionsManager({
           <CardTitle>Шаг 2. Проверка 50 тем</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {autoQueue ? (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+              Темы будут автоматически добавлены в очередь сразу после генерации.
+            </div>
+          ) : null}
+
           {generating ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               Генерация тем идёт. Список тем и логи запуска обновляются автоматически.
@@ -227,7 +251,7 @@ export function TopicSuggestionsManager({
             {filtered.length > 0 ? (
               filtered.map((item, index) => (
                 <label key={item.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
-                  <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggle(item.id)} disabled={generating} />
+                  <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggle(item.id)} disabled={generating || autoQueue} />
                   <span className="text-muted-foreground">{index + 1}.</span>
                   <span>{item.topicText}</span>
                 </label>
@@ -243,7 +267,7 @@ export function TopicSuggestionsManager({
             <Button type="button" variant="outline" disabled={generating} onClick={() => void startGeneration()}>
               {generating ? "Генерация..." : "Запустить генерацию"}
             </Button>
-            <Button type="button" disabled={loading || selectedIds.length === 0 || generating} onClick={addSelectedToQueue}>
+            <Button type="button" disabled={loading || selectedIds.length === 0 || generating || autoQueue} onClick={addSelectedToQueue}>
               {loading ? "Добавление..." : "Добавить выбранные в очередь"}
             </Button>
             <span className="text-sm text-muted-foreground">Выбрано: {selectedIds.length}</span>
