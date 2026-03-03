@@ -44,7 +44,7 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
       </div>
       <CampaignQueueManager
         flowId={flow.id}
-        autoStartGenerate={resolvedSearchParams?.autostart === "1"}
+        autoStartGenerate={resolvedSearchParams?.autostart === "1" || flow.queueItems.some((item) => item.status === "pending" || item.status === "failed")}
         initialItems={flow.queueItems.map((item) => ({
           id: item.id,
           status: item.status,

@@ -74,7 +74,7 @@ function getSuccessMessage(action: string, data: ActionResponse) {
     if ((data.generated ?? 0) === 0 && (data.published ?? 0) === 0) {
       return "Сейчас нет подходящих элементов для автогенерации. Очередь пуста или уже обработана.";
     }
-    return `Обработано ${data.generated ?? 0} элементов: подготовлено до 3 и опубликовано ${data.published ?? 0}.`;
+    return `Обработано ${data.generated ?? 0} элементов: сгенерировано до 10 и опубликовано ${data.published ?? 0}.`;
   }
   if (action === "generate-selected") {
     return `Текст и изображения обновлены для ${data.processed ?? 0} элементов.`;
@@ -232,8 +232,8 @@ export function CampaignQueueManager({
     if (pendingIds.length === 0 || generatedCount > 0) return;
 
     autoStartRef.current = true;
-    void perform("generate-selected", () =>
-      postJson(`/api/flows/${flowId}/queue/generate`, { queueItemIds: [pendingIds[0]] })
+    void perform("generate-all", () =>
+      postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true })
     );
   }, [autoStartGenerate, flowId, generatedCount, pendingIds]);
 
@@ -267,7 +267,7 @@ export function CampaignQueueManager({
               onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }))}
               disabled={loading !== null || allIds.length === 0}
             >
-              Сгенерировать 3 и опубликовать 1
+              Сгенерировать 10 и опубликовать 1
             </Button>
             <Button
               type="button"
@@ -322,8 +322,10 @@ export function CampaignQueueManager({
               Удалить выбранные
             </Button>
           </div>
+
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
           <p className="text-sm text-muted-foreground">
             Для публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Готово выбрано: {selectedReadyIds.length}.
           </p>
@@ -401,6 +403,7 @@ export function CampaignQueueManager({
                     </Button>
                   </td>
                 </tr>
+
                 {expandedItemId === item.id ? (
                   <tr className="border-t bg-muted/20">
                     <td colSpan={10} className="p-4">

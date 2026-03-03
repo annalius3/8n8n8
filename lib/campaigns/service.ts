@@ -671,7 +671,7 @@ export async function runGenerateAllPipeline(flowId: string, userId: string) {
       status: { in: [QueueStatus.pending, QueueStatus.failed] }
     },
     orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }],
-    take: 3,
+    take: 10,
     select: { id: true }
   });
 
