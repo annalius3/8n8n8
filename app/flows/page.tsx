@@ -9,6 +9,7 @@ import { LinkButton } from "@/components/ui/link-button";
 import { SchedulerTickButton } from "@/components/scheduler-tick-button";
 import { FlowToggleButton } from "@/components/flow-toggle-button";
 import { DeleteFlowButton } from "@/components/delete-flow-button";
+import { NextPublicationCountdown } from "@/components/next-publication-countdown";
 
 function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
@@ -54,6 +55,18 @@ export default async function FlowsPage() {
     orderBy: { createdAt: "desc" }
   });
 
+  const nextPublication = flows
+    .flatMap((flow) =>
+      flow.queueItems
+        .filter((item) => item.publishedAt === null && item.scheduledAt)
+        .map((item) => ({
+          flowId: flow.id,
+          flowName: flow.name,
+          scheduledAt: item.scheduledAt as Date
+        }))
+    )
+    .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime())[0];
+
   return (
     <div className="space-y-6">
       <IntegrationModePanel modes={modes} />
@@ -74,6 +87,28 @@ export default async function FlowsPage() {
         </CardHeader>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Следующая публикация</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg border p-3">
+            <p className="text-xs uppercase text-muted-foreground">Через</p>
+            <p className="mt-1 text-lg font-semibold">
+              <NextPublicationCountdown scheduledAt={nextPublication?.scheduledAt.toISOString() ?? null} />
+            </p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs uppercase text-muted-foreground">Поток</p>
+            <p className="mt-1 text-sm font-medium">{nextPublication?.flowName ?? "Нет запланированных публикаций"}</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs uppercase text-muted-foreground">Время</p>
+            <p className="mt-1 text-sm font-medium">{formatDate(nextPublication?.scheduledAt)}</p>
+          </div>
+        </CardContent>
+      </Card>
+
       {flows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -88,6 +123,9 @@ export default async function FlowsPage() {
           const pending = flow.queueItems.filter((item) => item.status === "pending").length;
           const ready = flow.queueItems.filter((item) => item.status === "ready").length;
           const published = flow.queueItems.filter((item) => item.status === "published").length;
+          const nextFlowPublication = flow.queueItems
+            .filter((item) => item.publishedAt === null && item.scheduledAt)
+            .sort((a, b) => (a.scheduledAt?.getTime() ?? 0) - (b.scheduledAt?.getTime() ?? 0))[0];
 
           return (
             <Card key={flow.id}>
@@ -126,6 +164,13 @@ export default async function FlowsPage() {
                   <div className="rounded-lg border p-3">
                     <p className="text-xs uppercase text-muted-foreground">Опубликовано</p>
                     <p className="mt-1 text-sm font-medium">{published}</p>
+                  </div>
+                  <div className="rounded-lg border p-3 md:col-span-2">
+                    <p className="text-xs uppercase text-muted-foreground">Следующая публикация</p>
+                    <p className="mt-1 text-sm font-medium">
+                      <NextPublicationCountdown scheduledAt={nextFlowPublication?.scheduledAt?.toISOString() ?? null} />
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatDate(nextFlowPublication?.scheduledAt)}</p>
                   </div>
                 </div>
 
