@@ -76,6 +76,8 @@ export default async function FlowOverviewPage({ params }: Props) {
   const lastRun = flow.runs[0];
   const readyCount = flow.queueItems.filter((item) => item.status === "ready").length;
   const publishedCount = flow.queueItems.filter((item) => item.status === "published").length;
+  const failedCount = flow.queueItems.filter((item) => item.status === "failed").length;
+  const lastPublishedItem = flow.queueItems.find((item) => item.publishedAt);
   const publishConfig = (flow.steps.find((step) => step.type === "pinterest_publish")?.configJson ?? {}) as Record<string, unknown>;
 
   return (
@@ -123,12 +125,20 @@ export default async function FlowOverviewPage({ params }: Props) {
             <p className="mt-1 text-sm font-medium">{publishedCount}</p>
           </div>
           <div className="rounded-lg border p-3">
+            <p className="text-xs uppercase text-muted-foreground">Ошибок в очереди</p>
+            <p className="mt-1 text-sm font-medium">{failedCount}</p>
+          </div>
+          <div className="rounded-lg border p-3">
             <p className="text-xs uppercase text-muted-foreground">Автопостинг</p>
             <p className="mt-1 text-sm font-medium">{flow.autopublishEnabled ? "Включён" : "Выключен"}</p>
           </div>
           <div className="rounded-lg border p-3">
             <p className="text-xs uppercase text-muted-foreground">Режим расписания</p>
             <p className="mt-1 text-sm font-medium">{describeScheduleMode(flow.schedule?.cron)}</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs uppercase text-muted-foreground">Последняя публикация</p>
+            <p className="mt-1 text-sm font-medium">{formatDate(lastPublishedItem?.publishedAt)}</p>
           </div>
         </CardContent>
       </Card>

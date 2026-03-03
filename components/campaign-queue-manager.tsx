@@ -516,7 +516,7 @@ export function CampaignQueueManager({
               <th className="w-40 p-3">Запланировано</th>
               <th className="w-40 p-3">Опубликовано</th>
               <th className="w-52 p-3">Ошибка</th>
-              <th className="p-3">Логи</th>
+              <th className="w-40 p-3">Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -554,9 +554,21 @@ export function CampaignQueueManager({
                     <div className="max-w-[200px] break-words">{item.error ?? "—"}</div>
                   </td>
                   <td className="p-3">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setExpandedItemId(expandedItemId === item.id ? null : item.id)}>
-                      Показать логи
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      {item.status === "ready" ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => void perform("publish-selected", () => postJson(`/api/flows/${flowId}/queue/publish`, { queueItemIds: [item.id] }))}
+                          disabled={loading !== null}
+                        >
+                          Опубликовать
+                        </Button>
+                      ) : null}
+                      <Button type="button" variant="outline" size="sm" onClick={() => setExpandedItemId(expandedItemId === item.id ? null : item.id)}>
+                        Показать логи
+                      </Button>
+                    </div>
                   </td>
                 </tr>
 
