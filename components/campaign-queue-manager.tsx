@@ -55,6 +55,11 @@ type ActionResponse = {
   error?: string;
 };
 
+type QueueSnapshot = {
+  queueItems: QueueItem[];
+  runs: Run[];
+};
+
 async function postJson(url: string, body: Record<string, unknown>) {
   const response = await fetch(url, {
     method: "POST",
@@ -68,13 +73,22 @@ async function postJson(url: string, body: Record<string, unknown>) {
   return data;
 }
 
+async function getQueueSnapshot(flowId: string) {
+  const response = await fetch(`/api/flows/${flowId}/queue`, { cache: "no-store" });
+  const data = (await response.json().catch(() => ({}))) as QueueSnapshot & { error?: string };
+  if (!response.ok) {
+    throw new Error(data.error ?? "Не удалось обновить очередь");
+  }
+  return data;
+}
+
 function getSuccessMessage(action: string, data: ActionResponse) {
   if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
   if (action === "generate-all") {
     if ((data.generated ?? 0) === 0 && (data.published ?? 0) === 0) {
       return "Сейчас нет подходящих элементов для автогенерации. Очередь пуста или уже обработана.";
     }
-    return `Обработано ${data.generated ?? 0} элементов: сгенерировано до 10 и опубликовано ${data.published ?? 0}.`;
+    return `Обработано ${data.generated ?? 0} элементов: подготовлено до 10 и опубликовано ${data.published ?? 0}.`;
   }
   if (action === "generate-selected") {
     return `Текст и изображения обновлены для ${data.processed ?? 0} элементов.`;
@@ -105,8 +119,11 @@ export function CampaignQueueManager({
 }) {
   const router = useRouter();
   const autoStartRef = useRef(false);
+  const [items, setItems] = useState(initialItems);
+  const [runs, setRuns] = useState(initialRuns);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
@@ -114,31 +131,33 @@ export function CampaignQueueManager({
 
   const runsByItem = useMemo(() => {
     const map = new Map<string, Run[]>();
-    for (const run of initialRuns) {
+    for (const run of runs) {
       if (!run.queueItemId) continue;
       const bucket = map.get(run.queueItemId) ?? [];
       bucket.push(run);
       map.set(run.queueItemId, bucket);
     }
     return map;
-  }, [initialRuns]);
+  }, [runs]);
 
-  const allIds = initialItems.map((item) => item.id);
-  const failedIds = initialItems.filter((item) => item.status === "failed").map((item) => item.id);
-  const readyIds = initialItems.filter((item) => item.status === "ready").map((item) => item.id);
-  const pendingIds = initialItems.filter((item) => item.status === "pending" || item.status === "failed").map((item) => item.id);
-  const generatedCount = initialItems.filter((item) => item.status === "ready" || item.status === "published" || item.status === "publishing").length;
+  const allIds = items.map((item) => item.id);
+  const failedIds = items.filter((item) => item.status === "failed").map((item) => item.id);
+  const readyIds = items.filter((item) => item.status === "ready").map((item) => item.id);
+  const pendingIds = items.filter((item) => item.status === "pending" || item.status === "failed").map((item) => item.id);
+  const generatedCount = items.filter((item) => item.status === "ready" || item.status === "published" || item.status === "publishing").length;
+  const activeCount = items.filter((item) => item.status === "generating" || item.status === "publishing").length;
   const selectedReadyIds = selectedIds.filter((id) => readyIds.includes(id));
   const selectedFailedIds = selectedIds.filter((id) => failedIds.includes(id));
+  const runningRuns = runs.filter((run) => run.status === "running").length;
 
   const criticalErrors = useMemo(() => {
     const messages = new Set<string>();
 
     if (error) messages.add(error);
-    for (const item of initialItems) {
+    for (const item of items) {
       if (item.error) messages.add(item.error);
     }
-    for (const run of initialRuns) {
+    for (const run of runs) {
       if (run.status === "failed" && run.error) messages.add(run.error);
       for (const step of run.steps) {
         if (step.status === "failed" && step.error) messages.add(step.error);
@@ -151,7 +170,7 @@ export function CampaignQueueManager({
       }
       return message;
     });
-  }, [error, initialItems, initialRuns]);
+  }, [error, items, runs]);
 
   const debugLogText = useMemo(() => {
     const lines: string[] = [];
@@ -161,7 +180,7 @@ export function CampaignQueueManager({
       lines.push("");
     }
 
-    for (const item of initialItems) {
+    for (const item of items) {
       if (!item.error && item.status !== "failed") continue;
       lines.push(`[QUEUE ITEM] ${item.id}`);
       lines.push(`status: ${item.status}`);
@@ -173,7 +192,7 @@ export function CampaignQueueManager({
       lines.push("");
     }
 
-    for (const run of initialRuns.slice(0, 20)) {
+    for (const run of runs.slice(0, 20)) {
       lines.push(`[RUN] ${run.id}`);
       lines.push(`queue_item_id: ${run.queueItemId ?? "—"}`);
       lines.push(`status: ${run.status}`);
@@ -191,7 +210,13 @@ export function CampaignQueueManager({
     }
 
     return lines.join("\n").trim() || "Логов пока нет.";
-  }, [error, initialItems, initialRuns]);
+  }, [error, items, runs]);
+
+  async function refreshQueue() {
+    const snapshot = await getQueueSnapshot(flowId);
+    setItems(snapshot.queueItems);
+    setRuns(snapshot.runs);
+  }
 
   function toggleSelection(id: string) {
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -214,16 +239,20 @@ export function CampaignQueueManager({
 
   async function perform(action: string, handler: () => Promise<ActionResponse>) {
     setLoading(action);
+    setProgressMessage(action === "generate-all" ? "Запущен длинный пайплайн: генерация 10 элементов и публикация первого. Страница будет обновляться автоматически." : "Действие выполняется. Данные обновляются автоматически.");
     setError(null);
     setSuccess(null);
     try {
       const result = await handler();
       setSuccess(getSuccessMessage(action, result));
+      await refreshQueue().catch(() => undefined);
       router.refresh();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Не удалось выполнить действие");
+      await refreshQueue().catch(() => undefined);
     } finally {
       setLoading(null);
+      setProgressMessage(null);
     }
   }
 
@@ -232,10 +261,18 @@ export function CampaignQueueManager({
     if (pendingIds.length === 0 || generatedCount > 0) return;
 
     autoStartRef.current = true;
-    void perform("generate-all", () =>
-      postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true })
-    );
+    void perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }));
   }, [autoStartGenerate, flowId, generatedCount, pendingIds]);
+
+  useEffect(() => {
+    if (!loading && activeCount === 0 && runningRuns === 0) return;
+
+    const poll = window.setInterval(() => {
+      void refreshQueue().catch(() => undefined);
+    }, 3000);
+
+    return () => window.clearInterval(poll);
+  }, [loading, activeCount, runningRuns, flowId]);
 
   return (
     <div className="space-y-6">
@@ -244,6 +281,25 @@ export function CampaignQueueManager({
           <CardTitle>Очередь / Контент-пайплайн</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs uppercase text-muted-foreground">В ожидании</p>
+              <p className="mt-1 text-lg font-semibold">{pendingIds.length}</p>
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs uppercase text-muted-foreground">В работе</p>
+              <p className="mt-1 text-lg font-semibold">{activeCount}</p>
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs uppercase text-muted-foreground">Готово</p>
+              <p className="mt-1 text-lg font-semibold">{readyIds.length}</p>
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs uppercase text-muted-foreground">Активных запусков</p>
+              <p className="mt-1 text-lg font-semibold">{runningRuns}</p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => selectIds(readyIds)} disabled={loading !== null || readyIds.length === 0}>
               Выбрать готовые
@@ -323,6 +379,7 @@ export function CampaignQueueManager({
             </Button>
           </div>
 
+          {progressMessage ? <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">{progressMessage}</div> : null}
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
@@ -364,7 +421,7 @@ export function CampaignQueueManager({
             </tr>
           </thead>
           <tbody>
-            {initialItems.map((item) => (
+            {items.map((item) => (
               <Fragment key={item.id}>
                 <tr className="border-t align-top">
                   <td className="p-3">

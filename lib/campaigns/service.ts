@@ -676,17 +676,37 @@ export async function runGenerateAllPipeline(flowId: string, userId: string) {
   });
 
   const queueItemIds = candidates.map((item) => item.id);
-  const generationResult = await generateContentForQueueItems(flow.id, userId, queueItemIds);
-  const publishResult = await publishQueueItems({
-    flowId: flow.id,
-    userId,
-    queueItemIds,
-    limit: 1
-  });
+  let generated = 0;
+  let published = 0;
+
+  for (const queueItemId of queueItemIds) {
+    const generationResult = await generateContentForQueueItems(flow.id, userId, [queueItemId]);
+    generated += generationResult.processed;
+
+    if (published === 0) {
+      const publishResult = await publishQueueItems({
+        flowId: flow.id,
+        userId,
+        queueItemIds: [queueItemId],
+        limit: 1
+      });
+      published += publishResult.processed;
+    }
+  }
+
+  if (published === 0 && queueItemIds.length > 0) {
+    const publishResult = await publishQueueItems({
+      flowId: flow.id,
+      userId,
+      queueItemIds,
+      limit: 1
+    });
+    published += publishResult.processed;
+  }
 
   return {
-    generated: generationResult.processed,
-    published: publishResult.processed
+    generated,
+    published
   };
 }
 
