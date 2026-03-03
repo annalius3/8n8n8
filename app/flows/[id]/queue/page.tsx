@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { CampaignQueueManager } from "@/components/campaign-queue-manager";
 import { LinkButton } from "@/components/ui/link-button";
+import { ensureDefaultLinkUrlForFlow } from "@/lib/campaigns/service";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -13,6 +14,8 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
   const user = await requireUser("/flows");
   const { id } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
+
+  await ensureDefaultLinkUrlForFlow(id, user.id);
 
   const flow = await prisma.flow.findFirst({
     where: { id, userId: user.id },
@@ -45,7 +48,7 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
       <CampaignQueueManager
         flowId={flow.id}
         bootstrapFromSeed={resolvedSearchParams?.bootstrap === "1"}
-        autoStartGenerate={resolvedSearchParams?.autostart === "1" || flow.queueItems.some((item) => item.status === "pending" || item.status === "failed")}
+        autoStartGenerate={resolvedSearchParams?.autostart === "1"}
         initialItems={flow.queueItems.map((item) => ({
           id: item.id,
           status: item.status,

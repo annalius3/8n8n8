@@ -120,8 +120,8 @@ export function CampaignQueueManager({
   initialRuns: Run[];
 }) {
   const router = useRouter();
-  const autoStartRef = useRef(false);
   const bootstrapRef = useRef(false);
+  const autoPipelineRef = useRef(false);
   const [items, setItems] = useState(initialItems);
   const [runs, setRuns] = useState(initialRuns);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -143,15 +143,15 @@ export function CampaignQueueManager({
     return map;
   }, [runs]);
 
-  const allIds = items.map((item) => item.id);
   const failedIds = items.filter((item) => item.status === "failed").map((item) => item.id);
   const readyIds = items.filter((item) => item.status === "ready").map((item) => item.id);
-  const pendingIds = items.filter((item) => item.status === "pending" || item.status === "failed").map((item) => item.id);
+  const pendingIds = items.filter((item) => item.status === "pending").map((item) => item.id);
   const generatedCount = items.filter((item) => item.status === "ready" || item.status === "published" || item.status === "publishing").length;
   const activeCount = items.filter((item) => item.status === "generating" || item.status === "publishing").length;
   const selectedReadyIds = selectedIds.filter((id) => readyIds.includes(id));
   const selectedFailedIds = selectedIds.filter((id) => failedIds.includes(id));
   const runningRuns = runs.filter((run) => run.status === "running").length;
+  const allSelected = items.length > 0 && selectedIds.length === items.length;
 
   const criticalErrors = useMemo(() => {
     const messages = new Set<string>();
@@ -266,10 +266,6 @@ export function CampaignQueueManager({
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
-  function selectIds(ids: string[]) {
-    setSelectedIds(ids);
-  }
-
   async function copyDebugLogs() {
     try {
       await navigator.clipboard.writeText(debugLogText);
@@ -309,12 +305,14 @@ export function CampaignQueueManager({
   }, [bootstrapFromSeed, items.length]);
 
   useEffect(() => {
-    if (!autoStartGenerate || autoStartRef.current) return;
-    if (pendingIds.length === 0 || generatedCount > 0) return;
+    if (!autoStartGenerate || loading !== null || activeCount > 0 || runningRuns > 0 || pendingIds.length === 0) return;
+    if (autoPipelineRef.current) return;
 
-    autoStartRef.current = true;
-    void perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }));
-  }, [autoStartGenerate, flowId, generatedCount, pendingIds]);
+    autoPipelineRef.current = true;
+    void perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true })).finally(() => {
+      autoPipelineRef.current = false;
+    });
+  }, [autoStartGenerate, flowId, loading, activeCount, runningRuns, pendingIds.length]);
 
   useEffect(() => {
     if (!loading && activeCount === 0 && runningRuns === 0) return;
@@ -347,35 +345,18 @@ export function CampaignQueueManager({
               <p className="mt-1 text-lg font-semibold">{readyIds.length}</p>
             </div>
             <div className="rounded-lg border p-3 text-sm">
-              <p className="text-xs uppercase text-muted-foreground">Активных запусков</p>
-              <p className="mt-1 text-lg font-semibold">{runningRuns}</p>
+              <p className="text-xs uppercase text-muted-foreground">Ошибок</p>
+              <p className="mt-1 text-lg font-semibold">{failedIds.length}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => selectIds(readyIds)} disabled={loading !== null || readyIds.length === 0}>
-              Выбрать готовые
-            </Button>
-            <Button type="button" variant="outline" onClick={() => selectIds(failedIds)} disabled={loading !== null || failedIds.length === 0}>
-              Выбрать ошибки
-            </Button>
-            <Button type="button" variant="outline" onClick={() => selectIds([])} disabled={loading !== null || selectedIds.length === 0}>
-              Снять выбор
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => perform("plan", () => postJson(`/api/flows/${flowId}/queue/plan-schedule`, {}))}
-              disabled={loading !== null}
-            >
-              Спланировать расписание
-            </Button>
             <Button
               type="button"
               onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }))}
-              disabled={loading !== null || allIds.length === 0}
+              disabled={loading !== null || (pendingIds.length === 0 && failedIds.length === 0)}
             >
-              Сгенерировать 10 и опубликовать 1
+              Запустить автопайплайн
             </Button>
             <Button
               type="button"
@@ -398,14 +379,6 @@ export function CampaignQueueManager({
               disabled={loading !== null || selectedReadyIds.length === 0}
             >
               Опубликовать выбранные
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => perform("publish-due", () => postJson(`/api/flows/${flowId}/queue/publish`, { dueOnly: true }))}
-              disabled={loading !== null}
-            >
-              Опубликовать по времени
             </Button>
             <Button
               type="button"
@@ -436,7 +409,7 @@ export function CampaignQueueManager({
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <p className="text-sm text-muted-foreground">
-            Для публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Готово выбрано: {selectedReadyIds.length}.
+            Автопайплайн подготавливает до 10 постов и сразу пытается опубликовать первый готовый. Для ручной публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Готово выбрано: {selectedReadyIds.length}.
           </p>
         </CardContent>
       </Card>
@@ -460,7 +433,16 @@ export function CampaignQueueManager({
         <table className="w-full table-fixed text-sm">
           <thead className="bg-muted/40 text-left">
             <tr>
-              <th className="p-3"></th>
+              <th className="p-3">
+                <label className="flex cursor-pointer items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 cursor-pointer"
+                    checked={allSelected}
+                    onChange={() => setSelectedIds(allSelected ? [] : items.map((item) => item.id))}
+                  />
+                </label>
+              </th>
               <th className="w-28 p-3">Статус</th>
               <th className="w-48 p-3">Тема</th>
               <th className="w-48 p-3">Заголовок</th>

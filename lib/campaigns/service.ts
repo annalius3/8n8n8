@@ -6,6 +6,8 @@ import { deleteLeonardoGeneration, generateLeonardoImage } from "@/lib/integrati
 import { publishToPinterest } from "@/lib/integrations/pinterest";
 import { applyTemplate } from "@/lib/worker/template";
 
+const DEFAULT_SITE_LINK = "https://www.b2bleadgenerationtools.com/";
+
 type CampaignInput = {
   name?: string;
   seedTopic: string;
@@ -100,6 +102,19 @@ export async function getFlowOrThrow(flowId: string, userId: string) {
   }
 
   return flow;
+}
+
+export async function ensureDefaultLinkUrlForFlow(flowId: string, userId: string) {
+  await prisma.postQueueItem.updateMany({
+    where: {
+      flowId,
+      userId,
+      OR: [{ linkUrl: null }, { linkUrl: "" }]
+    },
+    data: {
+      linkUrl: DEFAULT_SITE_LINK
+    }
+  });
 }
 
 function getStepConfig(flow: FlowWithSteps, type: string) {
@@ -286,6 +301,7 @@ export async function addTopicsToQueue(flowId: string, userId: string, topicIds:
         topicText: suggestion.topicText,
         title: suggestion.topicText,
         body: "",
+        linkUrl: DEFAULT_SITE_LINK,
         status: QueueStatus.pending
       }))
     });
@@ -463,6 +479,7 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
         data: {
           title: text.title,
           body: text.description,
+          linkUrl: item.linkUrl ?? DEFAULT_SITE_LINK,
           imageUrl: image.imageUrl,
           imageGenerationId: image.generationId,
           imagePrompt: prompt,
@@ -553,7 +570,7 @@ export async function publishQueueItems(input: {
         boardId: publishConfig.board_id,
         title: item.title,
         description: item.body,
-        linkUrl: item.linkUrl ?? undefined,
+        linkUrl: item.linkUrl ?? DEFAULT_SITE_LINK,
         imageUrl: item.imageUrl ?? undefined,
         altText: applyTemplate(publishConfig.alt_text_template ?? "{topic}", {
           topic: item.topicText ?? item.title,
