@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Privacy Policy | Autoposting Flow",
-  description: "Privacy policy for Autoposting Flow"
+  title: "Политика конфиденциальности | Autoposting Flow",
+  description: "Политика конфиденциальности для Autoposting Flow"
 };
 
 export default function PrivacyPage() {
@@ -10,61 +10,61 @@ export default function PrivacyPage() {
     <div className="mx-auto max-w-4xl">
       <Card>
         <CardHeader>
-          <CardTitle>Privacy Policy</CardTitle>
+          <CardTitle>Политика конфиденциальности</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-sm leading-6 text-muted-foreground">
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Overview</h2>
+            <h2 className="text-base font-semibold text-foreground">Обзор</h2>
             <p>
-              Autoposting Flow helps users plan content, generate assets, connect third-party services, and publish content on schedule.
-              This policy explains what information the service stores and how that information is used.
+              Autoposting Flow помогает планировать контент, генерировать материалы, подключать сторонние сервисы и публиковать контент по расписанию.
+              Эта политика объясняет, какие данные сервис хранит и как они используются.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Information we store</h2>
-            <p>We may store account information such as your email address, basic profile details, publishing settings, run logs, queued content, and connected integration metadata.</p>
+            <h2 className="text-base font-semibold text-foreground">Какие данные мы храним</h2>
+            <p>Сервис может хранить данные аккаунта, такие как email, базовую информацию профиля, настройки публикации, логи запусков, элементы очереди и метаданные подключённых интеграций.</p>
             <p>
-              Sensitive secrets such as API tokens are stored only on the server and are encrypted before being written to the database.
+              Чувствительные данные, например API-токены, хранятся только на сервере и шифруются перед записью в базу данных.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">How connected services are used</h2>
+            <h2 className="text-base font-semibold text-foreground">Как используются подключённые сервисы</h2>
             <p>
-              When you connect services such as Pinterest, Google, OpenAI, or Leonardo, the application uses those credentials only to authenticate your account,
-              generate content, retrieve boards, or publish content that you explicitly requested.
+              Когда вы подключаете сервисы вроде Pinterest, Google, OpenAI или Leonardo, приложение использует эти данные только для входа в аккаунт,
+              генерации контента, получения списка досок или публикации контента, который вы явно запросили.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Use of generated content and logs</h2>
+            <h2 className="text-base font-semibold text-foreground">Использование сгенерированного контента и логов</h2>
             <p>
-              The application stores queue items, generated text, generated image references, scheduling data, and execution logs so that you can manage, retry, audit,
-              and review publishing actions.
+              Приложение хранит элементы очереди, сгенерированный текст, ссылки на изображения, данные расписания и логи выполнения, чтобы вы могли управлять публикациями,
+              повторять действия, проверять результаты и разбирать ошибки.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Data sharing</h2>
+            <h2 className="text-base font-semibold text-foreground">Передача данных</h2>
             <p>
-              The service does not sell personal data. Data is shared only with the external providers required to fulfill requested features, such as authentication,
-              image generation, text generation, and publishing.
+              Сервис не продаёт персональные данные. Передача данных возможна только внешним провайдерам, которые нужны для работы конкретных функций:
+              авторизации, генерации текста, генерации изображений и публикации.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Data deletion</h2>
+            <h2 className="text-base font-semibold text-foreground">Удаление данных</h2>
             <p>
-              You can disconnect integrations, delete flows, and remove queued content from the application. Deleting connected integrations removes the stored encrypted
-              connection record from the application database.
+              Вы можете отключать интеграции, удалять потоки и убирать элементы из очереди прямо в приложении. Удаление интеграции удаляет из базы соответствующую
+              зашифрованную запись подключения.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Contact</h2>
+            <h2 className="text-base font-semibold text-foreground">Контакты</h2>
             <p>
-              For privacy-related questions, use the contact channel associated with the service deployment or the project owner responsible for the current environment.
+              По вопросам конфиденциальности используйте канал связи, указанный для этого развертывания сервиса, либо обращайтесь к владельцу проекта текущего окружения.
             </p>
           </section>
         </CardContent>

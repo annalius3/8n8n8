@@ -27,7 +27,7 @@ type Props = {
 };
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("ru-RU", {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
@@ -83,7 +83,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
               ? Object.entries(data.error.fieldErrors)
                   .flatMap(([, values]) => values ?? [])
                   .join(", ")
-              : "Failed to save the connection";
+              : "Не удалось сохранить подключение";
         throw new Error(message);
       }
 
@@ -95,9 +95,9 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
         return [savedConnection, ...next];
       });
       setAccessToken("");
-      setSaveMessage("The token was saved in encrypted form on the server.");
+      setSaveMessage("Токен сохранён на сервере в зашифрованном виде.");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Failed to save the token");
+      setError(saveError instanceof Error ? saveError.message : "Не удалось сохранить токен");
     } finally {
       setIsSaving(false);
     }
@@ -113,13 +113,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
       const response = await fetch(`/api/connections/pinterest/boards?connectionName=${encodeURIComponent(name)}`);
       const data = (await response.json()) as { boards?: BoardItem[]; error?: string };
       if (!response.ok || !data.boards) {
-        throw new Error(data.error ?? "Failed to check Pinterest");
+        throw new Error(data.error ?? "Не удалось проверить Pinterest");
       }
 
       setBoards(data.boards);
-      setSaveMessage(`Pinterest responded successfully. Boards found: ${data.boards.length}.`);
+      setSaveMessage(`Pinterest ответил успешно. Найдено досок: ${data.boards.length}.`);
     } catch (checkError) {
-      setError(checkError instanceof Error ? checkError.message : "Failed to check Pinterest");
+      setError(checkError instanceof Error ? checkError.message : "Не удалось проверить Pinterest");
     } finally {
       setIsChecking(false);
     }
@@ -147,15 +147,15 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to disconnect Pinterest");
+        throw new Error(data.error ?? "Не удалось отключить Pinterest");
       }
 
       setConnections((current) => current.filter((item) => !(item.provider === "pinterest" && item.name === name)));
       setAccessToken("");
       setBoards([]);
-      setSaveMessage("Pinterest was disconnected. You can now reconnect from a clean state.");
+      setSaveMessage("Pinterest отключён. Теперь можно подключить его заново с чистого состояния.");
     } catch (disconnectError) {
-      setError(disconnectError instanceof Error ? disconnectError.message : "Failed to disconnect Pinterest");
+      setError(disconnectError instanceof Error ? disconnectError.message : "Не удалось отключить Pinterest");
     } finally {
       setIsDisconnecting(false);
     }
@@ -172,63 +172,63 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Pinterest connection</CardTitle>
+          <CardTitle>Подключение Pinterest</CardTitle>
           <CardDescription>
-            Use OAuth if possible. Manual token save stays available as a fallback for existing access tokens.
+            Используйте OAuth, если это возможно. Ручное сохранение токена оставлено как запасной вариант.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {oauthSuccess === "pinterest_oauth" ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              Pinterest OAuth completed successfully. The connection was saved on the server.
+              OAuth-подключение Pinterest завершено успешно. Подключение сохранено на сервере.
             </div>
           ) : null}
           {oauthError === "pinterest_oauth_not_configured" ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Pinterest OAuth is not configured yet. Add `PINTEREST_CLIENT_ID` and `PINTEREST_CLIENT_SECRET` on the server.
+              Pinterest OAuth пока не настроен. Добавьте `PINTEREST_CLIENT_ID` и `PINTEREST_CLIENT_SECRET` на сервере.
             </div>
           ) : null}
           {oauthError === "pinterest_oauth" ? (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              Pinterest OAuth failed. Check the app settings, redirect URI, and requested scopes.
+              Ошибка Pinterest OAuth. Проверьте настройки приложения, redirect URI и scopes.
             </div>
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="connection-name">Connection name</Label>
+            <Label htmlFor="connection-name">Название подключения</Label>
             <Input id="connection-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Main Pinterest" />
           </div>
 
           {existingConnection ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              Status: Connected. This connection already has a saved Pinterest token on the server.
+              Статус: подключено. Для этого имени уже сохранён Pinterest-токен на сервере.
             </div>
           ) : (
             <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
-              Status: Not connected yet. Start the Pinterest OAuth flow below.
+              Статус: не подключено. Запустите OAuth-подключение ниже.
             </div>
           )}
 
           <div className="rounded-xl border bg-muted/30 p-4">
             <div className="mb-3">
-              <div className="font-medium">Preferred: Pinterest OAuth</div>
+              <div className="font-medium">Предпочтительный способ: Pinterest OAuth</div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Click the red button, continue on Pinterest, approve the requested scopes, and return here with a connected status.
+                Нажмите красную кнопку, перейдите на Pinterest, подтвердите запрашиваемые права и вернитесь сюда со статусом подключения.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button variant="destructive" onClick={startPinterestOAuth}>Connect Pinterest</Button>
+              <Button variant="destructive" onClick={startPinterestOAuth}>Подключить Pinterest</Button>
               <Button variant="outline" onClick={disconnectPinterest} disabled={!existingConnection || isDisconnecting}>
-                {isDisconnecting ? "Disconnecting..." : "Disconnect Pinterest"}
+                {isDisconnecting ? "Отключение..." : "Отключить Pinterest"}
               </Button>
             </div>
           </div>
 
           <div className="rounded-xl border p-4">
             <div className="mb-3">
-              <div className="font-medium">Fallback: manual token</div>
+              <div className="font-medium">Резервный вариант: ручной токен</div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Use this only if you already have a Pinterest access token and do not want to go through OAuth right now.
+                Используйте этот вариант, только если у вас уже есть Pinterest access token и вы не хотите проходить OAuth прямо сейчас.
               </p>
             </div>
             <div className="space-y-2">
@@ -241,16 +241,16 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                 placeholder="pina_..."
                 autoComplete="off"
               />
-              <p className="text-xs text-muted-foreground">Use a token that has never been posted in chat, git, or logs.</p>
+              <p className="text-xs text-muted-foreground">Используйте токен, который ни разу не публиковался в чате, git или логах.</p>
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
               <Button onClick={saveConnection} disabled={isSaving || name.trim().length < 2 || accessToken.trim().length < 20}>
-                {isSaving ? "Saving..." : "Save token"}
+                {isSaving ? "Сохранение..." : "Сохранить токен"}
               </Button>
               <Button variant="outline" onClick={checkPinterest} disabled={isChecking || name.trim().length < 2}>
-                {isChecking ? "Checking..." : "Check Pinterest"}
+                {isChecking ? "Проверка..." : "Проверить Pinterest"}
               </Button>
-              {existingConnection ? <Badge variant="outline">Saved connection exists</Badge> : null}
+              {existingConnection ? <Badge variant="outline">Подключение уже сохранено</Badge> : null}
             </div>
           </div>
 
@@ -259,7 +259,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
 
           {boards.length > 0 ? (
             <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
-              <div className="text-sm font-medium">Available boards</div>
+              <div className="text-sm font-medium">Доступные доски</div>
               <div className="space-y-2">
                 {boards.map((board) => (
                   <div key={board.id} className="rounded-lg border bg-background px-3 py-2 text-sm">
@@ -278,13 +278,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Saved connections</CardTitle>
-          <CardDescription>Only safe metadata is shown here. Tokens and secrets are never exposed.</CardDescription>
+          <CardTitle>Сохранённые подключения</CardTitle>
+          <CardDescription>Здесь видны только безопасные метаданные. Токены и секреты никогда не показываются.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {connections.length === 0 ? (
             <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-              No saved connections yet. Create a Pinterest OAuth connection or save a manual token first.
+              Подключений пока нет. Создайте Pinterest OAuth-подключение или сохраните ручной токен.
             </div>
           ) : (
             connections.map((connection) => (
@@ -294,9 +294,9 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                     <div className="font-medium">{connection.name}</div>
                     <div className="text-sm text-muted-foreground">{connection.provider}</div>
                   </div>
-                  <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Connected</Badge>
+                  <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Подключено</Badge>
                 </div>
-                <div className="mt-3 text-sm text-muted-foreground">Updated: {formatDate(connection.updatedAt)}</div>
+                <div className="mt-3 text-sm text-muted-foreground">Обновлено: {formatDate(connection.updatedAt)}</div>
               </div>
             ))
           )}

@@ -28,58 +28,58 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        setError("Failed to create a magic link");
+        setError("Не удалось создать magic link");
         return;
       }
 
       const data = (await response.json()) as { magicLink: string };
       setMagicLink(data.magicLink);
     } catch {
-      setError("Failed to reach the server");
+      setError("Не удалось связаться с сервером");
     }
   }
 
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>Sign in with magic link</CardTitle>
+        <CardTitle>Вход</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Authentication is required in real mode. After signing in, you will be able to manage flows, logs, and connection tokens.
+          В рабочем режиме нужна авторизация. После входа вы сможете управлять потоками, логами и токенами подключений.
         </p>
         <div className="flex flex-wrap gap-2">
-          <LinkButton href={`/api/auth/google/start?next=${encodeURIComponent(nextPath)}`}>Continue with Google</LinkButton>
+          <LinkButton href={`/api/auth/google/start?next=${encodeURIComponent(nextPath)}`}>Продолжить через Google</LinkButton>
         </div>
         {callbackError === "auth_setup" ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Sign-in could not be completed. Check the production database and Prisma migrations.
+            Не удалось завершить вход. Проверьте production-базу и Prisma migrations.
           </div>
         ) : null}
         {callbackError === "google_not_configured" ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Google OAuth is not configured on the server yet.
+            Google OAuth пока не настроен на сервере.
           </div>
         ) : null}
         {callbackError === "google_oauth" ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            Google sign-in failed. Check Google OAuth settings and redirect URI.
+            Ошибка входа через Google. Проверьте настройки Google OAuth и redirect URI.
           </div>
         ) : null}
         <div className="rounded-xl border p-4">
-          <p className="mb-3 text-sm font-medium">Fallback: magic link</p>
+          <p className="mb-3 text-sm font-medium">Резервный вариант: magic link</p>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label>Email</Label>
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <Button type="submit">Create magic link</Button>
+          <Button type="submit">Создать magic link</Button>
         </form>
         </div>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {magicLink ? (
           <p className="text-sm break-all">
-            Open link: <a className="underline" href={magicLink}>{magicLink}</a>
+            Открыть ссылку: <a className="underline" href={magicLink}>{magicLink}</a>
           </p>
         ) : null}
       </CardContent>

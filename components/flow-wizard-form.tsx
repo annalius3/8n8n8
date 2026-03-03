@@ -69,7 +69,7 @@ export function FlowWizardForm() {
             ? data.error
             : data.error?.fieldErrors
               ? Object.values(data.error.fieldErrors).flat().filter(Boolean).join(", ")
-              : "Failed to create flow";
+              : "Не удалось создать поток";
         setError(message);
         return;
       }
@@ -77,7 +77,7 @@ export function FlowWizardForm() {
       router.push(`/flows/${data.flowId}/topics`);
       router.refresh();
     } catch {
-      setError("Failed to reach the server");
+      setError("Не удалось связаться с сервером");
     } finally {
       setLoading(false);
     }
@@ -87,27 +87,27 @@ export function FlowWizardForm() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Step 1. Seed topic</CardTitle>
+          <CardTitle>Шаг 1. Исходная тема</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <Label>Flow name</Label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="For example: Calm Energy Campaign" />
+              <Label>Название потока</Label>
+              <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Например: Кампания спокойной энергии" />
             </div>
             <div className="space-y-2">
-              <Label>Seed topic</Label>
+              <Label>Исходная тема</Label>
               <Textarea
                 rows={3}
                 value={seedTopic}
                 onChange={(event) => setSeedTopic(event.target.value)}
-                placeholder="For example: morning routine for calm energy"
+                placeholder="Например: утренний ритуал для спокойной энергии"
                 required
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label>Язык</Label>
                 <Select value={language} onChange={(event) => setLanguage(event.target.value as "EN" | "RU" | "UA")}>
                   <option value="EN">EN</option>
                   <option value="RU">RU</option>
@@ -115,7 +115,7 @@ export function FlowWizardForm() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Posts per day</Label>
+                <Label>Публикаций в день</Label>
                 <Input
                   type="number"
                   min={1}
@@ -127,35 +127,35 @@ export function FlowWizardForm() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Niche / angle</Label>
-                <Input value={niche} onChange={(event) => setNiche(event.target.value)} placeholder="healing, wellness, finance" />
+                <Label>Ниша / угол подачи</Label>
+                <Input value={niche} onChange={(event) => setNiche(event.target.value)} placeholder="исцеление, wellness, финансы" />
               </div>
               <div className="space-y-2">
-                <Label>Audience</Label>
-                <Input value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="new moms, founders, students" />
+                <Label>Аудитория</Label>
+                <Input value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="молодые мамы, фаундеры, студенты" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Tone</Label>
-              <Input value={tone} onChange={(event) => setTone(event.target.value)} placeholder="clear, calm, expert, warm" />
+              <Label>Тон</Label>
+              <Input value={tone} onChange={(event) => setTone(event.target.value)} placeholder="ясный, спокойный, экспертный, тёплый" />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Timezone</Label>
+                <Label>Часовой пояс</Label>
                 <Input value={timezone} onChange={(event) => setTimezone(event.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Start time</Label>
+                <Label>Время старта</Label>
                 <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-              Enable autoposting after scheduling
+              Включить автопостинг после планирования
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Preparing topics..." : "Generate Top 50 Topics"}
+              {loading ? "Подготовка тем..." : "Сгенерировать топ-50 тем"}
             </Button>
           </form>
         </CardContent>
@@ -163,13 +163,13 @@ export function FlowWizardForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>What happens next</CardTitle>
+          <CardTitle>Что будет дальше</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>1. AI generates 50 topic ideas from your seed topic.</p>
-          <p>2. You review the list and move the best topics into the queue.</p>
-          <p>3. The app generates titles, descriptions, and Leonardo images for each queued post.</p>
-          <p>4. You can run manual publishing or turn on autoposting based on your schedule settings.</p>
+          <p>1. ИИ сгенерирует 50 тем на основе вашей исходной темы.</p>
+          <p>2. Вы выберете лучшие темы и добавите их в очередь.</p>
+          <p>3. Для каждой записи сервис создаст заголовок, описание и изображение через Leonardo.</p>
+          <p>4. Затем можно публиковать вручную или включить автопостинг по вашему расписанию.</p>
         </CardContent>
       </Card>
     </div>

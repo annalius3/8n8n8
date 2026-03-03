@@ -10,22 +10,23 @@ import { FlowToggleButton } from "@/components/flow-toggle-button";
 import { DeleteFlowButton } from "@/components/delete-flow-button";
 
 function formatDate(date: Date | null | undefined) {
-  return date ? date.toLocaleString("en-US") : "—";
+  return date ? date.toLocaleString("ru-RU") : "—";
 }
 
 function translateRunStatus(status: string | undefined) {
-  if (status === "success") return "Success";
-  if (status === "failed") return "Failed";
-  if (status === "running") return "Running";
+  if (status === "success") return "Успешно";
+  if (status === "failed") return "Ошибка";
+  if (status === "running") return "Выполняется";
   return "—";
 }
 
 function describeScheduleMode(cron?: string | null) {
-  if (!cron) return "Posts per day";
-  if (/^\*\/\d+\s+\*\s+\*\s+\*\s+\*$/.test(cron)) return "Interval: every N minutes";
-  if (/^\d+\s+\*\/\d+\s+\*\s+\*\s+\*$/.test(cron)) return "Interval: every N hours";
-  if (/^\d+\s+\d+\s+\*\/\d+\s+\*\s+\*$/.test(cron)) return "Interval: every N days";
-  return "Posts per day";
+  if (!cron) return "Публикации в день";
+  if (cron === "random_daily") return "Хаотично по времени";
+  if (/^\*\/\d+\s+\*\s+\*\s+\*\s+\*$/.test(cron)) return "Интервал: каждые N минут";
+  if (/^\d+\s+\*\/\d+\s+\*\s+\*\s+\*$/.test(cron)) return "Интервал: каждые N часов";
+  if (/^\d+\s+\d+\s+\*\/\d+\s+\*\s+\*$/.test(cron)) return "Интервал: каждые N дней";
+  return "Публикации в день";
 }
 
 type Props = {
@@ -80,10 +81,10 @@ export default async function FlowOverviewPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        <LinkButton href="/flows" variant="outline">Back to flows</LinkButton>
-        <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Topics</LinkButton>
-        <LinkButton href={`/flows/${flow.id}/queue`} variant="outline">Queue</LinkButton>
-        <LinkButton href="/settings" variant="outline">Settings</LinkButton>
+        <LinkButton href="/flows" variant="outline">К списку потоков</LinkButton>
+        <LinkButton href={`/flows/${flow.id}/topics`} variant="outline">Темы</LinkButton>
+        <LinkButton href={`/flows/${flow.id}/queue`} variant="outline">Очередь</LinkButton>
+        <LinkButton href="/settings" variant="outline">Настройки</LinkButton>
         <FlowToggleButton flowId={flow.id} initialEnabled={flow.isEnabled} />
         <DeleteFlowButton flowId={flow.id} redirectToFlows />
       </div>
@@ -94,39 +95,39 @@ export default async function FlowOverviewPage({ params }: Props) {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Seed topic</p>
+            <p className="text-xs uppercase text-muted-foreground">Исходная тема</p>
             <p className="mt-1 text-sm font-medium">{flow.seedTopic ?? "—"}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Language</p>
+            <p className="text-xs uppercase text-muted-foreground">Язык</p>
             <p className="mt-1 text-sm font-medium">{flow.language}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Posts per day</p>
+            <p className="text-xs uppercase text-muted-foreground">Публикаций в день</p>
             <p className="mt-1 text-sm font-medium">{flow.postsPerDay}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Status</p>
-            <p className="mt-1 text-sm font-medium">{flow.isEnabled ? "Enabled" : "Disabled"}</p>
+            <p className="text-xs uppercase text-muted-foreground">Статус</p>
+            <p className="mt-1 text-sm font-medium">{flow.isEnabled ? "Включён" : "Выключен"}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Topics</p>
+            <p className="text-xs uppercase text-muted-foreground">Темы</p>
             <p className="mt-1 text-sm font-medium">{flow.topicSuggestions.length}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Ready</p>
+            <p className="text-xs uppercase text-muted-foreground">Готово</p>
             <p className="mt-1 text-sm font-medium">{readyCount}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Published</p>
+            <p className="text-xs uppercase text-muted-foreground">Опубликовано</p>
             <p className="mt-1 text-sm font-medium">{publishedCount}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Autoposting</p>
-            <p className="mt-1 text-sm font-medium">{flow.autopublishEnabled ? "Enabled" : "Disabled"}</p>
+            <p className="text-xs uppercase text-muted-foreground">Автопостинг</p>
+            <p className="mt-1 text-sm font-medium">{flow.autopublishEnabled ? "Включён" : "Выключен"}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Schedule mode</p>
+            <p className="text-xs uppercase text-muted-foreground">Режим расписания</p>
             <p className="mt-1 text-sm font-medium">{describeScheduleMode(flow.schedule?.cron)}</p>
           </div>
         </CardContent>
@@ -152,14 +153,14 @@ export default async function FlowOverviewPage({ params }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Latest run</CardTitle>
+            <CardTitle>Последний запуск</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border p-3 text-sm">
-              <p>Started: {formatDate(lastRun?.startedAt)}</p>
-              <p>Finished: {formatDate(lastRun?.finishedAt)}</p>
+              <p>Старт: {formatDate(lastRun?.startedAt)}</p>
+              <p>Завершён: {formatDate(lastRun?.finishedAt)}</p>
               <p>
-                Status:{" "}
+                Статус:{" "}
                 {lastRun ? (
                   <Badge variant={lastRun.status === "failed" ? "destructive" : lastRun.status === "running" ? "secondary" : "default"}>
                     {translateRunStatus(lastRun.status)}
@@ -185,7 +186,7 @@ export default async function FlowOverviewPage({ params }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming queue items</CardTitle>
+          <CardTitle>Ближайшие элементы очереди</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {flow.queueItems.length > 0 ? (
@@ -196,13 +197,27 @@ export default async function FlowOverviewPage({ params }: Props) {
                     <p className="font-medium">{item.topicText ?? item.title}</p>
                     <p className="text-muted-foreground">{item.title}</p>
                   </div>
-                  <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : "outline"}>{item.status}</Badge>
+                  <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : "outline"}>
+                    {item.status === "pending"
+                      ? "В очереди"
+                      : item.status === "generating"
+                        ? "Генерация"
+                        : item.status === "ready"
+                          ? "Готово"
+                          : item.status === "publishing"
+                            ? "Публикация"
+                            : item.status === "published"
+                              ? "Опубликовано"
+                              : item.status === "failed"
+                                ? "Ошибка"
+                                : item.status}
+                  </Badge>
                 </div>
-                <p className="mt-2 text-muted-foreground">Scheduled: {formatDate(item.scheduledAt)}</p>
+                <p className="mt-2 text-muted-foreground">Запланировано: {formatDate(item.scheduledAt)}</p>
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">The queue is empty. Go to the topics screen and add suitable topics to the queue.</p>
+            <p className="text-sm text-muted-foreground">Очередь пуста. Перейдите на экран тем и добавьте подходящие темы в очередь.</p>
           )}
         </CardContent>
       </Card>

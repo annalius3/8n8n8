@@ -47,6 +47,55 @@ export function computeScheduledDatesFromIntervalCron(input: {
   return output;
 }
 
+export function computeRandomScheduledDates(input: {
+  count: number;
+  postsPerDay: number;
+  timezone: string;
+  startTime: string;
+  now?: Date;
+}) {
+  const now = input.now ?? new Date();
+  const postsPerDay = Math.max(1, Math.min(50, input.postsPerDay));
+  const [startHourRaw, startMinuteRaw] = input.startTime.split(":");
+  const startHour = Number(startHourRaw ?? 9) || 9;
+  const startMinute = Number(startMinuteRaw ?? 0) || 0;
+
+  const output: Date[] = [];
+  let dayOffset = 0;
+
+  while (output.length < input.count) {
+    const remaining = input.count - output.length;
+    const countForDay = Math.min(postsPerDay, remaining);
+    const dayDate = addDays(now, dayOffset);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = 23 * 60 + 59;
+    const availableMinutes = Math.max(1, endMinutes - startMinutes);
+    const minutePool = new Set<number>();
+
+    while (minutePool.size < countForDay) {
+      const randomMinute = startMinutes + Math.floor(Math.random() * availableMinutes);
+      minutePool.add(randomMinute);
+    }
+
+    const candidates = Array.from(minutePool)
+      .sort((a, b) => a - b)
+      .map((minuteOfDay) =>
+        zonedDateAtTime(dayDate, input.timezone, Math.floor(minuteOfDay / 60) % 24, minuteOfDay % 60)
+      )
+      .filter((candidate) => candidate > now || dayOffset > 0);
+
+    for (const candidate of candidates) {
+      if (output.length < input.count) {
+        output.push(candidate);
+      }
+    }
+
+    dayOffset += 1;
+  }
+
+  return output;
+}
+
 export function computeScheduledDates(input: {
   count: number;
   postsPerDay: number;

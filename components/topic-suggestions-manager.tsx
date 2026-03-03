@@ -78,11 +78,11 @@ export function TopicSuggestionsManager({
     };
 
     if (!topicsResponse.ok) {
-      throw new Error(topicsData.error ?? "Failed to refresh topics");
+      throw new Error(topicsData.error ?? "Не удалось обновить темы");
     }
 
     if (!runsResponse.ok) {
-      throw new Error(runsData.error ?? "Failed to refresh run logs");
+      throw new Error(runsData.error ?? "Не удалось обновить логи запуска");
     }
 
     const nextSuggestions = topicsData.suggestions ?? [];
@@ -124,10 +124,10 @@ export function TopicSuggestionsManager({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to start topic generation");
+        throw new Error(data.error ?? "Не удалось запустить генерацию тем");
       }
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to start topic generation");
+      setError(requestError instanceof Error ? requestError.message : "Не удалось запустить генерацию тем");
     } finally {
       window.clearInterval(poll);
       generationStartedRef.current = false;
@@ -186,13 +186,13 @@ export function TopicSuggestionsManager({
 
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to add topics to the queue");
+        throw new Error(data.error ?? "Не удалось добавить темы в очередь");
       }
 
       router.push(`/flows/${flowId}/queue`);
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to add topics to the queue");
+      setError(requestError instanceof Error ? requestError.message : "Не удалось добавить темы в очередь");
     } finally {
       setLoading(false);
     }
@@ -204,22 +204,22 @@ export function TopicSuggestionsManager({
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Step 2. Review 50 topics</CardTitle>
+          <CardTitle>Шаг 2. Проверка 50 тем</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {generating ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Topic generation is in progress. The topic list and run logs refresh automatically.
+              Генерация тем идёт. Список тем и логи запуска обновляются автоматически.
             </div>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search topics" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Поиск по темам" />
             <Button type="button" variant="outline" onClick={() => setSelectedIds(filtered.map((item) => item.id))} disabled={generating || filtered.length === 0}>
-              Select all
+              Выбрать все
             </Button>
             <Button type="button" variant="outline" onClick={() => setSelectedIds([])} disabled={generating || selectedIds.length === 0}>
-              Deselect all
+              Снять выбор
             </Button>
           </div>
 
@@ -234,19 +234,19 @@ export function TopicSuggestionsManager({
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                {generating ? "Topics are still being generated..." : "No topics yet. Click \"Start generation\" to get 50 topic suggestions."}
+                {generating ? "Темы ещё генерируются..." : "Тем пока нет. Нажмите «Запустить генерацию», чтобы получить 50 тем."}
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="button" variant="outline" disabled={generating} onClick={() => void startGeneration()}>
-              {generating ? "Generating..." : "Start generation"}
+              {generating ? "Генерация..." : "Запустить генерацию"}
             </Button>
             <Button type="button" disabled={loading || selectedIds.length === 0 || generating} onClick={addSelectedToQueue}>
-              {loading ? "Adding..." : "Add selected to queue"}
+              {loading ? "Добавление..." : "Добавить выбранные в очередь"}
             </Button>
-            <span className="text-sm text-muted-foreground">Selected: {selectedIds.length}</span>
+            <span className="text-sm text-muted-foreground">Выбрано: {selectedIds.length}</span>
           </div>
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -255,15 +255,15 @@ export function TopicSuggestionsManager({
 
       <Card>
         <CardHeader>
-          <CardTitle>Latest topic generation run</CardTitle>
+          <CardTitle>Последний запуск генерации тем</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {lastRun ? (
             <>
               <div className="rounded-lg border p-3 text-sm">
-                <p>Run ID: {lastRun.id}</p>
-                <p className="text-muted-foreground">Status: {lastRun.status}</p>
-                <p className="text-muted-foreground">Started: {new Date(lastRun.startedAt).toLocaleString("en-US")}</p>
+                <p>ID запуска: {lastRun.id}</p>
+                <p className="text-muted-foreground">Статус: {lastRun.status}</p>
+                <p className="text-muted-foreground">Старт: {new Date(lastRun.startedAt).toLocaleString("ru-RU")}</p>
                 {lastRun.error ? <p className="mt-2 text-red-600">{lastRun.error}</p> : null}
               </div>
               <ExecutionTimeline
@@ -277,7 +277,7 @@ export function TopicSuggestionsManager({
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">Run logs will appear after the first topic generation starts.</p>
+            <p className="text-sm text-muted-foreground">Логи появятся после первого запуска генерации тем.</p>
           )}
         </CardContent>
       </Card>

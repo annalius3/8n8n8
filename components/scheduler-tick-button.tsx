@@ -14,13 +14,13 @@ export function SchedulerTickButton() {
       const data = (await response.json().catch(() => ({}))) as { started?: number; due?: number; error?: string };
 
       if (!response.ok || typeof data.started !== "number") {
-        setStatus(data.error ?? "Failed to run scheduler tick");
+        setStatus(data.error ?? "Не удалось запустить проверку расписания");
         return;
       }
 
-      setStatus(`Started flows: ${data.started}${data.due !== undefined ? ` of ${data.due}` : ""}`);
+      setStatus(`Запущено потоков: ${data.started}${data.due !== undefined ? ` из ${data.due}` : ""}`);
     } catch {
-      setStatus("Failed to reach the server");
+      setStatus("Не удалось связаться с сервером");
     } finally {
       setLoading(false);
     }
@@ -29,7 +29,7 @@ export function SchedulerTickButton() {
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" onClick={onClick} disabled={loading}>
-        {loading ? "Checking..." : "Check schedule"}
+        {loading ? "Проверка..." : "Проверить расписание"}
       </Button>
       {status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
     </div>

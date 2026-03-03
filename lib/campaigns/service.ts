@@ -1,7 +1,7 @@
 ﻿import { Prisma, QueueStatus, RunStatus, StepExecStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateTopicSuggestions, generateQueueItemContent } from "@/lib/campaigns/openai";
-import { computeScheduledDates, computeScheduledDatesFromIntervalCron } from "@/lib/campaigns/schedule";
+import { computeRandomScheduledDates, computeScheduledDates, computeScheduledDatesFromIntervalCron } from "@/lib/campaigns/schedule";
 import { deleteLeonardoGeneration, generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
 import { applyTemplate } from "@/lib/worker/template";
@@ -311,6 +311,14 @@ export async function planScheduleForFlow(flowId: string, userId: string) {
     });
 
     const scheduledDates =
+      (flow.schedule?.cron === "random_daily"
+        ? computeRandomScheduledDates({
+            count: pendingItems.length,
+            postsPerDay: flow.postsPerDay,
+            timezone: flow.timezone,
+            startTime: flow.startTime
+          })
+        : null) ??
       computeScheduledDatesFromIntervalCron({
         count: pendingItems.length,
         cron: flow.schedule?.cron ?? "",

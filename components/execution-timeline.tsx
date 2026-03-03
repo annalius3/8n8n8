@@ -20,24 +20,24 @@ function getStatusColors(status: TimelineStep["status"]) {
 }
 
 function getStatusLabel(status: TimelineStep["status"]) {
-  if (status === "success") return "Success";
-  if (status === "failed") return "Failed";
-  if (status === "running") return "Running";
-  return "Skipped";
+  if (status === "success") return "Успешно";
+  if (status === "failed") return "Ошибка";
+  if (status === "running") return "Выполняется";
+  return "Пропущено";
 }
 
 function getModeLabel(mode: string | null | undefined) {
   if (!mode) return null;
-  if (mode === "real") return "Real API";
-  if (mode === "template") return "Template";
-  if (mode === "connection_required") return "Token required";
+  if (mode === "real") return "Реальный API";
+  if (mode === "template") return "Шаблон";
+  if (mode === "connection_required") return "Нужен токен";
   if (mode === "openai") return "OpenAI";
   return mode;
 }
 
 export function ExecutionTimeline({ steps }: ExecutionTimelineProps) {
   if (steps.length === 0) {
-    return <p className="text-sm text-muted-foreground">No steps have run yet.</p>;
+    return <p className="text-sm text-muted-foreground">Шаги ещё не запускались.</p>;
   }
 
   return (

@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Terms of Service | Autoposting Flow",
-  description: "Terms of Service for Autoposting Flow"
+  title: "Условия использования | Autoposting Flow",
+  description: "Условия использования для Autoposting Flow"
 };
 
 export default function TermsPage() {
@@ -10,45 +10,45 @@ export default function TermsPage() {
     <div className="mx-auto max-w-4xl">
       <Card>
         <CardHeader>
-          <CardTitle>Terms of Service</CardTitle>
+          <CardTitle>Условия использования</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-sm leading-6 text-muted-foreground">
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Service scope</h2>
+            <h2 className="text-base font-semibold text-foreground">Объём сервиса</h2>
             <p>
-              Autoposting Flow provides tools for planning content, generating text and images, managing publishing queues, and sending content to connected platforms.
+              Autoposting Flow предоставляет инструменты для планирования контента, генерации текста и изображений, управления очередью публикаций и отправки контента на подключённые платформы.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">User responsibility</h2>
+            <h2 className="text-base font-semibold text-foreground">Ответственность пользователя</h2>
             <p>
-              You are responsible for the content you create, schedule, generate, and publish through the service. You must have the necessary rights to use any topics,
-              text, images, links, or third-party accounts connected to the application.
+              Вы несёте ответственность за контент, который создаёте, планируете, генерируете и публикуете через сервис. У вас должны быть необходимые права на использование тем,
+              текстов, изображений, ссылок и сторонних аккаунтов, подключённых к приложению.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Third-party services</h2>
+            <h2 className="text-base font-semibold text-foreground">Сторонние сервисы</h2>
             <p>
-              The service relies on third-party providers such as Google, Pinterest, OpenAI, and Leonardo. Availability, API behavior, limits, and pricing of those
-              services are outside the direct control of this application.
+              Сервис опирается на внешних провайдеров, таких как Google, Pinterest, OpenAI и Leonardo. Доступность, поведение API, лимиты и цены этих сервисов
+              находятся вне прямого контроля этого приложения.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Acceptable use</h2>
+            <h2 className="text-base font-semibold text-foreground">Допустимое использование</h2>
             <p>
-              You must not use the service for unlawful, deceptive, infringing, or abusive publishing. You must also comply with the terms and policies of every connected
-              third-party platform.
+              Вы не должны использовать сервис для незаконной, вводящей в заблуждение, нарушающей чужие права или злоупотребляющей публикации. Также вы обязаны соблюдать правила
+              и политики всех подключённых сторонних платформ.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">No guarantee</h2>
+            <h2 className="text-base font-semibold text-foreground">Отсутствие гарантий</h2>
             <p>
-              The service is provided as available. Execution logs, schedules, and integrations are designed to improve reliability, but uninterrupted operation and
-              third-party delivery cannot be guaranteed.
+              Сервис предоставляется по мере доступности. Логи выполнения, расписания и интеграции повышают надёжность, но непрерывная работа и доставка через сторонние сервисы
+              не могут быть гарантированы.
             </p>
           </section>
         </CardContent>

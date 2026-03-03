@@ -22,11 +22,11 @@ export default async function ConnectionsPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Connections</CardTitle>
+          <CardTitle>Подключения</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>Real server-side integration tokens are stored here. Only an authenticated user can access this page.</p>
-          <p>Pinterest can be connected through OAuth or by saving an existing access token as a fallback.</p>
+          <p>Здесь хранятся реальные серверные токены интеграций. Доступ к странице есть только у авторизованного пользователя.</p>
+          <p>Pinterest можно подключить через OAuth или сохранить уже существующий access token как запасной вариант.</p>
         </CardContent>
       </Card>
       <ConnectionSettingsForm

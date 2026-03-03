@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Support | Autoposting Flow",
-  description: "Support information for Autoposting Flow"
+  title: "Поддержка | Autoposting Flow",
+  description: "Информация о поддержке для Autoposting Flow"
 };
 
 export default function SupportPage() {
@@ -10,33 +10,33 @@ export default function SupportPage() {
     <div className="mx-auto max-w-4xl">
       <Card>
         <CardHeader>
-          <CardTitle>Support</CardTitle>
+          <CardTitle>Поддержка</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-sm leading-6 text-muted-foreground">
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Getting help</h2>
+            <h2 className="text-base font-semibold text-foreground">Как получить помощь</h2>
             <p>
-              Use the support channel associated with the current deployment or the project owner responsible for this environment. When reporting an issue, include the
-              page URL, the action you attempted, and the relevant run or queue logs.
+              Используйте канал поддержки, связанный с текущим окружением, или обратитесь к владельцу проекта. Когда сообщаете о проблеме, укажите
+              URL страницы, действие, которое вы выполняли, и соответствующие логи запуска или очереди.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Recommended bug report details</h2>
-            <p>For faster triage, include:</p>
+            <h2 className="text-base font-semibold text-foreground">Что лучше приложить к сообщению об ошибке</h2>
+            <p>Чтобы быстрее разобраться с проблемой, приложите:</p>
             <ul className="list-disc space-y-1 pl-5">
-              <li>the exact page where the issue happened</li>
-              <li>the action button you clicked</li>
-              <li>the visible error text</li>
-              <li>the related run ID or queue item ID, if available</li>
+              <li>точную страницу, где возникла проблема</li>
+              <li>какую кнопку или действие вы нажали</li>
+              <li>текст видимой ошибки</li>
+              <li>ID запуска или элемента очереди, если он есть</li>
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-foreground">Operational issues</h2>
+            <h2 className="text-base font-semibold text-foreground">Операционные проблемы</h2>
             <p>
-              Problems related to OAuth, publishing permissions, API quotas, or third-party outages may require changes in external provider settings rather than code changes
-              in this application.
+              Проблемы, связанные с OAuth, правами на публикацию, квотами API или сбоями внешних сервисов, могут потребовать изменения настроек у провайдера,
+              а не правок в коде приложения.
             </p>
           </section>
         </CardContent>

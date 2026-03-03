@@ -16,7 +16,7 @@ export function DeleteFlowButton({
   const [error, setError] = useState<string | null>(null);
 
   async function removeFlow() {
-    const confirmed = window.confirm("Delete this flow and all related topics, queue items, and logs? This action cannot be undone.");
+    const confirmed = window.confirm("Удалить этот поток и все связанные темы, элементы очереди и логи? Это действие нельзя отменить.");
     if (!confirmed) return;
 
     setLoading(true);
@@ -29,7 +29,7 @@ export function DeleteFlowButton({
       const data = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "Failed to delete flow");
+        setError(data.error ?? "Не удалось удалить поток");
         return;
       }
 
@@ -38,7 +38,7 @@ export function DeleteFlowButton({
       }
       router.refresh();
     } catch {
-      setError("Failed to reach the server");
+      setError("Не удалось связаться с сервером");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export function DeleteFlowButton({
   return (
     <div className="flex items-center gap-2">
       <Button variant="destructive" onClick={removeFlow} disabled={loading}>
-        {loading ? "Deleting..." : "Delete flow"}
+        {loading ? "Удаление..." : "Удалить поток"}
       </Button>
       {error ? <span className="text-xs text-red-600">{error}</span> : null}
     </div>
