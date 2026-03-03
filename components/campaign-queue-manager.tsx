@@ -108,17 +108,20 @@ function getSuccessMessage(action: string, data: ActionResponse) {
 
 export function CampaignQueueManager({
   flowId,
+  bootstrapFromSeed = false,
   autoStartGenerate = false,
   initialItems,
   initialRuns
 }: {
   flowId: string;
+  bootstrapFromSeed?: boolean;
   autoStartGenerate?: boolean;
   initialItems: QueueItem[];
   initialRuns: Run[];
 }) {
   const router = useRouter();
   const autoStartRef = useRef(false);
+  const bootstrapRef = useRef(false);
   const [items, setItems] = useState(initialItems);
   const [runs, setRuns] = useState(initialRuns);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -218,6 +221,47 @@ export function CampaignQueueManager({
     setRuns(snapshot.runs);
   }
 
+  async function bootstrapQueueFromSeed() {
+    setLoading("bootstrap");
+    setProgressMessage("Генерируем темы и автоматически добавляем их в очередь...");
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const generateResponse = await fetch(`/api/flows/${flowId}/topics/generate`, { method: "POST" });
+      const generateData = (await generateResponse.json().catch(() => ({}))) as { error?: string };
+      if (!generateResponse.ok) {
+        throw new Error(generateData.error ?? "Не удалось сгенерировать темы");
+      }
+
+      const topicsResponse = await fetch(`/api/flows/${flowId}/topics`, { cache: "no-store" });
+      const topicsData = (await topicsResponse.json().catch(() => ({}))) as { suggestions?: Array<{ id: string }>; error?: string };
+      if (!topicsResponse.ok || !topicsData.suggestions?.length) {
+        throw new Error(topicsData.error ?? "Не удалось получить сгенерированные темы");
+      }
+
+      const addResponse = await fetch(`/api/flows/${flowId}/topics/add-to-queue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topicIds: topicsData.suggestions.map((item) => item.id) })
+      });
+      const addData = (await addResponse.json().catch(() => ({}))) as { error?: string };
+      if (!addResponse.ok) {
+        throw new Error(addData.error ?? "Не удалось добавить темы в очередь");
+      }
+
+      await refreshQueue();
+      setSuccess("Темы сгенерированы и автоматически добавлены в очередь.");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Не удалось подготовить очередь из исходной темы");
+    } finally {
+      setLoading(null);
+      setProgressMessage(null);
+      router.replace(`/flows/${flowId}/queue?autostart=1`);
+      router.refresh();
+    }
+  }
+
   function toggleSelection(id: string) {
     setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
@@ -255,6 +299,14 @@ export function CampaignQueueManager({
       setProgressMessage(null);
     }
   }
+
+  useEffect(() => {
+    if (!bootstrapFromSeed || bootstrapRef.current) return;
+    if (items.length > 0) return;
+
+    bootstrapRef.current = true;
+    void bootstrapQueueFromSeed();
+  }, [bootstrapFromSeed, items.length]);
 
   useEffect(() => {
     if (!autoStartGenerate || autoStartRef.current) return;

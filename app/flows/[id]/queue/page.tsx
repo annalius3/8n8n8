@@ -6,7 +6,7 @@ import { LinkButton } from "@/components/ui/link-button";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ autostart?: string }>;
+  searchParams?: Promise<{ autostart?: string; bootstrap?: string }>;
 };
 
 export default async function FlowQueuePage({ params, searchParams }: Props) {
@@ -44,6 +44,7 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
       </div>
       <CampaignQueueManager
         flowId={flow.id}
+        bootstrapFromSeed={resolvedSearchParams?.bootstrap === "1"}
         autoStartGenerate={resolvedSearchParams?.autostart === "1" || flow.queueItems.some((item) => item.status === "pending" || item.status === "failed")}
         initialItems={flow.queueItems.map((item) => ({
           id: item.id,

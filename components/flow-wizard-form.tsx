@@ -74,7 +74,7 @@ export function FlowWizardForm() {
         return;
       }
 
-      router.push(`/flows/${data.flowId}/topics?autoQueue=1`);
+      router.push(`/flows/${data.flowId}/queue?bootstrap=1`);
       router.refresh();
     } catch {
       setError("Не удалось связаться с сервером");
