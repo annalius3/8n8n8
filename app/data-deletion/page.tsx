@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Data Deletion | Scheduled Publishing",
-  description: "Data deletion information for Scheduled Publishing"
+  title: "Data Deletion | Autoposting Flow",
+  description: "Data deletion information for Autoposting Flow"
 };
 
 export default function DataDeletionPage() {

@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/link-button";
 
 export const metadata = {
-  title: "Scheduled Publishing",
-  description: "Visual MVP for scheduled publishing workflows"
+  title: "Autoposting Flow",
+  description: "Create topic batches, generate Pinterest assets, and run autoposting workflows"
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,8 +19,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <header className="space-y-4 rounded-2xl border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold">Scheduled Publishing</h1>
-                <p className="text-sm text-muted-foreground">Plan content, prepare assets, and publish on schedule.</p>
+                <h1 className="text-2xl font-bold">Autoposting Flow</h1>
+                <p className="text-sm text-muted-foreground">Generate topic batches, prepare assets, and run scheduled autoposting to Pinterest.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {user ? (
@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </header>
           {children}
           <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm text-muted-foreground">
-            <span>Scheduled Publishing</span>
+            <span>Autoposting Flow</span>
             <nav className="flex items-center gap-3">
               <a className="underline underline-offset-4" href="/privacy">Privacy Policy</a>
               <a className="underline underline-offset-4" href="/terms">Terms of Service</a>

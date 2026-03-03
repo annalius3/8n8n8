@@ -61,9 +61,9 @@ export default async function FlowsPage() {
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>Scheduled publishing flows</CardTitle>
+            <CardTitle>Autoposting flows</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Build flows from a seed topic to scheduled content, queue management, and controlled publishing.
+              Build autoposting flows from one seed topic to 50 ideas, bulk content generation, and scheduled Pinterest publishing.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -77,7 +77,7 @@ export default async function FlowsPage() {
       {flows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No flows yet. Create your first one from a seed topic.
+            No flows yet. Create your first autoposting flow from a seed topic.
           </CardContent>
         </Card>
       ) : null}
@@ -106,7 +106,7 @@ export default async function FlowsPage() {
                   <Badge variant="outline">{flow.postsPerDay} posts/day</Badge>
                   <Badge variant="outline">{flow.timezone}</Badge>
                   <Badge variant="outline">start {flow.startTime}</Badge>
-                  {flow.autopublishEnabled ? <Badge>scheduled publishing</Badge> : <Badge variant="secondary">manual publishing</Badge>}
+                  {flow.autopublishEnabled ? <Badge>autoposting enabled</Badge> : <Badge variant="secondary">manual publishing</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

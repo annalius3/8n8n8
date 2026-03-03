@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Terms of Service | Scheduled Publishing",
-  description: "Terms of Service for Scheduled Publishing"
+  title: "Terms of Service | Autoposting Flow",
+  description: "Terms of Service for Autoposting Flow"
 };
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h2 className="text-base font-semibold text-foreground">Service scope</h2>
             <p>
-              Scheduled Publishing provides tools for planning content, generating text and images, managing publishing queues, and sending content to connected platforms.
+              Autoposting Flow provides tools for planning content, generating text and images, managing publishing queues, and sending content to connected platforms.
             </p>
           </section>
 

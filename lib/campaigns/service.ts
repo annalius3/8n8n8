@@ -177,17 +177,6 @@ export async function createCampaign(userId: string, input: CampaignInput) {
     }
   });
 
-  await prisma.postQueueItem.create({
-    data: {
-      userId,
-      flowId: flow.id,
-      topicText: input.seedTopic.trim(),
-      title: "",
-      body: "",
-      status: QueueStatus.pending
-    }
-  });
-
   return flow;
 }
 

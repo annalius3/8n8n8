@@ -1,6 +1,6 @@
-# Scheduled Publishing
+# Autoposting Flow
 
-Scheduled Publishing is a Next.js + Prisma app for topic planning, queue-based content preparation, image generation, and scheduled Pinterest publishing.
+Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based content preparation, image generation, and Pinterest autoposting.
 
 ## Stack
 - Next.js App Router + TypeScript

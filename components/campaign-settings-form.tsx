@@ -191,7 +191,7 @@ export function CampaignSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Flow settings</CardTitle>
+        <CardTitle>Autoposting settings</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -264,7 +264,7 @@ export function CampaignSettingsForm({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Use this mode only when you need a strict interval between publications. For most scheduled publishing cases, the daily-posts mode is better.
+                  Use this mode only when you need a strict interval between publications. For most autoposting flows, the daily-posts mode is better.
                 </p>
               </>
             )}
@@ -332,7 +332,7 @@ export function CampaignSettingsForm({
 
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-            Scheduled publishing enabled
+            Autoposting enabled
           </label>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" disabled={loading}>

@@ -122,7 +122,7 @@ export default async function FlowOverviewPage({ params }: Props) {
             <p className="mt-1 text-sm font-medium">{publishedCount}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase text-muted-foreground">Scheduled publishing</p>
+            <p className="text-xs uppercase text-muted-foreground">Autoposting</p>
             <p className="mt-1 text-sm font-medium">{flow.autopublishEnabled ? "Enabled" : "Disabled"}</p>
           </div>
           <div className="rounded-lg border p-3">

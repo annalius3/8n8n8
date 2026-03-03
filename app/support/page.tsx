@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Support | Scheduled Publishing",
-  description: "Support information for Scheduled Publishing"
+  title: "Support | Autoposting Flow",
+  description: "Support information for Autoposting Flow"
 };
 
 export default function SupportPage() {

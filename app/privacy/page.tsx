@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Privacy Policy | Scheduled Publishing",
-  description: "Privacy policy for Scheduled Publishing"
+  title: "Privacy Policy | Autoposting Flow",
+  description: "Privacy policy for Autoposting Flow"
 };
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="text-base font-semibold text-foreground">Overview</h2>
             <p>
-              Scheduled Publishing helps users plan content, generate assets, connect third-party services, and publish content on schedule.
+              Autoposting Flow helps users plan content, generate assets, connect third-party services, and publish content on schedule.
               This policy explains what information the service stores and how that information is used.
             </p>
           </section>

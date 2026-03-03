@@ -74,7 +74,7 @@ export function FlowWizardForm() {
         return;
       }
 
-      router.push(`/flows/${data.flowId}/queue?autostart=1`);
+      router.push(`/flows/${data.flowId}/topics`);
       router.refresh();
     } catch {
       setError("Failed to reach the server");
@@ -151,13 +151,25 @@ export function FlowWizardForm() {
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-              Enable scheduled publishing
+              Enable autoposting after scheduling
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>
-              {loading ? "Adding to queue..." : "Add to Queue"}
+              {loading ? "Preparing topics..." : "Generate Top 50 Topics"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>What happens next</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <p>1. AI generates 50 topic ideas from your seed topic.</p>
+          <p>2. You review the list and move the best topics into the queue.</p>
+          <p>3. The app generates titles, descriptions, and Leonardo images for each queued post.</p>
+          <p>4. You can run manual publishing or turn on autoposting based on your schedule settings.</p>
         </CardContent>
       </Card>
     </div>
