@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 
 function translateQueueStatus(status: string) {
@@ -131,6 +132,8 @@ export function CampaignQueueManager({
   const [success, setSuccess] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "pending" | "generating" | "ready" | "failed" | "published">("all");
 
   const runsByItem = useMemo(() => {
     const map = new Map<string, Run[]>();
@@ -151,7 +154,18 @@ export function CampaignQueueManager({
   const selectedReadyIds = selectedIds.filter((id) => readyIds.includes(id));
   const selectedFailedIds = selectedIds.filter((id) => failedIds.includes(id));
   const runningRuns = runs.filter((run) => run.status === "running").length;
-  const allSelected = items.length > 0 && selectedIds.length === items.length;
+  const visibleItems = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+    return items.filter((item) => {
+      const filterMatch = filter === "all" ? true : item.status === filter;
+      if (!filterMatch) return false;
+      if (!normalizedSearch) return true;
+      const haystack = [item.topicText, item.title, item.body, item.error].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }, [items, filter, search]);
+  const visibleIds = visibleItems.map((item) => item.id);
+  const allSelected = visibleItems.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   const criticalErrors = useMemo(() => {
     const messages = new Set<string>();
@@ -170,6 +184,21 @@ export function CampaignQueueManager({
     return Array.from(messages).map((message) => {
       if (message.includes("Missing: ['boards:write', 'pins:write']")) {
         return "У Pinterest-токена нет прав на публикацию. Нужны scopes: boards:write и pins:write.";
+      }
+      if (message.includes("[PINTEREST_API_401]")) {
+        return "Pinterest отклонил токен. Переподключите Pinterest и проверьте scopes boards:write и pins:write.";
+      }
+      if (message.includes("[PINTEREST_CONNECTION_NOT_CONFIGURED]")) {
+        return "Pinterest не подключён. Откройте Connections и подключите аккаунт.";
+      }
+      if (message.includes("[PINTEREST_BOARD_ID_MISSING]")) {
+        return "Не выбрана доска Pinterest. Укажите board_id в настройках потока.";
+      }
+      if (message.includes("OpenAI request failed: 429") || message.includes("insufficient_quota")) {
+        return "OpenAI не дал ответ из-за лимита или отсутствия биллинга. Проверьте квоту и billing.";
+      }
+      if (message.includes("Leonardo API key is not configured")) {
+        return "Не настроен ключ Leonardo. Добавьте его в Settings.";
       }
       return message;
     });
@@ -324,6 +353,10 @@ export function CampaignQueueManager({
     return () => window.clearInterval(poll);
   }, [loading, activeCount, runningRuns, flowId]);
 
+  useEffect(() => {
+    setSelectedIds((current) => current.filter((id) => items.some((item) => item.id === id)));
+  }, [items]);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -404,12 +437,40 @@ export function CampaignQueueManager({
             </Button>
           </div>
 
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Поиск по теме, заголовку, описанию или ошибке"
+            />
+            <div className="flex flex-wrap gap-2">
+              {[
+                ["all", "Все"],
+                ["pending", "В ожидании"],
+                ["generating", "Генерация"],
+                ["ready", "Готово"],
+                ["failed", "Ошибка"],
+                ["published", "Опубликовано"]
+              ].map(([value, label]) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={filter === value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter(value as typeof filter)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           {progressMessage ? <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">{progressMessage}</div> : null}
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <p className="text-sm text-muted-foreground">
-            Автопайплайн подготавливает до 10 постов и сразу пытается опубликовать первый готовый. Для ручной публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Готово выбрано: {selectedReadyIds.length}.
+            Автопайплайн подготавливает до 10 постов и сразу пытается опубликовать первый готовый. Для ручной публикации выбирайте только элементы со статусом <span className="font-medium">Готово</span>. Готово выбрано: {selectedReadyIds.length}. Показано: {visibleItems.length}.
           </p>
         </CardContent>
       </Card>
@@ -439,7 +500,11 @@ export function CampaignQueueManager({
                     type="checkbox"
                     className="h-4 w-4 cursor-pointer"
                     checked={allSelected}
-                    onChange={() => setSelectedIds(allSelected ? [] : items.map((item) => item.id))}
+                    onChange={() =>
+                      setSelectedIds((current) =>
+                        allSelected ? current.filter((id) => !visibleIds.includes(id)) : Array.from(new Set([...current, ...visibleIds]))
+                      )
+                    }
                   />
                 </label>
               </th>
@@ -455,7 +520,7 @@ export function CampaignQueueManager({
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
+            {visibleItems.map((item) => (
               <Fragment key={item.id}>
                 <tr className="border-t align-top">
                   <td className="p-3">
@@ -532,6 +597,12 @@ export function CampaignQueueManager({
           </tbody>
         </table>
       </div>
+
+      {visibleItems.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-sm text-muted-foreground">По текущему фильтру и поиску элементов не найдено.</CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
