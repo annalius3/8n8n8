@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 
-function translateQueueStatus(status: string) {
+function translateQueueStatus(status: string, scheduledAt: string | null) {
+  const now = Date.now();
+  const isDue = scheduledAt ? new Date(scheduledAt).getTime() <= now : false;
   if (status === "pending") return "В ожидании";
   if (status === "generating") return "Генерация";
-  if (status === "ready") return "Готово";
+  if (status === "ready") return isDue ? "К публикации" : "Готово";
   if (status === "publishing") return "Публикация";
   if (status === "published") return "Опубликовано";
   if (status === "failed") return "Ошибка";
@@ -85,6 +87,7 @@ async function getQueueSnapshot(flowId: string) {
 
 function getSuccessMessage(action: string, data: ActionResponse) {
   if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
+  if (action === "plan-hourly") return `Поставлено почасовое расписание для ${data.count ?? 0} элементов.`;
   if (action === "generate-all") {
     if ((data.generated ?? 0) === 0 && (data.published ?? 0) === 0) {
       return "Сейчас нет подходящих элементов для автогенерации. Очередь пуста или уже обработана.";
@@ -386,6 +389,14 @@ export function CampaignQueueManager({
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
+              variant="outline"
+              onClick={() => perform("plan-hourly", () => postJson(`/api/flows/${flowId}/queue/plan-schedule`, { mode: "hourly" }))}
+              disabled={loading !== null}
+            >
+              Поставить по часу
+            </Button>
+            <Button
+              type="button"
               onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }))}
               disabled={loading !== null || (pendingIds.length === 0 && failedIds.length === 0)}
             >
@@ -534,8 +545,8 @@ export function CampaignQueueManager({
                     </label>
                   </td>
                   <td className="p-3">
-                    <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : "outline"}>
-                      {translateQueueStatus(item.status)}
+                    <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : item.status === "ready" && item.scheduledAt && new Date(item.scheduledAt).getTime() <= Date.now() ? "secondary" : "outline"}>
+                      {translateQueueStatus(item.status, item.scheduledAt)}
                     </Badge>
                   </td>
                   <td className="p-3">{item.topicText ?? "—"}</td>

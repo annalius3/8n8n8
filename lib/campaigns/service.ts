@@ -313,7 +313,7 @@ export async function addTopicsToQueue(flowId: string, userId: string, topicIds:
   return { created: uniqueSuggestions.length };
 }
 
-export async function planScheduleForFlow(flowId: string, userId: string) {
+export async function planScheduleForFlow(flowId: string, userId: string, mode: "default" | "hourly" = "default") {
   const flow = await getFlowOrThrow(flowId, userId);
   const run = await createRun(flow.id);
 
@@ -328,25 +328,33 @@ export async function planScheduleForFlow(flowId: string, userId: string) {
     });
 
     const scheduledDates =
-      (flow.schedule?.cron === "random_daily"
-        ? computeRandomScheduledDates({
+      mode === "hourly"
+        ? Array.from({ length: pendingItems.length }, (_, index) => {
+            const base = new Date();
+            base.setSeconds(0, 0);
+            base.setMinutes(0);
+            base.setHours(base.getHours() + index + 1);
+            return base;
+          })
+        : (flow.schedule?.cron === "random_daily"
+            ? computeRandomScheduledDates({
+                count: pendingItems.length,
+                postsPerDay: flow.postsPerDay,
+                timezone: flow.timezone,
+                startTime: flow.startTime
+              })
+            : null) ??
+          computeScheduledDatesFromIntervalCron({
+            count: pendingItems.length,
+            cron: flow.schedule?.cron ?? "",
+            timezone: flow.schedule?.timezone ?? flow.timezone
+          }) ??
+          computeScheduledDates({
             count: pendingItems.length,
             postsPerDay: flow.postsPerDay,
             timezone: flow.timezone,
             startTime: flow.startTime
-          })
-        : null) ??
-      computeScheduledDatesFromIntervalCron({
-        count: pendingItems.length,
-        cron: flow.schedule?.cron ?? "",
-        timezone: flow.schedule?.timezone ?? flow.timezone
-      }) ??
-      computeScheduledDates({
-        count: pendingItems.length,
-        postsPerDay: flow.postsPerDay,
-        timezone: flow.timezone,
-        startTime: flow.startTime
-      });
+          });
 
     for (let index = 0; index < pendingItems.length; index += 1) {
       await prisma.postQueueItem.update({
@@ -355,12 +363,35 @@ export async function planScheduleForFlow(flowId: string, userId: string) {
       });
     }
 
+    if (mode === "hourly") {
+      await prisma.flow.update({
+        where: { id: flow.id },
+        data: {
+          isEnabled: true,
+          autopublishEnabled: true
+        }
+      });
+
+      if (flow.schedule) {
+        await prisma.flowSchedule.update({
+          where: { flowId: flow.id },
+          data: {
+            cron: "0 * * * *",
+            isPaused: false,
+            timezone: flow.timezone,
+            nextRunAt: scheduledDates[0] ?? new Date()
+          }
+        });
+      }
+    }
+
     await createRunStep({
       runId: run.id,
       stepIndex: 0,
       stepType: "schedule_planning",
       status: StepExecStatus.success,
       inputJson: {
+        mode,
         posts_per_day: flow.postsPerDay,
         timezone: flow.timezone,
         start_time: flow.startTime
