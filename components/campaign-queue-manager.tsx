@@ -185,17 +185,20 @@ export function CampaignQueueManager({
     }
 
     return Array.from(messages).map((message) => {
+      const codeMatch = message.match(/\[(PINTEREST_[A-Z0-9_]+)\]/);
+      const codeSuffix = codeMatch ? ` (код: ${codeMatch[1]})` : "";
+
       if (message.includes("Missing: ['boards:write', 'pins:write']")) {
-        return "У Pinterest-токена нет прав на публикацию. Нужны scopes: boards:write и pins:write.";
+        return `У Pinterest-токена нет прав на публикацию. Нужны scopes: boards:write и pins:write.${codeSuffix}`;
       }
       if (message.includes("[PINTEREST_API_401]")) {
-        return "Pinterest отклонил токен. Переподключите Pinterest и проверьте scopes boards:write и pins:write.";
+        return `Pinterest отклонил токен. Переподключите Pinterest и проверьте scopes boards:write и pins:write.${codeSuffix}`;
       }
       if (message.includes("[PINTEREST_CONNECTION_NOT_CONFIGURED]")) {
-        return "Pinterest не подключён. Откройте Connections и подключите аккаунт.";
+        return `Pinterest не подключён. Откройте Connections и подключите аккаунт.${codeSuffix}`;
       }
       if (message.includes("[PINTEREST_BOARD_ID_MISSING]")) {
-        return "Не выбрана доска Pinterest. Укажите board_id в настройках потока.";
+        return `Не выбрана доска Pinterest. Укажите board_id в настройках потока.${codeSuffix}`;
       }
       if (message.includes("OpenAI request failed: 429") || message.includes("insufficient_quota")) {
         return "OpenAI не дал ответ из-за лимита или отсутствия биллинга. Проверьте квоту и billing.";
@@ -203,7 +206,7 @@ export function CampaignQueueManager({
       if (message.includes("Leonardo API key is not configured")) {
         return "Не настроен ключ Leonardo. Добавьте его в Settings.";
       }
-      return message;
+      return `${message}${codeSuffix}`;
     });
   }, [error, items, runs]);
 
@@ -502,7 +505,7 @@ export function CampaignQueueManager({
       ) : null}
 
       <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full table-fixed text-sm">
+        <table className="min-w-[1180px] w-full table-auto text-sm">
           <thead className="bg-muted/40 text-left">
             <tr>
               <th className="p-3">
@@ -519,10 +522,9 @@ export function CampaignQueueManager({
                   />
                 </label>
               </th>
-              <th className="w-28 p-3">Статус</th>
-              <th className="w-48 p-3">Тема</th>
-              <th className="w-48 p-3">Заголовок</th>
-              <th className="w-[340px] p-3">Описание</th>
+              <th className="w-36 p-3">Статус</th>
+              <th className="w-56 p-3">Тема</th>
+              <th className="w-56 p-3">Заголовок</th>
               <th className="w-28 p-3">Изображение</th>
               <th className="w-40 p-3">Запланировано</th>
               <th className="w-40 p-3">Опубликовано</th>
@@ -544,23 +546,22 @@ export function CampaignQueueManager({
                       />
                     </label>
                   </td>
-                  <td className="p-3">
-                    <Badge variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : item.status === "ready" && item.scheduledAt && new Date(item.scheduledAt).getTime() <= Date.now() ? "secondary" : "outline"}>
+                  <td className="p-3 whitespace-nowrap">
+                    <Badge className="whitespace-nowrap" variant={item.status === "failed" ? "destructive" : item.status === "published" ? "default" : item.status === "ready" && item.scheduledAt && new Date(item.scheduledAt).getTime() <= Date.now() ? "secondary" : "outline"}>
                       {translateQueueStatus(item.status, item.scheduledAt)}
                     </Badge>
                   </td>
-                  <td className="p-3">{item.topicText ?? "—"}</td>
-                  <td className="p-3">{item.title || "—"}</td>
                   <td className="p-3">
-                    <div className="max-w-[320px] overflow-hidden whitespace-pre-wrap break-words text-muted-foreground">
-                      {item.body || "—"}
-                    </div>
+                    <div className="max-w-[220px] break-words">{item.topicText ?? "—"}</div>
+                  </td>
+                  <td className="p-3">
+                    <div className="max-w-[220px] break-words">{item.title || "—"}</div>
                   </td>
                   <td className="p-3">
                     {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="h-20 w-20 rounded-md object-cover" /> : "—"}
                   </td>
-                  <td className="p-3">{item.scheduledAt ? new Date(item.scheduledAt).toLocaleString("ru-RU") : "—"}</td>
-                  <td className="p-3">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("ru-RU") : "—"}</td>
+                  <td className="p-3 whitespace-nowrap text-xs">{item.scheduledAt ? new Date(item.scheduledAt).toLocaleString("ru-RU") : "—"}</td>
+                  <td className="p-3 whitespace-nowrap text-xs">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("ru-RU") : "—"}</td>
                   <td className="p-3 text-red-600">
                     <div className="max-w-[200px] break-words">{item.error ?? "—"}</div>
                   </td>
@@ -585,7 +586,7 @@ export function CampaignQueueManager({
 
                 {expandedItemId === item.id ? (
                   <tr className="border-t bg-muted/20">
-                    <td colSpan={10} className="p-4">
+                    <td colSpan={9} className="p-4">
                       <div className="space-y-4">
                         {(runsByItem.get(item.id) ?? []).length > 0 ? (
                           (runsByItem.get(item.id) ?? []).map((run) => (
