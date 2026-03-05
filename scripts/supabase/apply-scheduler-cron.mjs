@@ -1,12 +1,28 @@
-import { readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
-import { resolve } from "node:path";
-
-const templatePath = resolve(process.cwd(), "scripts/supabase/setup_scheduler_cron.sql");
-const template = readFileSync(templatePath, "utf8");
+import { PrismaClient } from "@prisma/client";
 
 const appUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "").trim().replace(/\/+$/, "");
 const schedulerToken = (process.env.SCHEDULER_TOKEN || "").trim();
+
+function withPgbouncerFlag(urlString) {
+  try {
+    const url = new URL(urlString);
+    if (url.hostname.includes("pooler.supabase.com") && !url.searchParams.has("pgbouncer")) {
+      url.searchParams.set("pgbouncer", "true");
+    }
+    return url.toString();
+  } catch {
+    return urlString;
+  }
+}
+
+const datasourceUrl = withPgbouncerFlag(process.env.DATABASE_URL || "");
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: datasourceUrl
+    }
+  }
+});
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is required");
@@ -23,26 +39,73 @@ if (!schedulerToken) {
   process.exit(1);
 }
 
-const sql = template
-  .replaceAll("https://YOUR_APP_URL", appUrl)
-  .replaceAll("YOUR_SCHEDULER_TOKEN", schedulerToken);
+const schedulerUrl = `${appUrl}/api/scheduler/tick`;
 
-const result = spawnSync(
-  process.platform === "win32" ? "npx.cmd" : "npx",
-  ["prisma", "db", "execute", "--stdin", "--schema", "prisma/schema.prisma"],
-  {
-    input: sql,
-    encoding: "utf8",
-    stdio: ["pipe", "pipe", "pipe"],
-    env: process.env
-  }
+async function main() {
+  await prisma.$executeRawUnsafe(`create extension if not exists pg_cron;`);
+  await prisma.$executeRawUnsafe(`create extension if not exists pg_net;`);
+
+  await prisma.$executeRawUnsafe(`
+do $$
+declare
+  v_jobid integer;
+begin
+  select jobid into v_jobid
+  from cron.job
+  where jobname = 'autoposting_scheduler_tick'
+  limit 1;
+
+  if v_jobid is not null then
+    perform cron.unschedule(v_jobid);
+  end if;
+end $$;
+  `);
+
+  await prisma.$queryRawUnsafe(
+    `
+select cron.schedule(
+  'autoposting_scheduler_tick',
+  '*/5 * * * *',
+  $$
+    select net.http_post(
+      url := $1,
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-scheduler-token', $2
+      ),
+      body := '{}'::jsonb
+    );
+  $$
 );
+    `,
+    schedulerUrl,
+    schedulerToken
+  );
 
-if (result.stdout) process.stdout.write(result.stdout);
-if (result.stderr) process.stderr.write(result.stderr);
+  const jobs = await prisma.$queryRawUnsafe(
+    `
+select jobid, jobname, schedule, active
+from cron.job
+where jobname = 'autoposting_scheduler_tick';
+    `
+  );
 
-if (result.status !== 0) {
-  process.exit(result.status ?? 1);
+  console.log("Supabase scheduler cron configured successfully.");
+  console.log(
+    JSON.stringify(
+      jobs,
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
+      2
+    )
+  );
 }
 
-console.log("Supabase scheduler cron configured successfully.");
+main()
+  .catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to configure Supabase scheduler cron: ${message}`);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
