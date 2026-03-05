@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/require-user";
 import { prisma } from "@/lib/prisma";
 import { CampaignQueueManager } from "@/components/campaign-queue-manager";
 import { LinkButton } from "@/components/ui/link-button";
-import { ensureDefaultLinkUrlForFlow } from "@/lib/campaigns/service";
+import { ensureDefaultLinkUrlForFlow, getQueueDiagnostics } from "@/lib/campaigns/service";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -37,6 +37,7 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
   if (!flow) {
     notFound();
   }
+  const diagnostics = await getQueueDiagnostics(flow.id, user.id);
 
   return (
     <div className="space-y-4">
@@ -49,6 +50,7 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
         flowId={flow.id}
         bootstrapFromSeed={resolvedSearchParams?.bootstrap === "1"}
         autoStartGenerate={resolvedSearchParams?.autostart === "1"}
+        initialDiagnostics={diagnostics}
         initialItems={flow.queueItems.map((item) => ({
           id: item.id,
           status: item.status,

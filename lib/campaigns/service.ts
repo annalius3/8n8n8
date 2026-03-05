@@ -105,6 +105,115 @@ export async function getFlowOrThrow(flowId: string, userId: string) {
   return flow;
 }
 
+export type QueueDiagnostics = {
+  checkedAt: string;
+  flowEnabled: boolean;
+  autopublishEnabled: boolean;
+  schedulePaused: boolean;
+  scheduleCron: string | null;
+  scheduleLastRunAt: string | null;
+  scheduleNextRunAt: string | null;
+  schedulerStale: boolean;
+  dueItemId: string | null;
+  dueItemStatus: string | null;
+  dueItemScheduledAt: string | null;
+  blockedReason: string | null;
+  latestPublishError: string | null;
+};
+
+export async function getQueueDiagnostics(flowId: string, userId: string): Promise<QueueDiagnostics> {
+  const flow = await prisma.flow.findFirst({
+    where: { id: flowId, userId },
+    include: {
+      schedule: true
+    }
+  });
+
+  if (!flow) {
+    throw new Error("Campaign not found");
+  }
+
+  const now = new Date();
+  const staleThresholdMs = 1000 * 60 * 75;
+  const lastRunAt = flow.schedule?.lastRunAt ?? null;
+  const schedulerStale = lastRunAt ? now.getTime() - lastRunAt.getTime() > staleThresholdMs : true;
+
+  const dueItem = await prisma.postQueueItem.findFirst({
+    where: {
+      flowId: flow.id,
+      userId,
+      publishedAt: null,
+      scheduledAt: { lte: now }
+    },
+    orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }]
+  });
+
+  const latestPublishFailure = await prisma.jobRun.findFirst({
+    where: {
+      flowId: flow.id,
+      status: RunStatus.failed,
+      steps: {
+        some: {
+          stepType: "publish",
+          status: StepExecStatus.failed
+        }
+      }
+    },
+    orderBy: { startedAt: "desc" },
+    select: {
+      error: true,
+      steps: {
+        where: {
+          stepType: "publish",
+          status: StepExecStatus.failed
+        },
+        orderBy: { startedAt: "desc" },
+        take: 1,
+        select: { error: true }
+      }
+    }
+  });
+
+  let blockedReason: string | null = null;
+  if (!flow.isEnabled) {
+    blockedReason = "Поток выключен";
+  } else if (!flow.autopublishEnabled) {
+    blockedReason = "Автопубликация выключена в настройках потока";
+  } else if (flow.schedule?.isPaused) {
+    blockedReason = "Расписание поставлено на паузу";
+  } else if (schedulerStale) {
+    blockedReason = "Scheduler давно не запускался";
+  } else if (!dueItem) {
+    blockedReason = "Нет просроченных элементов для публикации";
+  } else if (dueItem.status === QueueStatus.pending) {
+    blockedReason = "Элемент ожидает генерацию контента";
+  } else if (dueItem.status === QueueStatus.generating) {
+    blockedReason = "Элемент сейчас в генерации";
+  } else if (dueItem.status === QueueStatus.publishing) {
+    blockedReason = "Элемент сейчас публикуется";
+  } else if (dueItem.status === QueueStatus.failed) {
+    blockedReason = "Последняя попытка завершилась ошибкой, нужен retry";
+  } else if (dueItem.status !== QueueStatus.ready) {
+    blockedReason = `Элемент в статусе ${dueItem.status}`;
+  }
+
+  return {
+    checkedAt: now.toISOString(),
+    flowEnabled: flow.isEnabled,
+    autopublishEnabled: flow.autopublishEnabled,
+    schedulePaused: flow.schedule?.isPaused ?? false,
+    scheduleCron: flow.schedule?.cron ?? null,
+    scheduleLastRunAt: flow.schedule?.lastRunAt?.toISOString() ?? null,
+    scheduleNextRunAt: flow.schedule?.nextRunAt?.toISOString() ?? null,
+    schedulerStale,
+    dueItemId: dueItem?.id ?? null,
+    dueItemStatus: dueItem?.status ?? null,
+    dueItemScheduledAt: dueItem?.scheduledAt?.toISOString() ?? null,
+    blockedReason,
+    latestPublishError: latestPublishFailure?.steps[0]?.error ?? latestPublishFailure?.error ?? null
+  };
+}
+
 export async function ensureDefaultLinkUrlForFlow(flowId: string, userId: string) {
   await prisma.postQueueItem.updateMany({
     where: {

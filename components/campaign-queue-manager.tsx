@@ -61,6 +61,23 @@ type ActionResponse = {
 type QueueSnapshot = {
   queueItems: QueueItem[];
   runs: Run[];
+  diagnostics?: QueueDiagnostics;
+};
+
+type QueueDiagnostics = {
+  checkedAt: string;
+  flowEnabled: boolean;
+  autopublishEnabled: boolean;
+  schedulePaused: boolean;
+  scheduleCron: string | null;
+  scheduleLastRunAt: string | null;
+  scheduleNextRunAt: string | null;
+  schedulerStale: boolean;
+  dueItemId: string | null;
+  dueItemStatus: string | null;
+  dueItemScheduledAt: string | null;
+  blockedReason: string | null;
+  latestPublishError: string | null;
 };
 
 async function postJson(url: string, body: Record<string, unknown>) {
@@ -114,12 +131,14 @@ export function CampaignQueueManager({
   flowId,
   bootstrapFromSeed = false,
   autoStartGenerate = false,
+  initialDiagnostics,
   initialItems,
   initialRuns
 }: {
   flowId: string;
   bootstrapFromSeed?: boolean;
   autoStartGenerate?: boolean;
+  initialDiagnostics: QueueDiagnostics;
   initialItems: QueueItem[];
   initialRuns: Run[];
 }) {
@@ -128,6 +147,7 @@ export function CampaignQueueManager({
   const autoPipelineRef = useRef(false);
   const [items, setItems] = useState(initialItems);
   const [runs, setRuns] = useState(initialRuns);
+  const [diagnostics, setDiagnostics] = useState(initialDiagnostics);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
@@ -254,6 +274,9 @@ export function CampaignQueueManager({
     const snapshot = await getQueueSnapshot(flowId);
     setItems(snapshot.queueItems);
     setRuns(snapshot.runs);
+    if (snapshot.diagnostics) {
+      setDiagnostics(snapshot.diagnostics);
+    }
   }
 
   async function bootstrapQueueFromSeed() {
@@ -370,6 +393,22 @@ export function CampaignQueueManager({
           <CardTitle>Очередь / Контент-пайплайн</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className={`rounded-lg border p-3 text-sm ${diagnostics.blockedReason ? "border-amber-300 bg-amber-50/70" : "border-emerald-300 bg-emerald-50/70"}`}>
+            <p className="font-medium">Диагностика автопубликации: {diagnostics.blockedReason ? "есть блокировка" : "готово к работе"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Последний тик: {diagnostics.scheduleLastRunAt ? new Date(diagnostics.scheduleLastRunAt).toLocaleString("ru-RU") : "—"} · Следующий тик:{" "}
+              {diagnostics.scheduleNextRunAt ? new Date(diagnostics.scheduleNextRunAt).toLocaleString("ru-RU") : "—"} · Cron: {diagnostics.scheduleCron ?? "—"}
+            </p>
+            {diagnostics.blockedReason ? <p className="mt-2 text-sm text-amber-800">Причина: {diagnostics.blockedReason}</p> : null}
+            {diagnostics.dueItemId ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Просроченный item: {diagnostics.dueItemId} · статус: {diagnostics.dueItemStatus ?? "—"} · время:{" "}
+                {diagnostics.dueItemScheduledAt ? new Date(diagnostics.dueItemScheduledAt).toLocaleString("ru-RU") : "—"}
+              </p>
+            ) : null}
+            {diagnostics.latestPublishError ? <p className="mt-2 text-sm text-red-700">Последняя ошибка: {diagnostics.latestPublishError}</p> : null}
+          </div>
+
           <div className="grid gap-3 md:grid-cols-4">
             <div className="rounded-lg border p-3 text-sm">
               <p className="text-xs uppercase text-muted-foreground">В ожидании</p>

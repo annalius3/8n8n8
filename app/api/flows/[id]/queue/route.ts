@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getActiveUser } from "@/lib/active-user";
-import { ensureDefaultLinkUrlForFlow, getFlowOrThrow } from "@/lib/campaigns/service";
+import { ensureDefaultLinkUrlForFlow, getFlowOrThrow, getQueueDiagnostics } from "@/lib/campaigns/service";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -15,9 +15,11 @@ export async function GET(_: Request, { params }: Params) {
   const { id } = await params;
   await ensureDefaultLinkUrlForFlow(id, user.id);
   const flow = await getFlowOrThrow(id, user.id);
+  const diagnostics = await getQueueDiagnostics(id, user.id);
 
   return NextResponse.json({
     queueItems: flow.queueItems,
-    runs: flow.runs
+    runs: flow.runs,
+    diagnostics
   });
 }
