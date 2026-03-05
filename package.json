@@ -14,6 +14,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
+    "scheduler:supabase:apply": "node scripts/supabase/apply-scheduler-cron.mjs",
     "scheduler": "tsx scripts/worker.ts",
     "worker": "tsx scripts/worker.ts"
   },
