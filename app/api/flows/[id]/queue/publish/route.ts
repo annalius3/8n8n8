@@ -4,7 +4,7 @@ import { getActiveUser } from "@/lib/active-user";
 import { publishQueueItems } from "@/lib/campaigns/service";
 
 const schema = z.object({
-  queueItemIds: z.array(z.string().min(1)).optional(),
+  queueItemIds: z.array(z.string().min(1)).min(1).optional(),
   dueOnly: z.boolean().optional()
 });
 
