@@ -9,14 +9,14 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 - Server-side auth: Google OAuth or magic link fallback
 
 ## Main pages
-- `/flows` — flow list
-- `/flows/new` — create a flow from one seed topic
-- `/flows/[id]` — flow overview and settings
-- `/flows/[id]/topics` — generate and review topic suggestions
-- `/flows/[id]/queue` — queue, generation, publish, logs
-- `/connections` — Pinterest OAuth / manual token connection
-- `/settings` — Leonardo API key per user
-- `/runs` — global run history
+- `/flows` - flow list
+- `/flows/new` - create a flow from one seed topic
+- `/flows/[id]` - flow overview and settings
+- `/flows/[id]/topics` - generate and review topic suggestions
+- `/flows/[id]/queue` - queue, generation, publish, logs
+- `/connections` - Pinterest OAuth / manual token connection
+- `/settings` - Leonardo API key per user
+- `/runs` - global run history
 
 ## Auth
 - Google OAuth login:
@@ -52,6 +52,7 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 
 ## Optional
 - `DIRECT_URL`
+- `APP_BASE_URL`
 - `R2_ENDPOINT`
 - `R2_ACCESS_KEY_ID`
 - `R2_SECRET_ACCESS_KEY`
@@ -125,3 +126,4 @@ where jobname = 'autoposting_scheduler_tick';
 
 ## Telegram notifications
 - If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are configured, the app sends a Telegram message after each successful Pinterest publish.
+
