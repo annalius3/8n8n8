@@ -354,6 +354,39 @@ export function CampaignQueueManager({
     }
   }
 
+  async function runSchedulerNow() {
+    setLoading("scheduler-tick");
+    setProgressMessage("Запускаем scheduler вручную...");
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch("/api/scheduler/tick", { method: "POST" });
+      const data = (await response.json().catch(() => ({}))) as {
+        started?: number;
+        due?: number;
+        publishedRuns?: number;
+        generatedRuns?: number;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Не удалось запустить scheduler");
+      }
+
+      const started = data.started ?? 0;
+      const generated = data.generatedRuns ?? 0;
+      const published = data.publishedRuns ?? 0;
+      setSuccess(`Scheduler выполнен: flow-запусков ${started}, сгенерировано ${generated}, опубликовано ${published}.`);
+      await refreshQueue();
+      router.refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Не удалось запустить scheduler");
+    } finally {
+      setLoading(null);
+      setProgressMessage(null);
+    }
+  }
+
   useEffect(() => {
     if (!bootstrapFromSeed || bootstrapRef.current) return;
     if (items.length > 0) return;
@@ -399,6 +432,11 @@ export function CampaignQueueManager({
               Последний тик: {diagnostics.scheduleLastRunAt ? new Date(diagnostics.scheduleLastRunAt).toLocaleString("ru-RU") : "—"} · Следующий тик:{" "}
               {diagnostics.scheduleNextRunAt ? new Date(diagnostics.scheduleNextRunAt).toLocaleString("ru-RU") : "—"} · Cron: {diagnostics.scheduleCron ?? "—"}
             </p>
+            <div className="mt-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => void runSchedulerNow()} disabled={loading !== null}>
+                Запустить scheduler сейчас
+              </Button>
+            </div>
             {diagnostics.blockedReason ? <p className="mt-2 text-sm text-amber-800">Причина: {diagnostics.blockedReason}</p> : null}
             {diagnostics.dueItemId ? (
               <p className="mt-1 text-xs text-muted-foreground">
