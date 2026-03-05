@@ -8,7 +8,13 @@ type Params = {
 };
 
 const schema = z.object({
-  mode: z.enum(["default", "hourly"]).optional().default("default")
+  mode: z.enum(["default", "hourly", "interval_hours", "random_daily"]).optional().default("default"),
+  intervalHours: z.number().int().min(1).max(24).optional(),
+  startTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
+  timezone: z.string().min(1).optional()
 });
 
 export async function POST(request: Request, { params }: Params) {
@@ -24,6 +30,6 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const result = await planScheduleForFlow(id, user.id, parsed.data.mode);
+  const result = await planScheduleForFlow(id, user.id, parsed.data);
   return NextResponse.json(result);
 }

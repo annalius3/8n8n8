@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { ExecutionTimeline } from "@/components/execution-timeline";
 
 function translateQueueStatus(status: string, scheduledAt: string | null) {
@@ -58,6 +59,8 @@ type ActionResponse = {
   error?: string;
 };
 
+type QueueScheduleMode = "interval_hours" | "random_daily" | "hourly";
+
 type QueueSnapshot = {
   queueItems: QueueItem[];
   runs: Run[];
@@ -105,6 +108,7 @@ async function getQueueSnapshot(flowId: string) {
 function getSuccessMessage(action: string, data: ActionResponse) {
   if (action === "plan") return `Расписание обновлено для ${data.count ?? 0} элементов.`;
   if (action === "plan-hourly") return `Поставлено почасовое расписание для ${data.count ?? 0} элементов.`;
+  if (action === "plan-custom") return `Новое расписание применено для ${data.count ?? 0} элементов.`;
   if (action === "generate-all") {
     if ((data.generated ?? 0) === 0 && (data.published ?? 0) === 0) {
       return "Сейчас нет подходящих элементов для автогенерации. Очередь пуста или уже обработана.";
@@ -131,6 +135,8 @@ export function CampaignQueueManager({
   flowId,
   bootstrapFromSeed = false,
   autoStartGenerate = false,
+  initialTimezone,
+  initialStartTime,
   initialDiagnostics,
   initialItems,
   initialRuns
@@ -138,6 +144,8 @@ export function CampaignQueueManager({
   flowId: string;
   bootstrapFromSeed?: boolean;
   autoStartGenerate?: boolean;
+  initialTimezone: string;
+  initialStartTime: string;
   initialDiagnostics: QueueDiagnostics;
   initialItems: QueueItem[];
   initialRuns: Run[];
@@ -157,6 +165,24 @@ export function CampaignQueueManager({
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "generating" | "ready" | "failed" | "published">("all");
+  const [scheduleMode, setScheduleMode] = useState<QueueScheduleMode>("interval_hours");
+  const [intervalHours, setIntervalHours] = useState(1);
+  const [scheduleStartTime, setScheduleStartTime] = useState(initialStartTime || "09:00");
+  const [scheduleTimezone, setScheduleTimezone] = useState(initialTimezone || "Europe/Kiev");
+
+  useEffect(() => {
+    const cron = diagnostics.scheduleCron ?? "";
+    if (cron === "random_daily") {
+      setScheduleMode("random_daily");
+      return;
+    }
+
+    const hourlyMatch = cron.match(/^(\d+)\s+\*\/(\d+)\s+\*\s+\*\s+\*$/);
+    if (hourlyMatch) {
+      setScheduleMode("interval_hours");
+      setIntervalHours(Math.max(1, Math.min(24, Number(hourlyMatch[2]) || 1)));
+    }
+  }, [diagnostics.scheduleCron]);
 
   const runsByItem = useMemo(() => {
     const map = new Map<string, Run[]>();
@@ -447,6 +473,61 @@ export function CampaignQueueManager({
             {diagnostics.latestPublishError ? <p className="mt-2 text-sm text-red-700">Последняя ошибка: {diagnostics.latestPublishError}</p> : null}
           </div>
 
+          <div className="rounded-xl border p-4">
+            <p className="text-sm font-medium">Настройка расписания публикаций</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Выберите человеческий режим: каждые 1/2/3+ часа или хаотично в течение дня. Точное время старта тоже можно задать.
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-4">
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Режим</span>
+                <Select value={scheduleMode} onChange={(event) => setScheduleMode(event.target.value as QueueScheduleMode)}>
+                  <option value="interval_hours">Каждые N часов</option>
+                  <option value="hourly">Каждый час</option>
+                  <option value="random_daily">Хаотично по времени</option>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Интервал (часы)</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={24}
+                  value={intervalHours}
+                  disabled={scheduleMode !== "interval_hours"}
+                  onChange={(event) => setIntervalHours(Math.max(1, Math.min(24, Number(event.target.value) || 1)))}
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Старт в</span>
+                <Input type="time" value={scheduleStartTime} onChange={(event) => setScheduleStartTime(event.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Часовой пояс</span>
+                <Input value={scheduleTimezone} onChange={(event) => setScheduleTimezone(event.target.value)} />
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  perform("plan-custom", () =>
+                    postJson(`/api/flows/${flowId}/queue/plan-schedule`, {
+                      mode: scheduleMode,
+                      intervalHours: scheduleMode === "interval_hours" ? intervalHours : undefined,
+                      startTime: scheduleStartTime,
+                      timezone: scheduleTimezone
+                    })
+                  )
+                }
+                disabled={loading !== null}
+              >
+                Подтвердить и применить
+              </Button>
+            </div>
+          </div>
+
           <div className="grid gap-3 md:grid-cols-4">
             <div className="rounded-lg border p-3 text-sm">
               <p className="text-xs uppercase text-muted-foreground">В ожидании</p>
@@ -467,14 +548,6 @@ export function CampaignQueueManager({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => perform("plan-hourly", () => postJson(`/api/flows/${flowId}/queue/plan-schedule`, { mode: "hourly" }))}
-              disabled={loading !== null}
-            >
-              Поставить по часу
-            </Button>
             <Button
               type="button"
               onClick={() => perform("generate-all", () => postJson(`/api/flows/${flowId}/queue/generate`, { autoPipeline: true }))}

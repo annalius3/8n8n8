@@ -50,6 +50,8 @@ export default async function FlowQueuePage({ params, searchParams }: Props) {
         flowId={flow.id}
         bootstrapFromSeed={resolvedSearchParams?.bootstrap === "1"}
         autoStartGenerate={resolvedSearchParams?.autostart === "1"}
+        initialTimezone={flow.timezone}
+        initialStartTime={flow.startTime}
         initialDiagnostics={diagnostics}
         initialItems={flow.queueItems.map((item) => ({
           id: item.id,

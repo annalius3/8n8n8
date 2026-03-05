@@ -18,6 +18,24 @@ function addDays(date: Date, days: number) {
   return copy;
 }
 
+export function computeStartDateFromTime(input: {
+  startTime: string;
+  timezone: string;
+  now?: Date;
+}) {
+  const now = input.now ?? new Date();
+  const [startHourRaw, startMinuteRaw] = input.startTime.split(":");
+  const startHour = Math.max(0, Math.min(23, Number(startHourRaw ?? 0) || 0));
+  const startMinute = Math.max(0, Math.min(59, Number(startMinuteRaw ?? 0) || 0));
+
+  let candidate = zonedDateAtTime(now, input.timezone, startHour, startMinute);
+  if (candidate <= now) {
+    candidate = zonedDateAtTime(addDays(now, 1), input.timezone, startHour, startMinute);
+  }
+
+  return candidate;
+}
+
 export function computeScheduledDatesFromIntervalCron(input: {
   count: number;
   cron: string;
