@@ -134,16 +134,16 @@ export async function createCampaign(userId: string, input: CampaignInput) {
       niche: input.niche?.trim() || null,
       audience: input.audience?.trim() || null,
       tone: input.tone?.trim() || null,
-      postsPerDay: Math.max(1, Math.min(50, input.postsPerDay ?? 3)),
+      postsPerDay: Math.max(1, Math.min(50, input.postsPerDay ?? 10)),
       timezone,
       startTime,
-      autopublishEnabled: Boolean(input.autopublishEnabled),
+      autopublishEnabled: input.autopublishEnabled ?? true,
       isEnabled: true,
       schedule: {
         create: {
           cron: "0 0 * * *",
           timezone,
-          maxRunsPerDay: Math.max(1, Math.min(50, input.postsPerDay ?? 3)),
+          maxRunsPerDay: Math.max(1, Math.min(50, input.postsPerDay ?? 10)),
           nextRunAt: new Date(),
           isPaused: true
         }

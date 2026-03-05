@@ -28,10 +28,10 @@ export function FlowWizardForm() {
   const [niche, setNiche] = useState("");
   const [audience, setAudience] = useState("");
   const [tone, setTone] = useState("");
-  const [postsPerDay, setPostsPerDay] = useState(3);
+  const [postsPerDay, setPostsPerDay] = useState(10);
   const [timezone, setTimezone] = useState("Europe/Kiev");
   const [startTime, setStartTime] = useState(() => getCurrentTimeForTimezone("Europe/Kiev"));
-  const [autopublishEnabled, setAutopublishEnabled] = useState(false);
+  const [autopublishEnabled, setAutopublishEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,7 +151,7 @@ export function FlowWizardForm() {
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={autopublishEnabled} onChange={(event) => setAutopublishEnabled(event.target.checked)} />
-              Включить автопостинг после планирования
+              Включить автопостинг сразу после генерации и планирования
             </label>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <Button type="submit" disabled={loading || seedTopic.trim().length < 3}>

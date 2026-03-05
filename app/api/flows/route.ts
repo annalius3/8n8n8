@@ -11,10 +11,10 @@ const createSchema = z.object({
   niche: z.string().trim().optional(),
   audience: z.string().trim().optional(),
   tone: z.string().trim().optional(),
-  postsPerDay: z.number().int().min(1).max(50).default(3),
+  postsPerDay: z.number().int().min(1).max(50).default(10),
   timezone: z.string().trim().default("Europe/Kiev"),
   startTime: z.string().trim().default("09:00"),
-  autopublishEnabled: z.boolean().default(false)
+  autopublishEnabled: z.boolean().default(true)
 });
 
 export async function GET() {
