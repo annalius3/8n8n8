@@ -10,19 +10,9 @@ function isSchedulerTokenValid(request: NextRequest, expected: string) {
   return fromHeader === expected || fromQuery === expected;
 }
 
-function isCronSecretValid(request: NextRequest, expected: string | undefined) {
-  if (!expected) {
-    return false;
-  }
-
-  const authorization = request.headers.get("authorization") ?? "";
-  return authorization === `Bearer ${expected}`;
-}
-
 async function handleTick(request: NextRequest) {
   const env = getServerEnv();
   const schedulerAllowed = isSchedulerTokenValid(request, env.SCHEDULER_TOKEN);
-  const cronAllowed = isCronSecretValid(request, env.CRON_SECRET);
 
   let user = null;
   try {
@@ -31,7 +21,7 @@ async function handleTick(request: NextRequest) {
     user = null;
   }
 
-  if (!user && !schedulerAllowed && !cronAllowed) {
+  if (!user && !schedulerAllowed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -40,9 +30,5 @@ async function handleTick(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return handleTick(request);
-}
-
-export async function GET(request: NextRequest) {
   return handleTick(request);
 }

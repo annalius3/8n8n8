@@ -106,5 +106,22 @@ npm run dev
 7. Generate content
 8. Publish selected items
 
+## Scheduler via Supabase Cron
+
+Autopublish is triggered by calling `POST /api/scheduler/tick` with `x-scheduler-token`.
+
+1. Keep `SCHEDULER_TOKEN` set in Vercel env.
+2. Open Supabase SQL Editor and run:
+   - [`scripts/supabase/setup_scheduler_cron.sql`](scripts/supabase/setup_scheduler_cron.sql)
+3. In the SQL file, replace:
+   - `YOUR_APP_URL` (your production domain)
+   - `YOUR_SCHEDULER_TOKEN` (same value as `SCHEDULER_TOKEN`)
+4. Verify job:
+```sql
+select jobid, jobname, schedule, active
+from cron.job
+where jobname = 'autoposting_scheduler_tick';
+```
+
 ## Telegram notifications
 - If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are configured, the app sends a Telegram message after each successful Pinterest publish.
