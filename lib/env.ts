@@ -15,6 +15,7 @@ const requiredEnvSchema = z.object({
 });
 
 const optionalEnvSchema = z.object({
+  CRON_SECRET: z.string().min(1).optional(),
   LEONARDO_API_KEY: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
