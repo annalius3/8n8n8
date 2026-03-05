@@ -1,5 +1,13 @@
-﻿import { getIntegrationModes } from "@/lib/integrations/runtime";
+import { getIntegrationModes } from "@/lib/integrations/runtime";
 import { z } from "zod";
+
+function emptyToUndefined(value: unknown) {
+  if (typeof value === "string" && value.trim() === "") {
+    return undefined;
+  }
+
+  return value;
+}
 
 const requiredEnvSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
@@ -15,21 +23,21 @@ const requiredEnvSchema = z.object({
 });
 
 const optionalEnvSchema = z.object({
-  LEONARDO_API_KEY: z.string().min(1).optional(),
-  OPENAI_API_KEY: z.string().min(1).optional(),
-  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
-  PINTEREST_CLIENT_ID: z.string().min(1).optional(),
-  PINTEREST_CLIENT_SECRET: z.string().min(1).optional(),
-  TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
-  TELEGRAM_CHAT_ID: z.string().min(1).optional(),
-  DIRECT_URL: z.string().min(1).optional(),
-  R2_ENDPOINT: z.string().url().optional(),
-  R2_ACCESS_KEY_ID: z.string().min(1).optional(),
-  R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-  R2_BUCKET: z.string().min(1).optional(),
-  R2_PUBLIC_BASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_BASE_URL: z.string().url().optional(),
+  LEONARDO_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  OPENAI_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GOOGLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GOOGLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  PINTEREST_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  PINTEREST_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  TELEGRAM_BOT_TOKEN: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  TELEGRAM_CHAT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  DIRECT_URL: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  R2_ENDPOINT: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  R2_ACCESS_KEY_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  R2_SECRET_ACCESS_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  R2_BUCKET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  R2_PUBLIC_BASE_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  NEXT_PUBLIC_BASE_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   NODE_ENV: z.enum(["development", "test", "production"]).optional()
 });
 
