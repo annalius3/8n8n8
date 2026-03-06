@@ -169,6 +169,7 @@ export function CampaignQueueManager({
   const [intervalHours, setIntervalHours] = useState(1);
   const [scheduleStartTime, setScheduleStartTime] = useState(initialStartTime || "09:00");
   const [scheduleTimezone, setScheduleTimezone] = useState(initialTimezone || "Europe/Kiev");
+  const waitingNextWindow = !diagnostics.blockedReason && !diagnostics.dueItemId;
 
   useEffect(() => {
     const cron = diagnostics.scheduleCron ?? "";
@@ -452,8 +453,18 @@ export function CampaignQueueManager({
           <CardTitle>Очередь / Контент-пайплайн</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className={`rounded-lg border p-3 text-sm ${diagnostics.blockedReason ? "border-amber-300 bg-amber-50/70" : "border-emerald-300 bg-emerald-50/70"}`}>
-            <p className="font-medium">Диагностика автопубликации: {diagnostics.blockedReason ? "есть блокировка" : "готово к работе"}</p>
+          <div
+            className={`rounded-lg border p-3 text-sm ${
+              diagnostics.blockedReason
+                ? "border-amber-300 bg-amber-50/70"
+                : waitingNextWindow
+                  ? "border-blue-300 bg-blue-50/70"
+                  : "border-emerald-300 bg-emerald-50/70"
+            }`}
+          >
+            <p className="font-medium">
+              Диагностика автопубликации: {diagnostics.blockedReason ? "есть блокировка" : waitingNextWindow ? "ожидание следующего окна" : "готово к работе"}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Последний тик: {diagnostics.scheduleLastRunAt ? new Date(diagnostics.scheduleLastRunAt).toLocaleString("ru-RU") : "—"} · Следующий тик:{" "}
               {diagnostics.scheduleNextRunAt ? new Date(diagnostics.scheduleNextRunAt).toLocaleString("ru-RU") : "—"} · Cron: {diagnostics.scheduleCron ?? "—"}
@@ -464,6 +475,7 @@ export function CampaignQueueManager({
               </Button>
             </div>
             {diagnostics.blockedReason ? <p className="mt-2 text-sm text-amber-800">Причина: {diagnostics.blockedReason}</p> : null}
+            {waitingNextWindow ? <p className="mt-2 text-sm text-blue-800">Сейчас нет просроченных постов. Публикация продолжится автоматически по расписанию.</p> : null}
             {diagnostics.dueItemId ? (
               <p className="mt-1 text-xs text-muted-foreground">
                 Просроченный item: {diagnostics.dueItemId} · статус: {diagnostics.dueItemStatus ?? "—"} · время:{" "}
