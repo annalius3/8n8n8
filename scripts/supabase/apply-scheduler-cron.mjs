@@ -40,6 +40,8 @@ if (!schedulerToken) {
 }
 
 const schedulerUrl = `${appUrl}/api/scheduler/tick`;
+const escapedSchedulerUrl = schedulerUrl.replace(/'/g, "''");
+const escapedSchedulerToken = schedulerToken.replace(/'/g, "''");
 
 async function main() {
   await prisma.$executeRawUnsafe(`create extension if not exists pg_cron;`);
@@ -61,26 +63,22 @@ begin
 end $$;
   `);
 
-  await prisma.$queryRawUnsafe(
-    `
+  await prisma.$queryRawUnsafe(`
 select cron.schedule(
   'autoposting_scheduler_tick',
   '*/5 * * * *',
   $$
     select net.http_post(
-      url := $1,
+      url := '${escapedSchedulerUrl}',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'x-scheduler-token', $2
+        'x-scheduler-token', '${escapedSchedulerToken}'
       ),
       body := '{}'::jsonb
     );
   $$
 );
-    `,
-    schedulerUrl,
-    schedulerToken
-  );
+  `);
 
   const jobs = await prisma.$queryRawUnsafe(
     `
