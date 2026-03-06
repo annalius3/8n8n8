@@ -124,6 +124,8 @@ export type QueueDiagnostics = {
   dueItemScheduledAt: string | null;
   blockedReason: string | null;
   latestPublishError: string | null;
+  readyWithImageBufferCount: number;
+  prefetchCandidateCount: number;
 };
 
 export async function getQueueDiagnostics(flowId: string, userId: string): Promise<QueueDiagnostics> {
@@ -179,6 +181,26 @@ export async function getQueueDiagnostics(flowId: string, userId: string): Promi
     }
   });
 
+  const [readyWithImageBufferCount, prefetchCandidateCount] = await Promise.all([
+    prisma.postQueueItem.count({
+      where: {
+        flowId: flow.id,
+        userId,
+        status: QueueStatus.ready,
+        publishedAt: null,
+        imageUrl: { not: null }
+      }
+    }),
+    prisma.postQueueItem.count({
+      where: {
+        flowId: flow.id,
+        userId,
+        status: { in: [QueueStatus.pending, QueueStatus.failed] },
+        publishedAt: null
+      }
+    })
+  ]);
+
   let blockedReason: string | null = null;
   if (!flow.isEnabled) {
     blockedReason = "Поток выключен";
@@ -215,7 +237,9 @@ export async function getQueueDiagnostics(flowId: string, userId: string): Promi
     dueItemStatus: dueItem?.status ?? null,
     dueItemScheduledAt: dueItem?.scheduledAt?.toISOString() ?? null,
     blockedReason,
-    latestPublishError: latestPublishFailure?.steps[0]?.error ?? latestPublishFailure?.error ?? null
+    latestPublishError: latestPublishFailure?.steps[0]?.error ?? latestPublishFailure?.error ?? null,
+    readyWithImageBufferCount,
+    prefetchCandidateCount
   };
 }
 

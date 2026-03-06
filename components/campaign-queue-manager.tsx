@@ -81,6 +81,8 @@ type QueueDiagnostics = {
   dueItemScheduledAt: string | null;
   blockedReason: string | null;
   latestPublishError: string | null;
+  readyWithImageBufferCount: number;
+  prefetchCandidateCount: number;
 };
 
 async function postJson(url: string, body: Record<string, unknown>) {
@@ -393,6 +395,7 @@ export function CampaignQueueManager({
         due?: number;
         publishedRuns?: number;
         generatedRuns?: number;
+        prefetchedRuns?: number;
         error?: string;
       };
 
@@ -403,7 +406,8 @@ export function CampaignQueueManager({
       const started = data.started ?? 0;
       const generated = data.generatedRuns ?? 0;
       const published = data.publishedRuns ?? 0;
-      setSuccess(`Scheduler выполнен: flow-запусков ${started}, сгенерировано ${generated}, опубликовано ${published}.`);
+      const prefetched = data.prefetchedRuns ?? 0;
+      setSuccess(`Scheduler выполнен: flow-запусков ${started}, due-сгенерировано ${generated}, догенерировано заранее ${prefetched}, опубликовано ${published}.`);
       await refreshQueue();
       router.refresh();
     } catch (requestError) {
@@ -483,6 +487,9 @@ export function CampaignQueueManager({
               </p>
             ) : null}
             {diagnostics.latestPublishError ? <p className="mt-2 text-sm text-red-700">Последняя ошибка: {diagnostics.latestPublishError}</p> : null}
+            <p className="mt-2 text-xs text-muted-foreground">
+              Буфер готовых с картинками: {diagnostics.readyWithImageBufferCount} · Доступно для догенерации: {diagnostics.prefetchCandidateCount}
+            </p>
           </div>
 
           <div className="rounded-xl border p-4">
