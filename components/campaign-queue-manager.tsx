@@ -685,11 +685,9 @@ export function CampaignQueueManager({
                 </label>
               </th>
               <th className="w-36 p-3">Статус</th>
-              <th className="w-56 p-3">Тема</th>
               <th className="w-56 p-3">Заголовок</th>
               <th className="w-28 p-3">Изображение</th>
               <th className="w-40 p-3">Запланировано</th>
-              <th className="w-40 p-3">Опубликовано</th>
               <th className="w-52 p-3">Ошибка</th>
               <th className="w-40 p-3">Действия</th>
             </tr>
@@ -714,16 +712,12 @@ export function CampaignQueueManager({
                     </Badge>
                   </td>
                   <td className="p-3">
-                    <div className="max-w-[220px] break-words">{item.topicText ?? "—"}</div>
-                  </td>
-                  <td className="p-3">
                     <div className="max-w-[220px] break-words">{item.title || "—"}</div>
                   </td>
                   <td className="p-3">
                     {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="h-20 w-20 rounded-md object-cover" /> : "—"}
                   </td>
                   <td className="p-3 whitespace-nowrap text-xs">{item.scheduledAt ? new Date(item.scheduledAt).toLocaleString("ru-RU") : "—"}</td>
-                  <td className="p-3 whitespace-nowrap text-xs">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("ru-RU") : "—"}</td>
                   <td className="p-3 text-red-600">
                     <div className="max-w-[200px] break-words">{item.error ?? "—"}</div>
                   </td>
@@ -748,7 +742,7 @@ export function CampaignQueueManager({
 
                 {expandedItemId === item.id ? (
                   <tr className="border-t bg-muted/20">
-                    <td colSpan={9} className="p-4">
+                    <td colSpan={7} className="p-4">
                       <div className="space-y-4">
                         {(runsByItem.get(item.id) ?? []).length > 0 ? (
                           (runsByItem.get(item.id) ?? []).map((run) => (
