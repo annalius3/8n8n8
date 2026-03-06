@@ -100,6 +100,7 @@ export async function runSchedulerTick() {
   });
 
   let generatedRuns = 0;
+  let prefetchedRuns = 0;
   let publishedRuns = 0;
   for (const campaign of dueCampaigns) {
     const duePending = await prisma.postQueueItem.findMany({
@@ -132,11 +133,60 @@ export async function runSchedulerTick() {
     publishedRuns += result.processed;
   }
 
+  // Prefetch generation: keep a healthy buffer of upcoming ready posts with images.
+  const autopublishCampaigns = await prisma.flow.findMany({
+    where: {
+      isEnabled: true,
+      autopublishEnabled: true
+    },
+    select: {
+      id: true,
+      userId: true
+    }
+  });
+
+  for (const campaign of autopublishCampaigns) {
+    const readyUpcoming = await prisma.postQueueItem.count({
+      where: {
+        flowId: campaign.id,
+        userId: campaign.userId,
+        status: QueueStatus.ready,
+        publishedAt: null,
+        imageUrl: { not: null }
+      }
+    });
+
+    // If we are close to running out of ready posts, pre-generate up to 10 new items.
+    if (readyUpcoming <= 2) {
+      const toPrefetch = await prisma.postQueueItem.findMany({
+        where: {
+          flowId: campaign.id,
+          userId: campaign.userId,
+          status: { in: [QueueStatus.pending, QueueStatus.failed] },
+          publishedAt: null
+        },
+        orderBy: [{ scheduledAt: "asc" }, { createdAt: "asc" }],
+        take: 10,
+        select: { id: true }
+      });
+
+      if (toPrefetch.length > 0) {
+        const generated = await generateContentForQueueItems(
+          campaign.id,
+          campaign.userId,
+          toPrefetch.map((item) => item.id)
+        );
+        prefetchedRuns += generated.processed;
+      }
+    }
+  }
+
   return {
     checkedAt: now.toISOString(),
     started,
     due: due.length,
     generatedRuns,
+    prefetchedRuns,
     publishedRuns
   };
 }
