@@ -189,7 +189,7 @@ export async function getQueueDiagnostics(flowId: string, userId: string): Promi
   } else if (schedulerStale) {
     blockedReason = "Scheduler давно не запускался";
   } else if (!dueItem) {
-    blockedReason = "Нет просроченных элементов для публикации";
+    blockedReason = null;
   } else if (dueItem.status === QueueStatus.pending) {
     blockedReason = "Элемент ожидает генерацию контента";
   } else if (dueItem.status === QueueStatus.generating) {
@@ -465,10 +465,15 @@ export async function planScheduleForFlow(flowId: string, userId: string, option
           })
         : mode === "interval_hours"
           ? (() => {
-              const first = computeStartDateFromTime({
+              let first = computeStartDateFromTime({
                 startTime,
                 timezone
               });
+              const now = new Date();
+              if (first.getTime() - now.getTime() > safeIntervalHours * 60 * 60 * 1000) {
+                first = new Date(now.getTime() + 60 * 1000);
+                first.setSeconds(0, 0);
+              }
               return Array.from({ length: pendingItems.length }, (_, index) => {
                 const date = new Date(first);
                 date.setHours(date.getHours() + safeIntervalHours * index);
