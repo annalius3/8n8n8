@@ -10,6 +10,7 @@ import { SchedulerTickButton } from "@/components/scheduler-tick-button";
 import { FlowToggleButton } from "@/components/flow-toggle-button";
 import { DeleteFlowButton } from "@/components/delete-flow-button";
 import { NextPublicationCountdown } from "@/components/next-publication-countdown";
+import { AUTOPOST_SYSTEM_FLOW_NAME } from "@/lib/autopost/constants";
 
 function formatDate(date: Date | null | undefined) {
   return date ? date.toLocaleString("ru-RU") : "—";
@@ -42,7 +43,8 @@ export default async function FlowsPage() {
   const flows = await prisma.flow.findMany({
     where: {
       userId: user.id,
-      id: { not: "seed-flow-rss-pinterest" }
+      id: { not: "seed-flow-rss-pinterest" },
+      name: { not: AUTOPOST_SYSTEM_FLOW_NAME }
     },
     include: {
       topicSuggestions: true,

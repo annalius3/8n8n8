@@ -17,6 +17,7 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 - `/connections` - Pinterest OAuth / manual token connection
 - `/settings` - Leonardo API key per user
 - `/runs` - global run history
+- `/autopost` - article auto-posting dashboard (scan, generate, publish, status/errors)
 
 ## Auth
 - Google OAuth login:
@@ -40,9 +41,24 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 
 ## Content generation
 - `OPENAI_API_KEY`
+- `OPENAI_MODEL`
 - `LEONARDO_API_KEY`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
+- `PINTEREST_ACCESS_TOKEN` (optional fallback)
+- `PINTEREST_BOARD_ID` (optional)
+- `REDDIT_CLIENT_ID`
+- `REDDIT_CLIENT_SECRET`
+- `REDDIT_USERNAME`
+- `REDDIT_PASSWORD`
+- `REDDIT_USER_AGENT`
+- `TWITTER_API_KEY`
+- `TWITTER_API_SECRET`
+- `TWITTER_ACCESS_TOKEN`
+- `TWITTER_ACCESS_SECRET`
+- `LINKEDIN_ACCESS_TOKEN`
+- `MEDIUM_ACCESS_TOKEN`
+- `FACEBOOK_PAGE_ACCESS_TOKEN`
 
 ## OAuth
 - `GOOGLE_CLIENT_ID`
@@ -106,6 +122,37 @@ npm run dev
 6. Create a flow and continue to `/queue`
 7. Generate content
 8. Publish selected items
+
+## Article Auto-posting (new)
+
+### How it works
+1. Scheduler scans RSS source for new published articles.
+2. New articles are saved in `articles`.
+3. Per-platform jobs are created in `autopost_jobs`.
+4. OpenAI generates platform-specific content (saved in `generated_content` and optional `autopost_assets`).
+5. Due jobs are published by platform adapters.
+6. All major actions are logged via `JobRun`/`JobRunStep` using a hidden system flow.
+
+### Open `/autopost`
+1. Set RSS URL and click `Сохранить источник`.
+2. Click `Сканировать и добавить статьи`.
+3. For an article click `Generate`.
+4. Click `Publish` (or publish one platform button).
+5. Read platform status badges and error column.
+
+### API endpoints
+- `POST /api/autopost/scan`
+- `POST /api/autopost/generate/:articleId`
+- `POST /api/autopost/publish/:articleId`
+- `POST /api/autopost/publish/:articleId/:platform`
+- `GET /api/autopost/status/:articleId`
+
+### Platform behavior
+- Missing credentials do not break generation.
+- Publish step is safely marked `skipped` with explicit reason code.
+- Pinterest currently publishes via existing Pinterest connection module.
+- Telegram currently publishes via bot token/chat id.
+- Other platforms are scaffolded with safe stub adapters and can be extended in `lib/autopost/publishers.ts`.
 
 ## Scheduler via Supabase Cron
 

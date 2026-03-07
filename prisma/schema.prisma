@@ -29,6 +29,27 @@ enum StepExecStatus {
   skipped
 }
 
+enum AutoPostJobStatus {
+  pending
+  generated
+  scheduled
+  publishing
+  published
+  failed
+  skipped
+  disabled
+}
+
+enum SocialPlatform {
+  twitter
+  linkedin
+  reddit
+  telegram
+  pinterest
+  medium
+  facebook
+}
+
 model User {
   id             String          @id @default(cuid())
   email          String          @unique
@@ -38,8 +59,129 @@ model User {
   connections    Connection[]
   flows          Flow[]
   postQueueItems PostQueueItem[]
+  articleSourceConfigs ArticleSourceConfig[]
+  articles       Article[]
+  autoPostPlatformSettings AutoPostPlatformSetting[]
+  subredditMappings AutoPostSubredditMapping[]
 
   @@map("users")
+}
+
+model ArticleSourceConfig {
+  id                      String   @id @default(cuid())
+  userId                  String   @map("user_id")
+  sourceType              String   @default("rss") @map("source_type")
+  rssUrl                  String?  @map("rss_url")
+  baseUrl                 String?  @map("base_url")
+  enabled                 Boolean  @default(true)
+  immediatePublishEnabled Boolean  @default(false) @map("immediate_publish_enabled")
+  assetsPersistenceEnabled Boolean @default(true) @map("assets_persistence_enabled")
+  lastScannedAt           DateTime? @map("last_scanned_at")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+  @@map("article_source_configs")
+}
+
+model Article {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  sourceType       String   @default("rss") @map("source_type")
+  sourceUid        String   @map("source_uid")
+  canonicalUrl     String   @map("canonical_url")
+  title            String
+  category         String?
+  excerpt          String?
+  content          String
+  publishedAt      DateTime @map("published_at")
+  autopostEnabled  Boolean  @default(true) @map("autopost_enabled")
+  assetsGeneratedAt DateTime? @map("assets_generated_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs             AutoPostJob[]
+  assets           AutoPostAsset[]
+
+  @@unique([userId, sourceType, sourceUid])
+  @@index([userId, publishedAt])
+  @@index([userId, autopostEnabled])
+  @@map("articles")
+}
+
+model AutoPostPlatformSetting {
+  id                 String         @id @default(cuid())
+  userId             String         @map("user_id")
+  platform           SocialPlatform
+  enabled            Boolean        @default(false)
+  maxPostsPerDay     Int            @default(10) @map("max_posts_per_day")
+  minIntervalMinutes Int            @default(30) @map("min_interval_minutes")
+  requireApproval    Boolean        @default(false) @map("require_approval")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@index([userId, enabled])
+  @@map("autopost_platform_settings")
+}
+
+model AutoPostJob {
+  id             String            @id @default(cuid())
+  userId         String            @map("user_id")
+  articleId      String            @map("article_id")
+  platform       SocialPlatform
+  status         AutoPostJobStatus @default(pending)
+  generatedContent Json?           @map("generated_content")
+  externalPostId String?           @map("external_post_id")
+  errorMessage   String?           @map("error_message")
+  scheduledAt    DateTime?         @map("scheduled_at")
+  publishedAt    DateTime?         @map("published_at")
+  attempts       Int               @default(0)
+  lastAttemptAt  DateTime?         @map("last_attempt_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  article        Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, platform])
+  @@index([userId, platform, status, scheduledAt])
+  @@index([articleId, status])
+  @@map("autopost_jobs")
+}
+
+model AutoPostAsset {
+  id          String         @id @default(cuid())
+  userId      String         @map("user_id")
+  articleId   String         @map("article_id")
+  platform    SocialPlatform
+  title       String?
+  body        String?
+  hashtags    String[]
+  imagePrompt String?        @map("image_prompt")
+  metadataJson Json?         @map("metadata_json")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  article     Article        @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, platform])
+  @@map("autopost_assets")
+}
+
+model AutoPostSubredditMapping {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  category     String?
+  keyword      String?
+  subreddit    String
+  isEnabled    Boolean  @default(true) @map("is_enabled")
+  manualOnly   Boolean  @default(true) @map("manual_only")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isEnabled])
+  @@map("autopost_subreddit_mappings")
 }
 
 model Connection {

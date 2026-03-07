@@ -1,6 +1,7 @@
 import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateContentForQueueItems, publishQueueItems } from "@/lib/campaigns/service";
+import { processDueAutoPostJobs, scanAndQueueNewArticles } from "@/lib/autopost/service";
 import { computeNextRunAt } from "@/lib/worker/cron";
 import { runFlowNow } from "@/lib/worker/runner";
 
@@ -181,12 +182,39 @@ export async function runSchedulerTick() {
     }
   }
 
+  const sourceUsers = await prisma.articleSourceConfig.findMany({
+    where: {
+      enabled: true
+    },
+    select: {
+      userId: true
+    },
+    distinct: ["userId"]
+  });
+
+  let articleScans = 0;
+  for (const sourceUser of sourceUsers) {
+    try {
+      await scanAndQueueNewArticles(sourceUser.userId);
+      articleScans += 1;
+    } catch {
+      // keep tick resilient even if one source fails
+    }
+  }
+
+  const autopostJobs = await processDueAutoPostJobs();
+
   return {
     checkedAt: now.toISOString(),
     started,
     due: due.length,
     generatedRuns,
     prefetchedRuns,
-    publishedRuns
+    publishedRuns,
+    articleScans,
+    autopostDue: autopostJobs.due,
+    autopostPublished: autopostJobs.published,
+    autopostFailed: autopostJobs.failed,
+    autopostSkipped: autopostJobs.skipped
   };
 }
