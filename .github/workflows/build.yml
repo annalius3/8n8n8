@@ -9,6 +9,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/autoposting_flow?schema=public
+      AUTH_SECRET: test-test-test-test-test-test-test-test
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      SCHEDULER_TOKEN: test-test-test-test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,13 +29,12 @@ jobs:
 
       - name: Generate Prisma client
         run: npx prisma generate
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/autoposting_flow?schema=public
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Text encoding check
+        run: npm run check:text
 
       - name: Build app
-        run: npm run build
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/autoposting_flow?schema=public
-          AUTH_SECRET: test-test-test-test-test-test-test-test
-          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-          SCHEDULER_TOKEN: test-test-test-test
+        run: npx next build
