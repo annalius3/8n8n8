@@ -12,6 +12,12 @@ export type ExtractedArticleCandidate = {
   publishedAt: Date;
 };
 
+export type ScanArticlesResult = {
+  articleIds: string[];
+  created: number;
+  scanned: number;
+};
+
 function stripCdata(value: string) {
   return value.replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1").trim();
 }
@@ -112,10 +118,10 @@ export async function ensureArticleSourceConfig(userId: string) {
   });
 }
 
-export async function scanNewArticlesForUser(userId: string) {
+export async function scanNewArticlesForUser(userId: string): Promise<ScanArticlesResult> {
   const config = await ensureArticleSourceConfig(userId);
   if (!config.enabled || !config.rssUrl) {
-    return { created: 0, scanned: 0 };
+    return { articleIds: [], created: 0, scanned: 0 };
   }
 
   const response = await fetch(config.rssUrl, { cache: "no-store" });
@@ -163,12 +169,28 @@ export async function scanNewArticlesForUser(userId: string) {
     });
   }
 
+  const createdArticles =
+    enriched.length > 0
+      ? await prisma.article.findMany({
+          where: {
+            userId,
+            sourceType: "rss",
+            sourceUid: { in: enriched.map((item) => item.sourceUid) }
+          },
+          select: {
+            id: true,
+            sourceUid: true
+          }
+        })
+      : [];
+
   await prisma.articleSourceConfig.update({
     where: { id: config.id },
     data: { lastScannedAt: new Date() }
   });
 
   return {
+    articleIds: createdArticles.map((item) => item.id),
     created: enriched.length,
     scanned: parsed.length
   };

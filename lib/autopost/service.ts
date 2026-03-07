@@ -206,14 +206,16 @@ export async function scanAndQueueNewArticles(userId: string) {
 
   try {
     const scanResult = await scanNewArticlesForUser(userId);
-    const freshArticles = await prisma.article.findMany({
-      where: {
-        userId,
-        autopostEnabled: true
-      },
-      orderBy: { publishedAt: "desc" },
-      take: scanResult.created
-    });
+    const freshArticles =
+      scanResult.articleIds.length > 0
+        ? await prisma.article.findMany({
+            where: {
+              userId,
+              autopostEnabled: true,
+              id: { in: scanResult.articleIds }
+            }
+          })
+        : [];
 
     for (const article of freshArticles) {
       await createOrUpdateJobsForArticle(userId, article.id, sourceConfig.immediatePublishEnabled);

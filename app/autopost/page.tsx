@@ -1,7 +1,7 @@
-import { requireUser } from "@/lib/require-user";
-import { getAutoPostDashboard } from "@/lib/autopost/service";
 import { AutoPostManager } from "@/components/autopost-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAutoPostDashboard } from "@/lib/autopost/service";
+import { requireUser } from "@/lib/require-user";
 
 export default async function AutoPostPage() {
   const user = await requireUser("/autopost");
@@ -11,13 +11,13 @@ export default async function AutoPostPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Auto-posting статей</CardTitle>
+          <CardTitle>Автопостинг статей</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>1) Нажмите “Сканировать и добавить статьи”.</p>
-          <p>2) Для нужной статьи нажмите “Generate” (создаст тексты под платформы).</p>
-          <p>3) Нажмите “Publish” для отправки постов на включенные платформы.</p>
-          <p>4) Ошибки отображаются в таблице по каждой платформе.</p>
+          <p>1. Нажмите «Сканировать и добавить статьи», чтобы подтянуть новые статьи с сайта.</p>
+          <p>2. У нужной статьи нажмите `Generate`, чтобы создать тексты под платформы.</p>
+          <p>3. Нажмите `Publish`, чтобы отправить посты на включенные платформы.</p>
+          <p>4. Статусы, время публикации и ошибки отображаются в таблице ниже.</p>
         </CardContent>
       </Card>
 
