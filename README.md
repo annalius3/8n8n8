@@ -16,6 +16,7 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 - `/flows/[id]/queue` - queue, generation, publish, logs
 - `/connections` - Pinterest OAuth / manual token connection
 - `/settings` - Leonardo API key per user
+- `/settings` - Leonardo keys and Reddit API credentials
 - `/runs` - global run history
 - `/autopost` - article auto-posting dashboard (scan, generate, publish, status/errors)
 
@@ -152,6 +153,7 @@ npm run dev
 - Publish step is safely marked `skipped` with explicit reason code.
 - Pinterest currently publishes via existing Pinterest connection module.
 - Telegram currently publishes via bot token/chat id.
+- Reddit credentials can be saved per-user on `/settings` and are encrypted in `connections`.
 - Other platforms are scaffolded with safe stub adapters and can be extended in `lib/autopost/publishers.ts`.
 
 ## Scheduler via Supabase Cron
