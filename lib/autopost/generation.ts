@@ -105,30 +105,62 @@ export async function generatePlatformContent(input: {
     temperature: 0.65
   });
 
+  const canonicalUrl = input.canonicalUrl;
+  const safeSummary = strip(input.excerpt || input.content).slice(0, 260);
+  const fallbackTwitter = `New article: ${strip(input.title)} ${canonicalUrl}`.slice(0, 280);
+  const fallbackLinkedIn = `${strip(input.title)}\n\n${safeSummary}\n\nRead full article: ${canonicalUrl}`.slice(0, 900);
+  const fallbackRedditTitle = strip(input.title).slice(0, 280);
+  const fallbackRedditBody = `${safeSummary}\n\nSource: ${canonicalUrl}`.slice(0, 3500);
+  const fallbackTelegram = `${strip(input.title)}\n\n${safeSummary}\n\n${canonicalUrl}`.slice(0, 700);
+  const fallbackPinTitle = strip(input.title).slice(0, 90);
+  const fallbackPinDescription = `${safeSummary}\n\n${canonicalUrl}`.slice(0, 500);
+  const fallbackPinPrompt = `Vertical professional B2B SaaS editorial image about: ${strip(input.title)}. Minimal clean composition, no text, no watermark.`;
+
+  const twitter = safeArray(payload.twitter)
+    .map((item) => ({
+      text: strip((item as { text?: string }).text),
+      hashtags: safeArray((item as { hashtags?: string[] }).hashtags).map((tag) => strip(tag)).filter(Boolean).slice(0, 3)
+    }))
+    .filter((item) => item.text)
+    .slice(0, 3);
+
+  const linkedin = safeArray(payload.linkedin)
+    .map((item) => ({ text: strip((item as { text?: string }).text).slice(0, 900) }))
+    .filter((item) => item.text.length >= 250)
+    .slice(0, 3);
+
   return {
-    twitter: safeArray(payload.twitter)
-      .map((item) => ({
-        text: strip((item as { text?: string }).text),
-        hashtags: safeArray((item as { hashtags?: string[] }).hashtags).map((tag) => strip(tag)).filter(Boolean).slice(0, 3)
-      }))
-      .filter((item) => item.text)
-      .slice(0, 3),
-    linkedin: safeArray(payload.linkedin)
-      .map((item) => ({ text: strip((item as { text?: string }).text).slice(0, 900) }))
-      .filter((item) => item.text.length >= 120)
-      .slice(0, 3),
+    twitter:
+      twitter.length > 0
+        ? twitter.map((item) => ({
+            ...item,
+            text: item.text.includes(canonicalUrl) ? item.text : `${item.text} ${canonicalUrl}`.slice(0, 280)
+          }))
+        : [{ text: fallbackTwitter, hashtags: [] }],
+    linkedin:
+      linkedin.length > 0
+        ? linkedin.map((item) => ({
+            text: item.text.includes(canonicalUrl) ? item.text : `${item.text}\n\nRead full article: ${canonicalUrl}`.slice(0, 900)
+          }))
+        : [{ text: fallbackLinkedIn }],
     reddit: {
-      title: strip(payload.reddit?.title).slice(0, 300),
-      body: strip(payload.reddit?.body).slice(0, 4000),
+      title: strip(payload.reddit?.title).slice(0, 300) || fallbackRedditTitle,
+      body:
+        (strip(payload.reddit?.body).slice(0, 4000) || fallbackRedditBody).includes(canonicalUrl)
+          ? strip(payload.reddit?.body).slice(0, 4000) || fallbackRedditBody
+          : `${strip(payload.reddit?.body).slice(0, 3800) || fallbackRedditBody}\n\nSource: ${canonicalUrl}`.slice(0, 4000),
       suggestedSubreddits: safeArray(payload.reddit?.suggestedSubreddits).map((name) => strip(name)).filter(Boolean).slice(0, 10)
     },
     telegram: {
-      text: strip(payload.telegram?.text).slice(0, 700)
+      text:
+        (strip(payload.telegram?.text).slice(0, 700) || fallbackTelegram).includes(canonicalUrl)
+          ? strip(payload.telegram?.text).slice(0, 700) || fallbackTelegram
+          : `${strip(payload.telegram?.text).slice(0, 620) || fallbackTelegram}\n\n${canonicalUrl}`.slice(0, 700)
     },
     pinterest: {
-      pinTitle: strip(payload.pinterest?.pinTitle).slice(0, 90),
-      pinDescription: strip(payload.pinterest?.pinDescription).slice(0, 500),
-      imagePrompt: strip(payload.pinterest?.imagePrompt).slice(0, 1000)
+      pinTitle: strip(payload.pinterest?.pinTitle).slice(0, 90) || fallbackPinTitle,
+      pinDescription: strip(payload.pinterest?.pinDescription).slice(0, 500) || fallbackPinDescription,
+      imagePrompt: strip(payload.pinterest?.imagePrompt).slice(0, 1000) || fallbackPinPrompt
     },
     medium: payload.medium
       ? {

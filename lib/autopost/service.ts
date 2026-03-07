@@ -569,10 +569,14 @@ export async function processDueAutoPostJobs() {
   let failed = 0;
   let skipped = 0;
   for (const job of dueJobs) {
-    const result = await publishJob(job.userId, job.id, { manual: false });
-    if (result.outcome === "published") published += 1;
-    if (result.outcome === "failed") failed += 1;
-    if (result.outcome === "skipped") skipped += 1;
+    try {
+      const result = await publishJob(job.userId, job.id, { manual: false });
+      if (result.outcome === "published") published += 1;
+      if (result.outcome === "failed") failed += 1;
+      if (result.outcome === "skipped") skipped += 1;
+    } catch {
+      failed += 1;
+    }
   }
 
   return {
