@@ -14,18 +14,10 @@ function getDatasourceUrl() {
   try {
     const url = new URL(raw);
     if (url.hostname.includes("pooler.supabase.com")) {
-      if (!url.searchParams.has("pgbouncer")) {
-        url.searchParams.set("pgbouncer", "true");
-      }
-      if (!url.searchParams.has("connection_limit")) {
-        url.searchParams.set("connection_limit", "5");
-      }
-      if (!url.searchParams.has("pool_timeout")) {
-        url.searchParams.set("pool_timeout", "30");
-      }
-      if (!url.searchParams.has("sslmode")) {
-        url.searchParams.set("sslmode", "require");
-      }
+      url.searchParams.set("pgbouncer", "true");
+      url.searchParams.set("connection_limit", "5");
+      url.searchParams.set("pool_timeout", "30");
+      url.searchParams.set("sslmode", "require");
     }
 
     return url.toString();
