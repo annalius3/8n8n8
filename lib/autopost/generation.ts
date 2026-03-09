@@ -1,4 +1,5 @@
 import { getServerEnv } from "@/lib/env";
+import { buildLeonardoPrompt } from "@/lib/images/prompt-builder";
 
 export type GeneratedPlatformContent = {
   twitter: Array<{ text: string; hashtags: string[] }>;
@@ -114,7 +115,11 @@ export async function generatePlatformContent(input: {
   const fallbackTelegram = `${strip(input.title)}\n\n${safeSummary}\n\n${canonicalUrl}`.slice(0, 700);
   const fallbackPinTitle = strip(input.title).slice(0, 90);
   const fallbackPinDescription = `${safeSummary}\n\n${canonicalUrl}`.slice(0, 500);
-  const fallbackPinPrompt = `Vertical professional B2B SaaS editorial image about: ${strip(input.title)}. Minimal clean composition, no text, no watermark.`;
+  const fallbackPinPrompt = buildLeonardoPrompt({
+    topic: input.title,
+    title: input.title,
+    description: input.excerpt ?? input.content.slice(0, 500)
+  }).prompt;
 
   const twitter = safeArray(payload.twitter)
     .map((item) => ({
@@ -176,8 +181,23 @@ export async function generatePlatformContent(input: {
     general: {
       shortSummary: strip(payload.general?.shortSummary).slice(0, 300),
       metaExcerpt: strip(payload.general?.metaExcerpt).slice(0, 350),
-      imagePromptHorizontal: strip(payload.general?.imagePromptHorizontal).slice(0, 1000),
-      imagePromptVertical: strip(payload.general?.imagePromptVertical).slice(0, 1000),
+      imagePromptHorizontal:
+        strip(payload.general?.imagePromptHorizontal).slice(0, 1000) ||
+        buildLeonardoPrompt({
+          topic: input.title,
+          title: input.title,
+          description: input.excerpt ?? input.content.slice(0, 500),
+          promptTemplate: [
+            "Create a clean horizontal editorial social preview image about {topic}.",
+            "Main subject: {visual_subject}.",
+            "Scene: {visual_scene}.",
+            "Style: {visual_style}.",
+            "Composition: wide 16:9 social preview, simple background, clear focal point.",
+            "Use relevant business details from: {description}.",
+            "No text, no letters, no watermark, no logo."
+          ].join(" ")
+        }).prompt,
+      imagePromptVertical: strip(payload.general?.imagePromptVertical).slice(0, 1000) || fallbackPinPrompt,
       tags: safeArray(payload.general?.tags).map((tag) => strip(tag)).filter(Boolean).slice(0, 20)
     }
   };

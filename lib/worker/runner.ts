@@ -1,5 +1,6 @@
 ﻿import { QueueStatus, RunStatus, StepExecStatus } from "@prisma/client";
 import { getServerEnv } from "@/lib/env";
+import { buildLeonardoPrompt, getDefaultNegativePrompt } from "@/lib/images/prompt-builder";
 import { prisma } from "@/lib/prisma";
 import { generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
@@ -513,17 +514,19 @@ export async function runFlowNow(flowId: string) {
         const imageItems: ImageItem[] = [];
 
         for (const source of sources) {
-          const vars = {
-            title: source.title ?? "",
-            summary: source.summary ?? "",
-            link_url: source.link_url ?? "",
-            image_prompt: source.image_prompt ?? "",
-            pin_title: context.text?.pin_title ?? ""
-          };
-
-          const prompt = applyTemplate(config.prompt_template ?? "{title}", vars);
+          const builtPrompt = buildLeonardoPrompt({
+            topic: context.text?.pin_title || source.title || source.summary || source.uid,
+            title: source.title ?? context.text?.pin_title ?? "",
+            description: context.text?.pin_description ?? source.summary ?? "",
+            imagePrompt: source.image_prompt ?? "",
+            promptTemplate: typeof config.prompt_template === "string" ? config.prompt_template : undefined
+          });
+          const prompt = builtPrompt.prompt;
           const result = await generateLeonardoImage(prompt, {
-            negativePrompt: config.negative_prompt,
+            negativePrompt:
+              typeof config.negative_prompt === "string" && config.negative_prompt.trim()
+                ? config.negative_prompt
+                : builtPrompt.negativePrompt ?? getDefaultNegativePrompt(),
             width: Number(config.width ?? 1024),
             height: Number(config.height ?? 1024),
             steps: Number(config.steps ?? 30),

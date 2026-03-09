@@ -79,7 +79,7 @@ async function main() {
         type: "ai_image_leonardo",
         configJson: {
           prompt_template:
-            "Pinterest-style lifestyle image about {topic}. Context: {description}. 1024x1024, realistic, high quality.",
+            "Create a clean editorial blog cover image about {topic}. Main subject: {visual_subject}. Scene: {visual_scene}. Style: {visual_style}. Composition: {visual_composition}. Format: {visual_format}. Use relevant business details from: {description}. If useful, incorporate this product hint naturally: {image_prompt}. No text, no letters, no watermark, no logo, no collage, no extra objects.",
           negative_prompt: "text, watermark, logo, blurry, low quality",
           width: 1024,
           height: 1024,

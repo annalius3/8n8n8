@@ -10,6 +10,11 @@ import {
 import { deleteLeonardoGeneration, generateLeonardoImage } from "@/lib/integrations/leonardo";
 import { publishToPinterest } from "@/lib/integrations/pinterest";
 import { isTelegramConfigured, sendTelegramPublishNotification } from "@/lib/integrations/telegram";
+import {
+  buildLeonardoPrompt,
+  getDefaultLeonardoPromptTemplate,
+  getDefaultNegativePrompt
+} from "@/lib/images/prompt-builder";
 import { applyTemplate } from "@/lib/worker/template";
 
 const DEFAULT_SITE_LINK = "https://www.b2bleadgenerationtools.com/";
@@ -302,9 +307,8 @@ export async function createCampaign(userId: string, input: CampaignInput) {
             orderIndex: 1,
             type: "ai_image_leonardo",
             configJson: {
-              prompt_template:
-                "Pinterest-style lifestyle image about {topic}. Context: {description}. 1024x1024, realistic, high quality.",
-              negative_prompt: "text, watermark, logo, blurry, low quality",
+              prompt_template: getDefaultLeonardoPromptTemplate(),
+              negative_prompt: getDefaultNegativePrompt(),
               width: 1024,
               height: 1024,
               steps: 30,
@@ -648,18 +652,18 @@ export async function generateContentForQueueItems(flowId: string, userId: strin
         outputJson: text
       });
 
-      const prompt = applyTemplate(
-        imageConfig.prompt_template ?? "Pinterest-style lifestyle image about {topic}. Context: {description}.",
-        {
-          topic: item.topicText ?? item.title,
-          title: text.title,
-          description: text.description
-        }
-      );
+      const builtPrompt = buildLeonardoPrompt({
+        topic: item.topicText ?? item.title,
+        title: text.title,
+        description: text.description,
+        imagePrompt: item.imagePrompt ?? undefined,
+        promptTemplate: typeof imageConfig.prompt_template === "string" ? imageConfig.prompt_template : undefined
+      });
+      const prompt = builtPrompt.prompt;
 
       const image = await generateLeonardoImage(prompt, {
         userId,
-        negativePrompt: imageConfig.negative_prompt ?? "text, watermark, logo, blurry, low quality",
+        negativePrompt: imageConfig.negative_prompt ?? builtPrompt.negativePrompt,
         width: Number(imageConfig.width ?? 1024),
         height: Number(imageConfig.height ?? 1024),
         steps: Number(imageConfig.steps ?? 30),
