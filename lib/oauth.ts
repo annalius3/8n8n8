@@ -1,7 +1,7 @@
-import { getServerEnv } from "@/lib/env";
+import { getOptionalServerEnvValue } from "@/lib/env";
 
 export function getRequestOrigin(requestUrl: string) {
-  const configured = getServerEnv().NEXT_PUBLIC_BASE_URL;
+  const configured = getOptionalServerEnvValue("NEXT_PUBLIC_BASE_URL");
   if (configured) {
     return configured.replace(/\/$/, "");
   }

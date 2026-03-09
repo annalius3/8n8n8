@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { setAuthCookie, verifySignedStateToken } from "@/lib/auth";
-import { getServerEnv } from "@/lib/env";
+import { getOptionalServerEnvValue } from "@/lib/env";
 import { getRequestOrigin, joinUrl } from "@/lib/oauth";
 
 type GoogleState = {
@@ -46,8 +46,9 @@ function toReasonCode(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const env = getServerEnv();
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  const clientId = getOptionalServerEnvValue("GOOGLE_CLIENT_ID");
+  const clientSecret = getOptionalServerEnvValue("GOOGLE_CLIENT_SECRET");
+  if (!clientId || !clientSecret) {
     return buildErrorRedirect(request.url, "google_not_configured");
   }
 
@@ -70,8 +71,8 @@ export async function GET(request: NextRequest) {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         code,
-        client_id: env.GOOGLE_CLIENT_ID,
-        client_secret: env.GOOGLE_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
         redirect_uri: redirectUri,
         grant_type: "authorization_code"
       }),

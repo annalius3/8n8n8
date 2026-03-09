@@ -62,6 +62,24 @@ export type ServerEnv = z.infer<typeof envSchema>;
 
 let cachedEnv: ServerEnv | null = null;
 
+export function getOptionalServerEnvValue(name: keyof NodeJS.ProcessEnv) {
+  const raw = process.env[name];
+  if (typeof raw !== "string") {
+    return undefined;
+  }
+
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+export function getRequiredServerEnvValue(name: keyof NodeJS.ProcessEnv, minLength = 1) {
+  const value = getOptionalServerEnvValue(name);
+  if (!value || value.length < minLength) {
+    throw new Error(`${name} is required`);
+  }
+  return value;
+}
+
 export function inspectServerEnv() {
   return envSchema.safeParse(process.env);
 }
