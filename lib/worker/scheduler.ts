@@ -2,6 +2,7 @@ import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateContentForQueueItems, publishQueueItems } from "@/lib/campaigns/service";
 import { processDueAutoPostJobs, scanAndQueueNewArticles } from "@/lib/autopost/service";
+import { runSearchConsoleSyncTick } from "@/lib/sites/service";
 import { computeNextRunAt } from "@/lib/worker/cron";
 import { runFlowNow } from "@/lib/worker/runner";
 
@@ -203,6 +204,7 @@ export async function runSchedulerTick() {
   }
 
   const autopostJobs = await processDueAutoPostJobs();
+  const siteSync = await runSearchConsoleSyncTick();
 
   return {
     checkedAt: now.toISOString(),
@@ -215,6 +217,9 @@ export async function runSchedulerTick() {
     autopostDue: autopostJobs.due,
     autopostPublished: autopostJobs.published,
     autopostFailed: autopostJobs.failed,
-    autopostSkipped: autopostJobs.skipped
+    autopostSkipped: autopostJobs.skipped,
+    siteSyncChecked: siteSync.checked,
+    siteSyncSynced: siteSync.synced,
+    siteSyncFailed: siteSync.failed
   };
 }

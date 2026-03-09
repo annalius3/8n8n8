@@ -19,6 +19,9 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 - `/settings` - Leonardo keys and Reddit API credentials
 - `/runs` - global run history
 - `/autopost` - article auto-posting dashboard (scan, generate, publish, status/errors)
+- `/sites` - сайты и аналитика Google Search Console
+- `/sites/new` - добавление нового сайта
+- `/sites/[id]` - обзор сайта, queries, pages, countries, devices, settings
 
 ## Auth
 - Google OAuth login:
@@ -64,6 +67,8 @@ Autoposting Flow is a Next.js + Prisma app for topic planning, queue-based conte
 ## OAuth
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_SEARCH_CONSOLE_CLIENT_ID` (optional, falls back to `GOOGLE_CLIENT_ID`)
+- `GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET` (optional, falls back to `GOOGLE_CLIENT_SECRET`)
 - `PINTEREST_CLIENT_ID`
 - `PINTEREST_CLIENT_SECRET`
 
@@ -123,6 +128,46 @@ npm run dev
 6. Create a flow and continue to `/queue`
 7. Generate content
 8. Publish selected items
+
+## Sites / Google Search Console
+
+### What is stored
+- `sites` - user sites and basic metadata
+- `site_search_console_connections` - encrypted Google tokens and selected property
+- `site_search_console_daily_stats` - daily clicks, impressions, CTR, position
+- `site_search_console_queries` - top queries by period
+- `site_search_console_pages` - top pages by period
+- `site_search_console_countries` - countries by period
+- `site_search_console_devices` - devices by period
+
+### Required Google OAuth setup
+Use a dedicated OAuth client for Search Console or reuse the existing Google client.
+
+Required scope:
+- `https://www.googleapis.com/auth/webmasters.readonly`
+
+Callback URL:
+- Local: `http://localhost:3000/sites/google/callback`
+- Production: `https://YOUR_DOMAIN/sites/google/callback`
+
+### How to test Search Console integration
+1. Open `/sites`
+2. Click `Добавить сайт`
+3. Save `Site name`, `Domain / base URL`, optional `Notes`
+4. Open the created site
+5. Go to `Settings`
+6. Click `Подключить Google`
+7. Complete Google OAuth
+8. Click `Загрузить properties`
+9. Select a Search Console property and click `Привязать property`
+10. Click `Первая синхронизация`
+11. Check `Overview`, `Queries`, `Pages`, `Countries`, `Devices`
+
+### Notes
+- Tokens are stored only on the server in encrypted form.
+- If Search Console access token expires, the app refreshes it automatically by `refresh_token`.
+- Scheduler now also checks connected sites and refreshes stale Search Console data automatically примерно раз в 12 часов.
+- Without real Google credentials and a verified Search Console property, OAuth/property selection cannot be completed, but the full backend and UI flow is already wired.
 
 ## Article Auto-posting (new)
 

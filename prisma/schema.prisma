@@ -50,6 +50,20 @@ enum SocialPlatform {
   facebook
 }
 
+enum SearchConsolePeriod {
+  today
+  last_7_days
+  last_28_days
+  last_3_months
+}
+
+enum SearchConsoleDevice {
+  desktop
+  mobile
+  tablet
+  other
+}
+
 model User {
   id             String          @id @default(cuid())
   email          String          @unique
@@ -63,8 +77,142 @@ model User {
   articles       Article[]
   autoPostPlatformSettings AutoPostPlatformSetting[]
   subredditMappings AutoPostSubredditMapping[]
+  sites          Site[]
+  siteSearchConsoleConnections SiteSearchConsoleConnection[]
 
   @@map("users")
+}
+
+model Site {
+  id                String                           @id @default(cuid())
+  userId            String                           @map("user_id")
+  name              String
+  domain            String
+  notes             String?
+  lastSyncAt        DateTime?                        @map("last_sync_at")
+  createdAt         DateTime                         @default(now()) @map("created_at")
+  updatedAt         DateTime                         @updatedAt @map("updated_at")
+  user              User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  searchConsoleConnection SiteSearchConsoleConnection?
+  dailyStats        SiteSearchConsoleDailyStat[]
+  queries           SiteSearchConsoleQuery[]
+  pages             SiteSearchConsolePage[]
+  countries         SiteSearchConsoleCountry[]
+  devices           SiteSearchConsoleDeviceMetric[]
+
+  @@index([userId, createdAt])
+  @@index([userId, domain])
+  @@map("sites")
+}
+
+model SiteSearchConsoleConnection {
+  id                String                 @id @default(cuid())
+  siteId            String                 @unique @map("site_id")
+  userId            String                 @map("user_id")
+  googleAccountEmail String?               @map("google_account_email")
+  propertyUrl       String?                @map("property_url")
+  encryptedJson     String                 @map("encrypted_json")
+  tokenExpiresAt    DateTime?              @map("token_expires_at")
+  createdAt         DateTime               @default(now()) @map("created_at")
+  updatedAt         DateTime               @updatedAt @map("updated_at")
+  site              Site                   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@map("site_search_console_connections")
+}
+
+model SiteSearchConsoleDailyStat {
+  id          String   @id @default(cuid())
+  siteId       String   @map("site_id")
+  date         DateTime
+  clicks       Float
+  impressions  Float
+  ctr          Float
+  position     Float
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  site         Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, date])
+  @@index([siteId, date])
+  @@map("site_search_console_daily_stats")
+}
+
+model SiteSearchConsoleQuery {
+  id          String              @id @default(cuid())
+  siteId      String              @map("site_id")
+  period      SearchConsolePeriod
+  query       String
+  clicks      Float
+  impressions Float
+  ctr         Float
+  position    Float
+  syncedAt    DateTime            @map("synced_at")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  site        Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, period, query])
+  @@index([siteId, period, clicks])
+  @@map("site_search_console_queries")
+}
+
+model SiteSearchConsolePage {
+  id          String              @id @default(cuid())
+  siteId      String              @map("site_id")
+  period      SearchConsolePeriod
+  pageUrl     String              @map("page_url")
+  clicks      Float
+  impressions Float
+  ctr         Float
+  position    Float
+  syncedAt    DateTime            @map("synced_at")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  site        Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, period, pageUrl])
+  @@index([siteId, period, clicks])
+  @@map("site_search_console_pages")
+}
+
+model SiteSearchConsoleCountry {
+  id          String              @id @default(cuid())
+  siteId      String              @map("site_id")
+  period      SearchConsolePeriod
+  country     String
+  clicks      Float
+  impressions Float
+  ctr         Float
+  position    Float
+  syncedAt    DateTime            @map("synced_at")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  site        Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, period, country])
+  @@index([siteId, period, clicks])
+  @@map("site_search_console_countries")
+}
+
+model SiteSearchConsoleDeviceMetric {
+  id          String              @id @default(cuid())
+  siteId      String              @map("site_id")
+  period      SearchConsolePeriod
+  device      SearchConsoleDevice
+  clicks      Float
+  impressions Float
+  ctr         Float
+  position    Float
+  syncedAt    DateTime            @map("synced_at")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  site        Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, period, device])
+  @@index([siteId, period, clicks])
+  @@map("site_search_console_devices")
 }
 
 model ArticleSourceConfig {

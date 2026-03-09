@@ -27,6 +27,8 @@ const optionalEnvSchema = z.object({
   OPENAI_API_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   GOOGLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GOOGLE_SEARCH_CONSOLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   PINTEREST_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   PINTEREST_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   PINTEREST_ACCESS_TOKEN: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
