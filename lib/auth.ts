@@ -90,14 +90,19 @@ function readSessionToken(token: string): { userId: string } | null {
 }
 
 export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE)?.value;
-  if (!token) return null;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(AUTH_COOKIE)?.value;
+    if (!token) return null;
 
-  const session = readSessionToken(token);
-  if (!session) return null;
+    const session = readSessionToken(token);
+    if (!session) return null;
 
-  return prisma.user.findUnique({ where: { id: session.userId } });
+    return await prisma.user.findUnique({ where: { id: session.userId } });
+  } catch {
+    // If env or DB is temporarily unavailable, render the app in guest mode instead of 500.
+    return null;
+  }
 }
 
 export function setAuthCookie(response: NextResponse, userId: string) {
