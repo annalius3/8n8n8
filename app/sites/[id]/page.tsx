@@ -11,8 +11,9 @@ type PageProps = {
 };
 
 export default async function SiteDetailPage({ params, searchParams }: PageProps) {
+  const user = await requireUser("/sites");
+
   try {
-    const user = await requireUser("/sites");
     const { id } = await params;
     const resolvedSearch = (await searchParams) ?? {};
     const analytics = await getSiteAnalytics({

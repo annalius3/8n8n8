@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/link-button";
 
 export default async function NewSitePage() {
+  await requireUser("/sites/new");
+
   try {
-    await requireUser("/sites/new");
     return <SiteForm />;
   } catch {
     return (
