@@ -26,10 +26,32 @@ function getGoogleErrorMessage(reason: string | null) {
   if (reason === "invalid_state") {
     return "State token невалиден или истек.";
   }
+  if (reason === "auth_secret_missing") {
+    return "На сервере отсутствует AUTH_SECRET или он слишком короткий.";
+  }
+  if (reason === "db_unavailable") {
+    return "Приложение не смогло подключиться к production-базе. Проверьте DATABASE_URL и доступ к БД.";
+  }
+  if (reason === "db_schema") {
+    return "В production-базе не хватает таблиц или Prisma migrations не применены.";
+  }
   if (reason === "oauth_failed") {
     return "Google OAuth завершился ошибкой на этапе обмена токена или загрузки профиля.";
   }
   return "Ошибка входа через Google. Проверьте настройки Google OAuth и redirect URI.";
+}
+
+function getSetupErrorMessage(reason: string | null) {
+  if (reason === "auth_secret_missing") {
+    return "AUTH_SECRET отсутствует или короче 32 символов.";
+  }
+  if (reason === "db_unavailable") {
+    return "Приложение не может подключиться к production-базе. Проверьте DATABASE_URL.";
+  }
+  if (reason === "db_schema") {
+    return "Production-база доступна, но Prisma schema не совпадает с кодом. Примените migrations.";
+  }
+  return "Не удалось завершить вход. Проверьте production-базу, Prisma migrations и обязательные env.";
 }
 
 export default function LoginClientPage() {
@@ -85,7 +107,7 @@ export default function LoginClientPage() {
 
         {callbackError === "auth_setup" ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Не удалось завершить вход. Проверьте production-базу, Prisma migrations и обязательные env.
+            {getSetupErrorMessage(callbackReason)}
           </div>
         ) : null}
 

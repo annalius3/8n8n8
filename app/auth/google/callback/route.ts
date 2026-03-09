@@ -37,9 +37,20 @@ function toReasonCode(error: unknown) {
   if (message.includes("invalid_client")) return "invalid_client";
   if (message.includes("invalid_grant")) return "invalid_grant";
   if (message.includes("missing email")) return "missing_email";
-  if (message.includes("environment") || message.includes("auth_secret")) return "auth_setup";
-  if (message.includes("prisma") || message.includes("database") || message.includes("p1000") || message.includes("p1001")) {
-    return "auth_setup";
+  if (message.includes("auth_secret")) return "auth_secret_missing";
+  if (message.includes("environment")) return "auth_setup";
+  if (message.includes("p1000") || message.includes("p1001") || message.includes("database")) {
+    return "db_unavailable";
+  }
+  if (
+    message.includes("does not exist") ||
+    message.includes("relation") ||
+    message.includes("column") ||
+    message.includes("table") ||
+    message.includes("p2021") ||
+    message.includes("p2022")
+  ) {
+    return "db_schema";
   }
 
   return "oauth_failed";
@@ -117,6 +128,10 @@ export async function GET(request: NextRequest) {
       reason,
       error: error instanceof Error ? error.message : String(error ?? "")
     });
-    return buildErrorRedirect(request.url, reason === "auth_setup" ? "auth_setup" : "google_oauth", reason);
+    return buildErrorRedirect(
+      request.url,
+      ["auth_setup", "auth_secret_missing", "db_unavailable", "db_schema"].includes(reason) ? "auth_setup" : "google_oauth",
+      reason
+    );
   }
 }
