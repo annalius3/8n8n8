@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LinkButton } from "@/components/ui/link-button";
 
 function getGoogleErrorMessage(reason: string | null) {
   if (reason === "redirect_uri_mismatch") {
@@ -76,7 +75,12 @@ export default function LoginClientPage() {
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <LinkButton href={`/api/auth/google/start?next=${encodeURIComponent(nextPath)}`}>Продолжить через Google</LinkButton>
+          <a
+            href={`/api/auth/google/start?next=${encodeURIComponent(nextPath)}`}
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Продолжить через Google
+          </a>
         </div>
 
         {callbackError === "auth_setup" ? (
