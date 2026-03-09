@@ -21,22 +21,46 @@ type GoogleUserInfo = {
   picture?: string;
 };
 
+function buildErrorRedirect(requestUrl: string, code: string, reason?: string) {
+  const url = new URL("/login", requestUrl);
+  url.searchParams.set("error", code);
+  if (reason) {
+    url.searchParams.set("reason", reason);
+  }
+  return NextResponse.redirect(url);
+}
+
+function toReasonCode(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error ?? "").toLowerCase();
+
+  if (message.includes("redirect_uri_mismatch")) return "redirect_uri_mismatch";
+  if (message.includes("invalid_client")) return "invalid_client";
+  if (message.includes("invalid_grant")) return "invalid_grant";
+  if (message.includes("missing email")) return "missing_email";
+  if (message.includes("environment") || message.includes("auth_secret")) return "auth_setup";
+  if (message.includes("prisma") || message.includes("database") || message.includes("p1000") || message.includes("p1001")) {
+    return "auth_setup";
+  }
+
+  return "oauth_failed";
+}
+
 export async function GET(request: NextRequest) {
   const env = getServerEnv();
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url));
+    return buildErrorRedirect(request.url, "google_not_configured");
   }
 
   const code = request.nextUrl.searchParams.get("code");
   const stateToken = request.nextUrl.searchParams.get("state");
 
   if (!code || !stateToken) {
-    return NextResponse.redirect(new URL("/login?error=google_oauth", request.url));
+    return buildErrorRedirect(request.url, "google_oauth", "missing_code_or_state");
   }
 
   const state = verifySignedStateToken<GoogleState>(stateToken);
   if (!state || state.provider !== "google") {
-    return NextResponse.redirect(new URL("/login?error=google_oauth", request.url));
+    return buildErrorRedirect(request.url, "google_oauth", "invalid_state");
   }
 
   try {
@@ -86,7 +110,12 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.redirect(new URL(nextPath, request.url));
     setAuthCookie(response, user.id);
     return response;
-  } catch {
-    return NextResponse.redirect(new URL("/login?error=google_oauth", request.url));
+  } catch (error) {
+    const reason = toReasonCode(error);
+    console.error("Google OAuth callback failed", {
+      reason,
+      error: error instanceof Error ? error.message : String(error ?? "")
+    });
+    return buildErrorRedirect(request.url, reason === "auth_setup" ? "auth_setup" : "google_oauth", reason);
   }
 }
