@@ -766,6 +766,8 @@ export async function publishQueueItems(input: {
   const limitedItems = typeof input.limit === "number" ? items.slice(0, Math.max(0, input.limit)) : items;
 
   let processed = 0;
+  let failed = 0;
+  const errors: Array<{ queueItemId: string; message: string }> = [];
 
   for (const item of limitedItems) {
     const run = await createRun(flow.id, item.id);
@@ -914,6 +916,8 @@ export async function publishQueueItems(input: {
       processed += 1;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Publish failed";
+      failed += 1;
+      errors.push({ queueItemId: item.id, message });
       await createRunStep({
         runId: run.id,
         stepIndex: 0,
@@ -933,7 +937,7 @@ export async function publishQueueItems(input: {
     }
   }
 
-  return { processed };
+  return { processed, failed, errors };
 }
 
 export async function runGenerateAllPipeline(flowId: string, userId: string) {
