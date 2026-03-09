@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && npx prisma migrate deploy && next build",
-    "vercel-build": "npx prisma generate && npx prisma migrate deploy && next build",
+    "build": "npx prisma generate && next build",
+    "vercel-build": "npx prisma generate && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit --incremental false",
     "check:text": "node scripts/check-text.mjs",

@@ -112,12 +112,12 @@ export function RedditSettingsForm({ initialStatus }: { initialStatus: RedditSta
       <CardHeader>
         <CardTitle>Reddit API</CardTitle>
         <CardDescription>
-          Сюда добавляются ключи для Reddit. Они нужны для будущей автопубликации в Reddit и хранятся только на сервере.
+          Здесь хранятся ключи Reddit для будущей автопубликации. Все данные сохраняются только на сервере и шифруются.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
-          <p>Где взять:</p>
+          <p>Где взять данные:</p>
           <p>`client id` и `client secret` — в Reddit App Preferences.</p>
           <p>`username` и `password` — от Reddit-аккаунта, через который будет идти публикация.</p>
           <p>`user agent` — строка вида `web:scheduled-publishing:v1.0 (by /u/your_username)`.</p>
@@ -206,7 +206,12 @@ export function RedditSettingsForm({ initialStatus }: { initialStatus: RedditSta
               {loading === "save" ? "Сохранение..." : "Сохранить Reddit API"}
             </Button>
 
-            <Button type="button" variant="destructive" disabled={loading !== null || !status.configured} onClick={() => void removeCredentials()}>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={loading !== null || !status.configured}
+              onClick={() => void removeCredentials()}
+            >
               {loading === "delete" ? "Удаление..." : "Удалить Reddit API"}
             </Button>
           </div>

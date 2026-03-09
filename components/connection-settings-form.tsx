@@ -183,11 +183,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
               OAuth-подключение Pinterest завершено успешно. Подключение сохранено на сервере.
             </div>
           ) : null}
+
           {oauthError === "pinterest_oauth_not_configured" ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               Pinterest OAuth пока не настроен. Добавьте `PINTEREST_CLIENT_ID` и `PINTEREST_CLIENT_SECRET` на сервере.
             </div>
           ) : null}
+
           {oauthError === "pinterest_oauth" ? (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               Ошибка Pinterest OAuth. Проверьте настройки приложения, redirect URI и scopes.
@@ -213,11 +215,13 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
             <div className="mb-3">
               <div className="font-medium">Предпочтительный способ: Pinterest OAuth</div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Нажмите красную кнопку, перейдите на Pinterest, подтвердите запрашиваемые права и вернитесь сюда со статусом подключения.
+                Нажмите красную кнопку, перейдите на Pinterest, подтвердите права и вернитесь сюда.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button variant="destructive" onClick={startPinterestOAuth}>Подключить Pinterest</Button>
+              <Button variant="destructive" onClick={startPinterestOAuth}>
+                Подключить Pinterest
+              </Button>
               <Button variant="outline" onClick={disconnectPinterest} disabled={!existingConnection || isDisconnecting}>
                 {isDisconnecting ? "Отключение..." : "Отключить Pinterest"}
               </Button>
@@ -228,7 +232,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
             <div className="mb-3">
               <div className="font-medium">Резервный вариант: ручной токен</div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Используйте этот вариант, только если у вас уже есть Pinterest access token и вы не хотите проходить OAuth прямо сейчас.
+                Используйте этот вариант только если у вас уже есть Pinterest access token и вы не хотите проходить OAuth прямо сейчас.
               </p>
             </div>
             <div className="space-y-2">
@@ -241,7 +245,7 @@ export function ConnectionSettingsForm({ initialConnections }: Props) {
                 placeholder="pina_..."
                 autoComplete="off"
               />
-              <p className="text-xs text-muted-foreground">Используйте токен, который ни разу не публиковался в чате, git или логах.</p>
+              <p className="text-xs text-muted-foreground">Никогда не публикуйте access token в чате, git или логах.</p>
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
               <Button onClick={saveConnection} disabled={isSaving || name.trim().length < 2 || accessToken.trim().length < 20}>
